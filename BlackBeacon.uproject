@@ -1,0 +1,22 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "",
+	"Category": "Game",
+	"Description": "BLACK BEACON - cinematic first-person mystery/exploration on a storm-battered island. C++-first Unreal Engine 5 project.",
+	"Modules": [
+		{
+			"Name": "BlackBeacon",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"CoreUObject"
+			]
+		}
+	],
+	"Plugins": [],
+	"TargetPlatforms": [
+		"Windows",
+		"Linux"
+	]
+}

@@ -1,0 +1,38 @@
+# ============================================================
+# BLACK BEACON - Unreal Engine 5 project ignore rules
+# ============================================================
+
+# --- Unreal Engine generated / build artifacts ---
+Binaries/
+Intermediate/
+DerivedDataCache/
+Saved/
+Build/
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# --- IDE / tooling ---
+.vscode/
+.idea/
+.vs/
+*.sln
+*.suo
+*.user
+*.userprefs
+*.swp
+*~
+
+# --- OS noise ---
+.DS_Store
+Thumbs.db
+
+# --- Local-only files that must never be committed ---
+*.log
+LocalState/
+
+# --- Standalone test/tool build output ---
+Tests/build/
+
+# --- Misc ---
+*.pdb
+*.ilk
