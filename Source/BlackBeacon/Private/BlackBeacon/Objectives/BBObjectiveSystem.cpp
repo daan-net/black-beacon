@@ -1,6 +1,6 @@
 #include "BlackBeacon/Objectives/BBObjectiveSystem.h"
 
-#include "Misc/StringConv.h"
+#include "Containers/StringConv.h"
 
 void UBBObjectiveSystem::Initialize(FSubsystemCollectionBase& Collection)
 {

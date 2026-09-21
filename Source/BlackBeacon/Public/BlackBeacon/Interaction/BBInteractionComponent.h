@@ -30,7 +30,7 @@ public:
 	bool TryInteract();
 
 	AActor* GetFocusedActor() const { return FocusedActor.Get(); }
-	bool HasFocus() const { return FocusedActor.IsValid(); }
+	bool HasFocus() const { return IsValid(FocusedActor.Get()); }
 
 	// Fired whenever the focused interactable changes (or focus is lost).
 	FBBInteractionFocusChanged OnFocusChanged;

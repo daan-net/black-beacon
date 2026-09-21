@@ -18,13 +18,13 @@ unit tests, greybox bootstrap world, git history, handoff docs.
 - [x] Honest CURRENT_STATE.md + CODEX_HANDOFF.md
 - [ ] Unreal Engine installed; project generates; UE systems compile — **blocked on engine**
 
-## M0.1 — Engine bring-up (blocked on UE install)
+## M0.1 — Engine bring-up (Phase A complete; Phase B in progress)
 
 Install UE 5.4+ (see CODEX_HANDOFF § Unreal setup), generate VS/Linux project files,
 compile the module, run on the greybox slice, fix compile/runtime errors.
 
 **Acceptance (M0.1)**
-- [ ] `BlackBeacon` module compiles with zero errors (warnings avoided)
+- [x] `BlackBeacon` module compiles with zero errors (warnings avoided)
 - [ ] Play the greybox slice: walk/look/sprint/crouch work
 - [ ] Interact with generator → spin-up → power on
 - [ ] Climb to lantern room, start the beam, manual rotation works

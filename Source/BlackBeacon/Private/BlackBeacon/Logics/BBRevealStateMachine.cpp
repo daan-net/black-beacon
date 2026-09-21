@@ -1,6 +1,6 @@
-#include <algorithm>
-
 #include "BlackBeacon/Logics/BBRevealStateMachine.h"
+
+#include <algorithm>
 
 namespace BlackBeacon::Logics
 {

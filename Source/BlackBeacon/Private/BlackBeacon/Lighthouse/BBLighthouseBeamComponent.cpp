@@ -27,7 +27,7 @@ void UBBLighthouseBeamComponent::BeginPlay()
 
 	if (BeamLight)
 	{
-		BeamLight->SetLightUnits(ELightUnits::Lumens);
+		BeamLight->IntensityUnits = ELightUnits::Lumens;
 		BeamLight->SetIntensity(BeamMaxIntensityLumens);
 		BeamLight->SetLightColor(BeamColor);
 		BeamLight->SetAttenuationRadius(BeamRangeCm);
@@ -212,7 +212,7 @@ void UBBLighthouseBeamComponent::UpdateReveals(const BlackBeacon::Logics::FBBBea
 		}
 		else
 		{
-			SubscribedReveals.RemoveAtSwap(I, 1, /*bAllowShrinking=*/false);
+			SubscribedReveals.RemoveAtSwap(I, 1, EAllowShrinking::No);
 		}
 	}
 }

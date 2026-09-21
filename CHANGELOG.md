@@ -11,6 +11,21 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 ---
 
+## 2026-09-21 — M0.1 Phase A — UE 5.8.2 bring-up
+
+- Fixed all 11 errors from the first real Unreal compile, plus the subsequent
+  UHT include-order and Slate binding errors: matching beam update return
+  contracts, current `EAllowShrinking` API, current string conversion header,
+  object pointer validity/constness, spotlight intensity units, and prompt text.
+- `BlackBeaconEditor` built successfully with UE 5.8.2 on Linux. The actual
+  project opened in Unreal Editor, reached engine initialization, passed map
+  check (0 errors, 0 warnings), and remained running for a 70-second smoke run
+  without a startup fatal error. This is `TESTED` startup evidence, not a Play
+  test of gameplay.
+- `./Tools/validate.sh` remains green, with 45/45 engine-independent checks
+  passing. No gameplay behavior or tunable was changed in this checkpoint.
+
+
 ## 2026-09-21 — M0 — Initial foundation bootstrap
 
 The repository as first established on `main`. No prior history. Unreal Engine

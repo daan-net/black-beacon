@@ -12,10 +12,9 @@ it reveals things that are invisible under normal lighting.
 
 ## Before anything else
 
-1. **Unreal Engine is not installed on this machine yet** — see
-   [CODEX_HANDOFF.md](CODEX_HANDOFF.md) § "Unreal Engine setup" for exact install steps.
-   The repository is a complete, real UE5 C++ project; drop the engine in and it builds.
-   Nothing here substitutes a different engine, and no engine were used to fake it.
+1. **Unreal Engine 5.8.2 is installed** at `~/WORK/_TOOLS/UE_5.8.2`.
+   The real `BlackBeaconEditor` target builds and the project opens in the editor.
+   See [CURRENT_STATE.md](CURRENT_STATE.md) for the tested scope and remaining Play work.
 2. Read [MASTER_VISION.md](MASTER_VISION.md) for the one-paragraph vision.
 3. Read [CURRENT_STATE.md](CURRENT_STATE.md) for the honest, always-updated status map
    (what works, what is tested, what is placeholder, next task).
@@ -53,7 +52,11 @@ BLACK_BEACON/
 
 ## Building today
 
-There is nothing to build yet: **the Unreal Engine toolchain is missing**.
+Build the editor with the installed Unreal Engine 5.8.2 toolchain:
+
+```bash
+~/WORK/_TOOLS/UE_5.8.2/Engine/Build/BatchFiles/Linux/Build.sh BlackBeaconEditor Linux Development -project="$PWD/BlackBeacon.uproject" -waitmutex
+```
 
 What *can* be validated right now, without UE:
 
@@ -65,9 +68,8 @@ The logic layer (`Source/BlackBeacon/Public/BlackBeacon/Logics/`) is plain, engi
 (beam math, beam-reveal state machine, objective graph resolver, weather interpolation)
 that is unit-tested by `Tests/`. Those tests run on any machine with a C++ compiler.
 
-The UE C++ systems (components/actors/subsystems) are **written but not compiled** until
-Unreal Engine is installed. Nothing that has not actually been built is ever claimed as
-working — see [CURRENT_STATE.md](CURRENT_STATE.md) for the exact status of each system.
+The UE C++ systems now compile in the actual engine. Gameplay still needs in-engine
+Play verification — see [CURRENT_STATE.md](CURRENT_STATE.md) for exact status.
 
 ## Ground rules (abridged)
 

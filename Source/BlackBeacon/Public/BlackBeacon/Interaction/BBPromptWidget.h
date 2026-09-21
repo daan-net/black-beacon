@@ -30,9 +30,6 @@ protected:
 	virtual void NativeConstruct() override;
 
 private:
-	// Slate attribute source used inside RebuildWidget.
-	const FText& GetPromptTextSrc() const { return CurrentPrompt; }
-
 	UPROPERTY()
 	FText CurrentPrompt;
 };

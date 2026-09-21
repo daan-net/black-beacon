@@ -120,8 +120,8 @@ protected:
 	TObjectPtr<USpotLightComponent> BeamLight = nullptr;
 
 private:
-	void UpdateRotation(float DeltaTime);
-	void UpdateIntensity(float DeltaTime);
+	bool UpdateRotation(float DeltaTime);
+	bool UpdateIntensity(float DeltaTime);
 	void UpdateReveals(const BlackBeacon::Logics::FBBBeamQuery& Query, float DeltaTime);
 	void PublishBeamState();
 

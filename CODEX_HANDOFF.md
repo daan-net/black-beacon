@@ -3,6 +3,10 @@
 Read me last. Everything else (vision, design, architecture, current state) is in
 the root docs; here is the operational picture and the exact next steps.
 
+> 2026-09-21 update: the engine-install blocker described below is resolved.
+> UE 5.8.2 is installed at `~/WORK/_TOOLS/UE_5.8.2`; the editor target builds
+> and the project opens. See CURRENT_STATE.md for live M0.1 Phase B status.
+
 ## 0. TL;DR
 
 BLACK BEACON is a UE5 PC-first, C++-first, single-player mystery built around one

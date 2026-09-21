@@ -174,7 +174,7 @@ void ABBlackBeaconPlayerController::HandleInteract()
 
 	// Cache the beam control when the interaction was with the lighthouse so
 	// manual aim is constant-time afterwards.
-	const AActor* const Focused = InteractionComponent->GetFocusedActor();
+	AActor* const Focused = InteractionComponent->GetFocusedActor();
 	CachedBeamController = Cast<ABBLighthouseController>(Focused);
 }
 

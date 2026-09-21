@@ -117,7 +117,7 @@ void UBBInteractionComponent::ApplyFocus(AActor* NewActor)
 
 void UBBInteractionComponent::ClearFocus()
 {
-	if (!FocusedActor.IsValid())
+	if (!IsValid(FocusedActor.Get()))
 	{
 		return;
 	}

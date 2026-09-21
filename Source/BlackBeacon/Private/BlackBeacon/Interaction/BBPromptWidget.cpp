@@ -13,7 +13,7 @@ void UBBPromptWidget::NativeConstruct()
 TSharedRef<SWidget> UBBPromptWidget::RebuildWidget()
 {
 	return SNew(STextBlock)
-		.Text(this, &UBBPromptWidget::GetPromptTextSrc)
+		.Text(CurrentPrompt)
 		.Font(FCoreStyle::GetDefaultFontStyle("Bold", 18))
 		.ColorAndOpacity(FLinearColor(1.0f, 0.98f, 0.92f, 1.0f))
 		.ShadowOffset(FVector2D(2.0f, 2.0f))
