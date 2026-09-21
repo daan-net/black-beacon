@@ -8,6 +8,7 @@
 **Last updated:** 2026-09-21 · **Milestone:** M0 — Foundation & Bootstrap
 **Latest build:** local `./Tools/validate.sh` → **green**; `bb_logic_tests` → **ALL PASS (45/45)**
 **Engine status:** Unreal Engine **not installed** — UE C++ layer compiled = false.
+**Repo history:** initial commits `bce6bc6` → `1f2bcf5` (6 commits, clean log — see CHANGELOG).
 
 ---
 

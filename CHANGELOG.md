@@ -17,6 +17,9 @@ The repository as first established on `main`. No prior history. Unreal Engine
 is **not installed** on this machine, so the UE C++ layer is written but not
 compiled; every UE system below is **written, not built** until M0.1 pass.
 
+Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
+(status + handoff docs) — see `git log` for the full history.
+
 ### Added
 
 - **Documentation set (10 root docs):** `README_FIRST`, `AGENTS`, `MASTER_VISION`,
