@@ -192,10 +192,19 @@ ABBLighthouseController* UBBProceduralWorld::SpawnLighthouse(UWorld* World)
 void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 {
 	const UBBProceduralWorld* const Lighting = GetDefault<UBBProceduralWorld>();
-	constexpr float kStepHeight = 24.0f;
-	constexpr int32 kStepsPerFloor = 22;
-	constexpr float kTurnPerStepDeg = 16.0f;
-	constexpr float kStairRadius = 240.0f;
+	constexpr int32 kStepsPerFloor = 28;
+	constexpr float kStepHeight = kTowerFloorHeightCm / static_cast<float>(kStepsPerFloor);
+	constexpr float kTurnPerStepDeg = 360.0f / static_cast<float>(kStepsPerFloor);
+	constexpr float kStairRadius = 200.0f;
+	constexpr float kOuterRailRadius = 315.0f;
+
+	// The central column closes the inner drop. The previous stairs had no
+	// physical reference or protection at the open centre.
+	SpawnMeshActor(
+		World, kMeshCylinder,
+		FTransform(FRotator::ZeroRotator, FVector(0.0f, 0.0f, kTowerFloorHeightCm * 1.5f)),
+		FVector(1.8f, 1.8f, kTowerFloorHeightCm * 1.5f / 100.0f),
+		TEXT("BB_StairCore"));
 
 	// Three stacked cylindrical wall sections + floor discs (greybox).
 	for (int32 Floor = 0; Floor < 3; ++Floor)
@@ -239,7 +248,7 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 		// Helical stair: boxes spiralling up inside the tower.
 		for (int32 Step = 0; Step < kStepsPerFloor; ++Step)
 		{
-			const float StepZ = BaseZ + 8.0f + static_cast<float>(Step) * kStepHeight;
+			const float StepZ = BaseZ + kStepHeight * (static_cast<float>(Step) + 0.5f);
 			const float StepYawDeg = -static_cast<float>(Step) * kTurnPerStepDeg;
 			const float AngleRad = FMath::DegreesToRadians(StepYawDeg);
 
@@ -250,12 +259,23 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 
 			FRotator StepRot(0.0f, StepYawDeg, 0.0f);
 
-			// Step box: 90 wide x 320 deep x 24 tall.
+			// Radial depth is 240 cm and the walking run is 80 cm. These axes
+			// were reversed in the original greybox, leaving only a 90 cm strip.
 			SpawnMeshActor(
 				World, kMeshCube,
 				FTransform(StepRot, StepPos),
-				FVector(0.9f, 3.2f, kStepHeight / 100.0f),
+				FVector(2.4f, 0.8f, kStepHeight / 100.0f),
 				TEXT("BB_StairStep"));
+
+			const FVector RailPos(
+				FMath::Cos(AngleRad) * kOuterRailRadius,
+				FMath::Sin(AngleRad) * kOuterRailRadius,
+				StepZ + 48.0f);
+			SpawnMeshActor(
+				World, kMeshCube,
+				FTransform(StepRot, RailPos),
+				FVector(0.12f, 0.8f, 0.95f),
+				TEXT("BB_StairGuard"));
 		}
 	}
 

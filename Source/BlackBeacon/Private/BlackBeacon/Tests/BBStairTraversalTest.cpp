@@ -64,8 +64,8 @@ bool FBBStairTraversalTest::RunTest(const FString& Parameters)
                 }
             }
             State->Steps.Sort([](const FVector& A, const FVector& B) { return A.Z < B.Z; });
-            TestEqual(TEXT("Greybox stair count"), State->Steps.Num(), 66);
-            if (State->Steps.Num() != 66)
+            TestEqual(TEXT("Greybox stair count"), State->Steps.Num(), 84);
+            if (State->Steps.Num() != 84)
             {
                 return true;
             }

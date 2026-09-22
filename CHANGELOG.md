@@ -17,6 +17,9 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 - **User-visible:** moved the first-person viewpoint from the capsule centre to a 152 cm standing eye height, switched crouch to the engine's supported crouch path, and tuned walk/sprint/crouch speeds, braking, and ground friction for the narrow helical stair.
 - **User-visible:** added one warm, unshadowed fill light per greybox tower floor. This improves stair visibility without changing geometry, collision, objectives, or the lighthouse beam.
 - Extended `BlackBeacon.M01.PlayerControls` to check human-scale eye height and bounded mouse yaw/pitch response. The isolated PlayerControls, GameplayFlow, and StairTraversal tests passed; the complete Vulkan `BlackBeacon.M01` suite then passed 3/3 and regenerated the five beam captures. `BlackBeaconEditor` built without warnings and `./Tools/validate.sh` remained green with 45/45 logic checks.
+- **User-visible:** raised explicit mouse yaw/pitch response to 0.22/0.18 degrees per count and walk/sprint speed to 400/700 cm/s after the first direct control review found the prior tuning too slow.
+- **User-visible:** rebuilt each stair revolution from 22 tall, incorrectly oriented treads to 28 treads with an 18.6 cm rise, 80 cm run, and 240 cm radial depth. Added a central collision column and 95 cm outer guards so the player cannot slip into either open edge during the climb. `BlackBeacon.M01.StairTraversal` now covers all 84 steps.
+- Rebuilt `BlackBeaconEditor` with UE 5.8.2. The complete rendered Vulkan `BlackBeacon.M01` suite passed 3/3 after the new stair geometry and control tuning, and all five beam screenshots were regenerated. `./Tools/validate.sh` remained green with 45/45 logic checks. Direct control feel and stair proportions still require human review.
 
 ## 2026-09-22 — M0.1 Phase B — beam readability pass in progress
 
@@ -59,7 +62,7 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 - Replaced the obstructing full lantern floor with a compact landing beside
   the control. Added `BlackBeacon.M01.StairTraversal`, which moved the actual
-  character over all 66 greybox steps to lantern height in the engine. All
+  character over all original 66 greybox steps to lantern height in the engine. All
   three M0.1 automation tests pass together. Beam readability remains open.
 
 

@@ -60,10 +60,10 @@ private:
 	void UpdateStance(float DeltaSeconds);
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement")
-	float WalkSpeed = 330.0f;
+	float WalkSpeed = 400.0f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement")
-	float SprintSpeed = 620.0f;
+	float SprintSpeed = 700.0f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement")
 	float CrouchSpeed = 190.0f;
