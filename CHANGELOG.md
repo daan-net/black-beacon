@@ -20,6 +20,8 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 - **User-visible:** raised explicit mouse yaw/pitch response to 0.22/0.18 degrees per count and walk/sprint speed to 400/700 cm/s after the first direct control review found the prior tuning too slow.
 - **User-visible:** rebuilt each stair revolution from 22 tall, incorrectly oriented treads to 28 treads with an 18.6 cm rise, 80 cm run, and 240 cm radial depth. Added a central collision column and 95 cm outer guards so the player cannot slip into either open edge during the climb. `BlackBeacon.M01.StairTraversal` now covers all 84 steps.
 - Rebuilt `BlackBeaconEditor` with UE 5.8.2. The complete rendered Vulkan `BlackBeacon.M01` suite passed 3/3 after the new stair geometry and control tuning, and all five beam screenshots were regenerated. `./Tools/validate.sh` remained green with 45/45 logic checks. Direct control feel and stair proportions still require human review.
+- **User-visible:** corrected the vertical mouse direction reported as inverted and increased horizontal look response from 0.22 to 0.35 degrees per count so the helical climb requires less mouse travel.
+- **User-visible:** opened the first outer guard at each stair revolution, halved guard thickness, and moved the lantern landing beyond the final tread. This removes the collision squeeze at stair entries and the low overhead obstruction near the top. The UE 5.8.2 build and complete rendered M0.1 suite passed 3/3 after these changes; human traversal feel remains the acceptance check.
 
 ## 2026-09-22 — M0.1 Phase B — beam readability pass in progress
 

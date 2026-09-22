@@ -267,22 +267,29 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 				FVector(2.4f, 0.8f, kStepHeight / 100.0f),
 				TEXT("BB_StairStep"));
 
-			const FVector RailPos(
-				FMath::Cos(AngleRad) * kOuterRailRadius,
-				FMath::Sin(AngleRad) * kOuterRailRadius,
-				StepZ + 48.0f);
-			SpawnMeshActor(
-				World, kMeshCube,
-				FTransform(StepRot, RailPos),
-				FVector(0.12f, 0.8f, 0.95f),
-				TEXT("BB_StairGuard"));
+			// Leave the first tread of each revolution open at the outside edge.
+			// This is the access point from the floor below; placing a guard here
+			// made the player squeeze around a collision block before climbing.
+			if (Step > 0)
+			{
+				const FVector RailPos(
+					FMath::Cos(AngleRad) * kOuterRailRadius,
+					FMath::Sin(AngleRad) * kOuterRailRadius,
+					StepZ + 48.0f);
+				SpawnMeshActor(
+					World, kMeshCube,
+					FTransform(StepRot, RailPos),
+					FVector(0.06f, 0.8f, 0.95f),
+					TEXT("BB_StairGuard"));
+			}
 		}
 	}
 
-	// A compact landing leaves the stair opening clear and reaches the control.
+	// Continue the landing beyond the final tread. Centring it on the final
+	// tread put its underside in the capsule's head space during the approach.
 	SpawnMeshActor(
 		World, kMeshCube,
-		FTransform(FRotator::ZeroRotator, FVector(200.0f, 0.0f, kTowerFloorHeightCm * 3.0f)),
+		FTransform(FRotator::ZeroRotator, FVector(200.0f, -120.0f, kTowerFloorHeightCm * 3.0f)),
 		FVector(2.4f, 2.4f, 0.2f),
 		TEXT("BB_LanternFloor"));
 }

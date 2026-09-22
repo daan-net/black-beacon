@@ -125,7 +125,7 @@ bool FBBPlayerControlsTest::RunTest(const FString& Parameters)
         if (State->Stage == 4 && Now - State->StageAt >= 0.15)
         {
             const float PitchDelta = FMath::FindDeltaAngleDegrees(State->StartPitch, Controller->GetControlRotation().Pitch);
-            TestTrue(TEXT("Mouse down looks down at a controllable rate"), PitchDelta < -0.1f && PitchDelta > -10.0f);
+            TestTrue(TEXT("Mouse down looks down at a controllable rate"), PitchDelta > 0.1f && PitchDelta < 10.0f);
             return true;
         }
         return false;

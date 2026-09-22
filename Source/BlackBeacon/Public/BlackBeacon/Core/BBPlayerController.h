@@ -82,7 +82,7 @@ private:
 	TObjectPtr<class ABBLighthouseController> CachedBeamController = nullptr;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Aim")
-	float MouseYawDegreesPerCount = 0.22f;
+	float MouseYawDegreesPerCount = 0.35f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Aim")
 	float MousePitchDegreesPerCount = 0.18f;
