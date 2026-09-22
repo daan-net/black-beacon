@@ -54,6 +54,7 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<AActor> FocusedActor = nullptr;
+	FText FocusedPrompt;
 
 	FTimerHandle FocusTimerHandle;
 	bool bTryInteractQueued = false;

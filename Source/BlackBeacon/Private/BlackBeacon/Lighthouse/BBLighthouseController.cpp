@@ -2,6 +2,8 @@
 
 #include "GameFramework/PlayerController.h"
 #include "Internationalization/Text.h"
+#include "Components/StaticMeshComponent.h"
+#include "UObject/ConstructorHelpers.h"
 
 #include "BlackBeacon/Lighthouse/BBLighthouseBeamComponent.h"
 #include "BlackBeacon/Objectives/BBObjectiveSystem.h"
@@ -10,6 +12,17 @@
 ABBLighthouseController::ABBLighthouseController()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+
+	UStaticMeshComponent* const ControlMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ControlMesh"));
+	ControlMesh->SetupAttachment(RootComponent);
+	ControlMesh->SetRelativeLocation(FVector(200.0f, 0.0f, -350.0f));
+	ControlMesh->SetRelativeScale3D(FVector(0.8f, 1.2f, 1.0f));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlShape(TEXT("/Engine/BasicShapes/Cube.Cube"));
+	if (ControlShape.Succeeded())
+	{
+		ControlMesh->SetStaticMesh(ControlShape.Object);
+	}
 
 	BeamComponent = CreateDefaultSubobject<UBBLighthouseBeamComponent>(TEXT("BeamComponent"));
 	BeamComponent->SetupAttachment(RootComponent);
@@ -64,7 +77,7 @@ void ABBLighthouseController::NotifyPowerState(bool bPoweredNow, float SuppliedW
 
 	if (BeamComponent)
 	{
-		BeamComponent->SetPowered(bPowered);
+		BeamComponent->SetPowered(bPowered && bBeamStarted);
 	}
 
 	if (bPowered && !bPowerGrantedOnce)

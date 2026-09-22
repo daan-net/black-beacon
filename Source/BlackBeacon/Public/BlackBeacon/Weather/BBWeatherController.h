@@ -86,7 +86,7 @@ public:
 	float TransitionSeconds = 8.0f;
 
 	// Palette overrides; leave phases out to keep the struct defaults.
-	UPROPERTY(EditAnywhere, Category = "BlackBeacon|Weather")
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
 	TArray<FBBWeatherPaletteConfig> Palette;
 
 protected:

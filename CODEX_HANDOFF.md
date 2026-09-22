@@ -11,14 +11,13 @@ the root docs; here is the operational picture and the exact next steps.
 
 BLACK BEACON is a UE5 PC-first, C++-first, single-player mystery built around one
 reusable mechanic: the lighthouse beam reveals things invisible under normal
-light. M0 (foundation) is done locally **except** compiling the UE layer, which
-requires an installed Unreal Engine (currently absent, see §3). A plain-C++
-**Logics** layer is written and unit-tested (45/45). All UE systems are written,
-consistent, and **unbuilt**.
+light. M0 is complete. UE 5.8.2 is installed; the editor target builds and the
+actual project opens. The plain-C++ Logics layer passes 45/45 tests, and M0.1
+input and gameplay-flow automation run in the engine. See CURRENT_STATE.md for
+remaining physical traversal and visual checks.
 
-Your job when you pick this up: get an engine, compile, run M0.1 acceptance
-(`MILESTONES.md`), and fix what breaks — without expanding scope (GAME_DESIGN §1,
-§7).
+Continue M0.1 acceptance (`MILESTONES.md`) without expanding scope
+(GAME_DESIGN §1, §7).
 
 ---
 

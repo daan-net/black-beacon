@@ -11,6 +11,33 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 ---
 
+## 2026-09-22 — M0.1 Phase B — runtime greybox bring-up
+
+- Corrected the reflected GameMode config path. The real `-game` launch then
+  exposed and fixed player-start recursion and a Slate prompt crash. The
+  procedural builder now applies mesh and trigger transforms, uses the
+  configured landing point, and leaves passage through the tower and annex.
+- Wired Enhanced Input classes and proper W/A/S/D and mouse axis mappings;
+  made generator and lighthouse controls traceable through the existing
+  interaction component. Prompts now refresh after an interaction changes
+  the focused actor's state.
+- **User-visible:** objective prerequisites in `DefaultGame.ini` now enforce
+  the nine-step order. Generator start completes before power is granted, and
+  stopping it removes power and turns off the beam. Beam operation waits for
+  the player's lantern interaction.
+- **User-visible:** rain fog and spotlight scattering are enabled in the real
+  renderer. The rain fog density and greybox beam intensity were adjusted
+  during Vulkan capture checks; visual readability remains unverified because
+  the captured view is obscured. `bVolumetricLight` now drives the spotlight.
+- Added in-engine `BlackBeacon.M01.PlayerControls` and
+  `BlackBeacon.M01.GameplayFlow` automation checks. Both passed on UE 5.8.2;
+  the flow also passed with Vulkan on the NVIDIA RTX 2060. It exercises pawn
+  overlaps, trace interactions, prompts, generator spin-up and power loss,
+  manual beam aim, persistent reveal, and completion of all objectives.
+- Physical stair traversal and final visual readability remain open M0.1
+  acceptance checks. No M1 work was started.
+
+
 ## 2026-09-21 — M0.1 Phase A — UE 5.8.2 bring-up
 
 - Fixed all 11 errors from the first real Unreal compile, plus the subsequent

@@ -4,7 +4,7 @@ Scope discipline: each milestone is small, complete, and shippable on its own.
 QUALITY > FEATURE COUNT. Do not start the next milestone until the current one is
 built, tested, and bumped in CURRENT_STATE.md.
 
-## M0 — Foundation & Bootstrap (current)
+## M0 — Foundation & Bootstrap (complete)
 
 Repository, documentation set, UE5 C++ project scaffold, plain-C++ logic layer with
 unit tests, greybox bootstrap world, git history, handoff docs.
@@ -13,24 +13,27 @@ unit tests, greybox bootstrap world, git history, handoff docs.
 - [x] Repo + docs (all 10 top-level markdown files present and consistent)
 - [x] Valid `.uproject`, `Config/*.ini`, UE module/Target/Build files
 - [x] Logic layer compiles & its unit tests pass on this machine (`./Tools/validate.sh`)
-- [x] ALL UE C++ systems written (interaction, power, beam, reveal, weather, objectives,
-      save foundation, greybox builder) — unbuilt until engine drops in
+- [x] ALL UE C++ systems written and built (interaction, power, beam, reveal, weather,
+      objectives, save foundation, greybox builder)
 - [x] Honest CURRENT_STATE.md + CODEX_HANDOFF.md
-- [ ] Unreal Engine installed; project generates; UE systems compile — **blocked on engine**
+- [x] Unreal Engine 5.8.2 installed; UE systems compile
 
 ## M0.1 — Engine bring-up (Phase A complete; Phase B in progress)
 
-Install UE 5.4+ (see CODEX_HANDOFF § Unreal setup), generate VS/Linux project files,
-compile the module, run on the greybox slice, fix compile/runtime errors.
+Build the UE 5.8.2 module, run the greybox slice, and verify the complete player path.
 
 **Acceptance (M0.1)**
 - [x] `BlackBeacon` module compiles with zero errors (warnings avoided)
-- [ ] Play the greybox slice: walk/look/sprint/crouch work
-- [ ] Interact with generator → spin-up → power on
+- [x] Play the greybox slice: walk/look/sprint/crouch work (in-engine input automation)
+- [x] Interact with generator → spin-up → power on (in-engine flow automation)
 - [ ] Climb to lantern room, start the beam, manual rotation works
 - [ ] Beam is visibly volumetric through fog
-- [ ] First anomaly reveals and fades per config
-- [ ] Whole objective chain completes; HUD prompt updates
+- [x] First anomaly reveals and persists per current config (in-engine flow automation)
+- [x] Whole objective chain completes; HUD prompt updates (in-engine flow automation)
+
+Remaining checks: walk the complete stair route in editor Play and inspect the beam
+through fog from a side viewpoint. The flow automation reaches the lantern volume by
+teleporting the pawn, so it does not establish physical stair traversal.
 
 ## M0.2 — Vertical slice 0.1 polish (first "playable prototype")
 

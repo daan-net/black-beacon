@@ -76,6 +76,13 @@ void UBBGeneratorComponent::SetRunning(bool bNowRunning)
 	else
 	{
 		Owner->GetWorldTimerManager().ClearTimer(SpinUpTimerHandle);
+		const bool bWasProducing = SpinUpProgress >= 1.0f;
+		SpinUpProgress = 0.0f;
+		NotifyPowerNetworkChanged();
+		if (bWasProducing)
+		{
+			OnGeneratorStateChanged.Broadcast(false);
+		}
 	}
 }
 
@@ -89,7 +96,16 @@ void UBBGeneratorComponent::AdvanceSpinUp()
 	if (SpinUpProgress < 1.0f)
 	{
 		// Linear ramp for 0.1; replace with a physical torque curve later.
-		SpinUpProgress = FMath::Min(1.0f, SpinUpProgress + 0.05f / SpinUpSeconds);
+		SpinUpProgress = FMath::Min(1.0f, SpinUpProgress + 0.05f / FMath::Max(SpinUpSeconds, 0.05f));
+		if (SpinUpProgress >= 1.0f)
+		{
+			if (!bHasProducedOnce)
+			{
+				bHasProducedOnce = true;
+				CompleteStartObjectiveIfNew();
+			}
+			OnGeneratorStateChanged.Broadcast(true);
+		}
 		NotifyPowerNetworkChanged();
 	}
 	else
@@ -100,12 +116,6 @@ void UBBGeneratorComponent::AdvanceSpinUp()
 			Owner->GetWorldTimerManager().ClearTimer(SpinUpTimerHandle);
 		}
 
-		if (!bHasProducedOnce)
-		{
-			bHasProducedOnce = true;
-			CompleteStartObjectiveIfNew();
-			OnGeneratorStateChanged.Broadcast(true);
-		}
 	}
 }
 

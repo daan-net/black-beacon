@@ -1,6 +1,7 @@
 #include "BlackBeacon/Core/BBGameMode.h"
 
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
 
 #include "BlackBeacon/Core/BBGameState.h"
@@ -45,14 +46,10 @@ void ABBlackBeaconGameMode::BuildProceduralSlice()
 
 AActor* ABBlackBeaconGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
-	if (AActor* const Found = FindPlayerStart(Player))
-	{
-		return Found;
-	}
-
-	// Blank map (Entry, or an empty test level): synthesize a player start
-	// at the configured bootstrap transform so the slice always boots.
-	if (!BootstrapPlayerStart.GetLocation().IsNearlyZero() || !BootstrapPlayerStart.GetRotation().IsIdentity())
+	// The bootstrap slice owns its landing point even when Entry has a
+	// built-in PlayerStart at the map origin.
+	if (bBuildProceduralBootstrapWorld
+		&& (!BootstrapPlayerStart.GetLocation().IsNearlyZero() || !BootstrapPlayerStart.GetRotation().IsIdentity()))
 	{
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -62,6 +59,12 @@ AActor* ABBlackBeaconGameMode::ChoosePlayerStart_Implementation(AController* Pla
 		{
 			return Start;
 		}
+	}
+
+	TActorIterator<APlayerStart> ExistingStart(GetWorld());
+	if (ExistingStart)
+	{
+		return *ExistingStart;
 	}
 
 	return Super::ChoosePlayerStart_Implementation(Player);

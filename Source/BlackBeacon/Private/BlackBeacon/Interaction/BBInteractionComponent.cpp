@@ -97,13 +97,6 @@ void UBBInteractionComponent::RefreshFocus()
 
 void UBBInteractionComponent::ApplyFocus(AActor* NewActor)
 {
-	if (FocusedActor == NewActor)
-	{
-		return; // no change
-	}
-
-	FocusedActor = NewActor;
-
 	FText Prompt = FText::GetEmpty();
 	if (NewActor)
 	{
@@ -112,6 +105,12 @@ void UBBInteractionComponent::ApplyFocus(AActor* NewActor)
 			Prompt = Interactable->GetInteractionPrompt();
 		}
 	}
+	if (FocusedActor == NewActor && FocusedPrompt.EqualTo(Prompt))
+	{
+		return;
+	}
+	FocusedActor = NewActor;
+	FocusedPrompt = Prompt;
 	OnFocusChanged.Broadcast(NewActor, Prompt);
 }
 
@@ -122,6 +121,7 @@ void UBBInteractionComponent::ClearFocus()
 		return;
 	}
 	FocusedActor = nullptr;
+	FocusedPrompt = FText::GetEmpty();
 	OnFocusChanged.Broadcast(nullptr, FText::GetEmpty());
 }
 
@@ -148,5 +148,13 @@ bool UBBInteractionComponent::TryInteract()
 	// Retarget the focus check so stale focus can't fire through walls:
 	// the interactable itself is trusted to gate on its own state.
 	Interactable->OnInteract(PC);
+	if (IsValid(Actor))
+	{
+		ApplyFocus(Actor);
+	}
+	else
+	{
+		ClearFocus();
+	}
 	return true;
 }

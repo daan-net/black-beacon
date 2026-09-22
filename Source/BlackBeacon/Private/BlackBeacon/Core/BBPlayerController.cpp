@@ -4,6 +4,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
+#include "InputModifiers.h"
 
 #include "BlackBeacon/Core/BBPlayerCharacter.h"
 #include "BlackBeacon/Interaction/BBInteractionComponent.h"
@@ -77,17 +78,30 @@ void ABBlackBeaconPlayerController::CreateInputAssets()
 	InteractAction->ValueType = EInputActionValueType::Boolean;
 
 	MappingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_Default"));
-	MappingContext->MapKey(MoveAction, EKeys::W);
-	MappingContext->MapKey(MoveAction, EKeys::A);
-	MappingContext->MapKey(MoveAction, EKeys::S);
-	MappingContext->MapKey(MoveAction, EKeys::D);
-	MappingContext->MapKey(MoveAction, EKeys::Up);
-	MappingContext->MapKey(MoveAction, EKeys::Down);
-	MappingContext->MapKey(MoveAction, EKeys::Left);
-	MappingContext->MapKey(MoveAction, EKeys::Right);
+	auto MapMove = [this](FKey Key, bool bForwardAxis, bool bNegate)
+	{
+		FEnhancedActionKeyMapping& Mapping = MappingContext->MapKey(MoveAction, Key);
+		if (bForwardAxis)
+		{
+			Mapping.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>(MappingContext));
+		}
+		if (bNegate)
+		{
+			Mapping.Modifiers.Add(NewObject<UInputModifierNegate>(MappingContext));
+		}
+	};
+	MapMove(EKeys::W, true, false);
+	MapMove(EKeys::S, true, true);
+	MapMove(EKeys::A, false, true);
+	MapMove(EKeys::D, false, false);
+	MapMove(EKeys::Up, true, false);
+	MapMove(EKeys::Down, true, true);
+	MapMove(EKeys::Left, false, true);
+	MapMove(EKeys::Right, false, false);
 
 	MappingContext->MapKey(LookAction, EKeys::MouseX);
-	MappingContext->MapKey(LookAction, EKeys::MouseY);
+	FEnhancedActionKeyMapping& MouseYMapping = MappingContext->MapKey(LookAction, EKeys::MouseY);
+	MouseYMapping.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>(MappingContext));
 
 	MappingContext->MapKey(SprintAction, EKeys::LeftShift);
 

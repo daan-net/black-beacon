@@ -36,6 +36,11 @@ print("  .uproject  : valid JSON, module entry OK")
 # that appears somewhere under Source/ (cheap static cross-check).
 import re, pathlib
 source = "".join(p.read_text(errors="ignore") for p in pathlib.Path(f"{root}/Source").rglob("*.*"))
+engine_config = pathlib.Path(f"{root}/Config/DefaultEngine.ini").read_text()
+game_mode = re.search(r"^GlobalDefaultGameMode=/Script/BlackBeacon\.(\w+)$", engine_config, re.M)
+assert game_mode, "missing BlackBeacon GameMode path"
+assert f"class A{game_mode.group(1)} : public AGameModeBase" in source, \
+    f"GameMode path {game_mode.group(1)} does not match a reflected C++ class"
 for ini in pathlib.Path(f"{root}/Config").glob("Default*.ini"):
     text = ini.read_text(errors="ignore")
     for m in re.finditer(r"\[/Script/(\w+)\.(\w+)\]", text):

@@ -33,6 +33,7 @@ void UBBLighthouseBeamComponent::BeginPlay()
 		BeamLight->SetAttenuationRadius(BeamRangeCm);
 		BeamLight->SetOuterConeAngle(BeamHalfAngleDeg);
 		BeamLight->SetInnerConeAngle(BeamHalfAngleDeg * 0.5f);
+		BeamLight->SetVolumetricScatteringIntensity(bVolumetricLight ? 1.0f : 0.0f);
 	}
 
 	if (bStartInAutoRotation)

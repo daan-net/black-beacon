@@ -8,7 +8,8 @@ ABBWeatherController::ABBWeatherController()
 	PrimaryActorTick.TickGroup = TG_PrePhysics;
 
 	FogComponent = CreateDefaultSubobject<UExponentialHeightFogComponent>(TEXT("FogComponent"));
-	FogComponent->SetupAttachment(RootComponent);
+	RootComponent = FogComponent;
+	FogComponent->SetVolumetricFog(true);
 }
 
 void ABBWeatherController::BeginPlay()
@@ -25,7 +26,9 @@ void ABBWeatherController::BuildInterpolatorPalette()
 	std::vector<BlackBeacon::Logics::FBBWeatherPaletteEntry> Entries;
 	for (std::uint8_t I = 0; I < static_cast<std::uint8_t>(BlackBeacon::Logics::EBBWeatherPhase::Count); ++I)
 	{
-		Entries.push_back(BlackBeacon::Logics::FBBWeatherPaletteEntry{});
+		BlackBeacon::Logics::FBBWeatherPaletteEntry Entry;
+		Entry.Phase = static_cast<BlackBeacon::Logics::EBBWeatherPhase>(I);
+		Entries.push_back(Entry);
 	}
 
 	for (const FBBWeatherPaletteConfig& Config : Palette)

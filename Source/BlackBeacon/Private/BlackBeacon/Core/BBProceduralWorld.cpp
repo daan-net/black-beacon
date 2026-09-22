@@ -47,6 +47,7 @@ AActor* UBBProceduralWorld::SpawnMeshActor(
 
 	USceneComponent* const Root = NewObject<USceneComponent>(Actor, TEXT("Root"));
 	Actor->SetRootComponent(Root);
+	Root->SetWorldTransform(Transform);
 	Root->RegisterComponent();
 
 	UStaticMeshComponent* const Mesh = NewObject<UStaticMeshComponent>(Actor, TEXT("Mesh"));
@@ -87,6 +88,7 @@ AActor* UBBProceduralWorld::SpawnTriggerVolume(
 
 	UBoxComponent* const Box = NewObject<UBoxComponent>(Volume, TEXT("TriggerBox"));
 	Volume->SetRootComponent(Box);
+	Box->SetWorldLocation(Center);
 	Box->SetBoxExtent(HalfExtent);
 	Box->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	Box->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -115,7 +117,7 @@ int32 UBBProceduralWorld::BuildSlice(UWorld* World)
 	// --- terrain ---
 	if (AActor* const Ground = SpawnMeshActor(
 			World, kMeshPlane, FTransform(FRotator(0, 0, 0), FVector(0, 0, 0)),
-			FVector(70.0f, 70.0f, 1.0f), TEXT("BB_Ground")))
+			FVector(120.0f, 120.0f, 1.0f), TEXT("BB_Ground")))
 	{
 		++Spawned;
 	}
@@ -158,7 +160,8 @@ ABBWeatherController* UBBProceduralWorld::EnsureWeatherController(UWorld* World)
 	}
 
 	// One controller per level.
-	for (TActorIterator<ABBWeatherController> It(World); It; ++It)
+	TActorIterator<ABBWeatherController> It(World);
+	if (It)
 	{
 		return *It;
 	}
@@ -205,13 +208,20 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 			FVector(kTowerRadiusCm / 50.0f, kTowerRadiusCm / 50.0f, kTowerFloorHeightCm * 0.5f / 100.0f),
 			TEXT("BB_TowerWall"));
 		(void)Wall;
+		if (Wall)
+		{
+			Wall->SetActorEnableCollision(false);
+		}
 
 		// Floor disc (cube: 100x100x100 -> scale to a thin disc).
-		SpawnMeshActor(
-			World, kMeshCube,
-			FTransform(FRotator::ZeroRotator, FVector(0, 0, BaseZ)),
-			FVector(kTowerRadiusCm * 2.0f / 100.0f, kTowerRadiusCm * 2.0f / 100.0f, 0.2f),
-			FName(TEXT("BB_TowerFloor")));
+		if (Floor == 0)
+		{
+			SpawnMeshActor(
+				World, kMeshCube,
+				FTransform(FRotator::ZeroRotator, FVector(0, 0, BaseZ)),
+				FVector(kTowerRadiusCm * 2.0f / 100.0f, kTowerRadiusCm * 2.0f / 100.0f, 0.2f),
+				FName(TEXT("BB_TowerFloor")));
+		}
 
 		// Helical stair: boxes spiralling up inside the tower.
 		for (int32 Step = 0; Step < kStepsPerFloor; ++Step)
@@ -255,6 +265,10 @@ void UBBProceduralWorld::SpawnGeneratorAnnex(UWorld* World)
 		FVector(4.2f, 5.2f, 2.6f),
 		TEXT("BB_GeneratorShed"));
 	(void)Shed;
+	if (Shed)
+	{
+		Shed->SetActorEnableCollision(false);
+	}
 
 	// The generator itself (interactable, power source).
 	AActor* const GenActor = SpawnMeshActor(

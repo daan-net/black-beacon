@@ -102,7 +102,8 @@ FString UBBObjectiveSystem::GetCurrentObjectiveId() const
 		return FString();
 	}
 	const std::string Id = Graph.GetCurrentObjectiveId();
-	return FString(FUTF8ToTCHAR(Id.c_str(), Id.size()).Get());
+	const FUTF8ToTCHAR Converter(Id.data(), static_cast<int32>(Id.size()));
+	return FString(Converter.Length(), Converter.Get());
 }
 
 FString UBBObjectiveSystem::GetCurrentObjectiveText() const

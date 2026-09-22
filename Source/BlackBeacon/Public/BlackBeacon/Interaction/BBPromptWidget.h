@@ -30,6 +30,8 @@ protected:
 	virtual void NativeConstruct() override;
 
 private:
+	TSharedPtr<STextBlock> PromptTextBlock;
+
 	UPROPERTY()
 	FText CurrentPrompt;
 };

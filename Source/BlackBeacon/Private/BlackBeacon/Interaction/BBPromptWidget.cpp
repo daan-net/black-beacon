@@ -12,7 +12,7 @@ void UBBPromptWidget::NativeConstruct()
 
 TSharedRef<SWidget> UBBPromptWidget::RebuildWidget()
 {
-	return SNew(STextBlock)
+	return SAssignNew(PromptTextBlock, STextBlock)
 		.Text(CurrentPrompt)
 		.Font(FCoreStyle::GetDefaultFontStyle("Bold", 18))
 		.ColorAndOpacity(FLinearColor(1.0f, 0.98f, 0.92f, 1.0f))
@@ -24,13 +24,9 @@ void UBBPromptWidget::SetPromptText(const FText& InText)
 {
 	CurrentPrompt = InText;
 
-	if (TSharedPtr<SWidget> Cached = GetCachedWidget())
+	if (PromptTextBlock.IsValid())
 	{
-		// Force the slate text to re-read the attribute.
-		if (TSharedPtr<STextBlock> TextBlock = StaticCastSharedPtr<STextBlock>(Cached))
-		{
-			TextBlock->SetText(CurrentPrompt);
-		}
+		PromptTextBlock->SetText(CurrentPrompt);
 	}
 
 	SetVisibility(CurrentPrompt.IsEmpty() ? ESlateVisibility::Hidden : ESlateVisibility::HitTestInvisible);
