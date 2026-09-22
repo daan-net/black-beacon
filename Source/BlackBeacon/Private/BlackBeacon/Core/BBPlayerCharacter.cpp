@@ -28,14 +28,19 @@ ABBlackBeaconPlayerCharacter::ABBlackBeaconPlayerCharacter()
 	UCharacterMovementComponent* const Move = GetCharacterMovement();
 	Move->MaxWalkSpeed = WalkSpeed;
 	Move->MaxWalkSpeedCrouched = CrouchSpeed;
-	Move->BrakingDecelerationWalking = 1200.0f;
+	Move->BrakingDecelerationWalking = 2200.0f;
+	Move->GroundFriction = 10.0f;
+	Move->GetNavAgentPropertiesRef().bCanCrouch = true;
+	Move->SetCrouchedHalfHeight(CrouchHalfHeight);
+	Move->bCrouchMaintainsBaseLocation = true;
 }
 
 void ABBlackBeaconPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	CameraStandZ = CameraBoom->GetRelativeLocation().Z;
-	CameraCrouchZ = CameraStandZ - (StandHalfHeight - CrouchHalfHeight);
+	CameraStandZ = StandEyeHeightCm - StandHalfHeight;
+	CameraCrouchZ = CrouchEyeHeightCm - CrouchHalfHeight;
+	CameraBoom->SetRelativeLocation(FVector(0.0f, 0.0f, CameraStandZ));
 }
 
 void ABBlackBeaconPlayerCharacter::Tick(float DeltaSeconds)
@@ -54,19 +59,6 @@ void ABBlackBeaconPlayerCharacter::UpdateStance(float DeltaSeconds)
 		Move->MaxWalkSpeed = bWantsCrouch
 			? CrouchSpeed
 			: (bWantsSprint ? SprintSpeed : WalkSpeed);
-	}
-
-	// Crouch: lower the capsule instantly (collision) and glide the eye down.
-	if (bWantsCrouch)
-	{
-		if (GetCapsuleComponent()->GetScaledCapsuleHalfHeight() > CrouchHalfHeight + 1.0f)
-		{
-			GetCapsuleComponent()->SetCapsuleSize(GetCapsuleComponent()->GetUnscaledCapsuleRadius(), CrouchHalfHeight);
-		}
-	}
-	else if (GetCapsuleComponent()->GetScaledCapsuleHalfHeight() < StandHalfHeight - 1.0f)
-	{
-		GetCapsuleComponent()->SetCapsuleSize(GetCapsuleComponent()->GetUnscaledCapsuleRadius(), StandHalfHeight);
 	}
 
 	if (CameraBoom)
@@ -101,5 +93,10 @@ void ABBlackBeaconPlayerCharacter::SetCrouched(bool bNewCrouched)
 	if (bWantsCrouch)
 	{
 		bSprinting = false; // sprint and crouch are mutually exclusive
+		Crouch();
+	}
+	else
+	{
+		UnCrouch();
 	}
 }

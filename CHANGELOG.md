@@ -11,6 +11,13 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 ---
 
+## 2026-09-22 — M0.1 Phase B — first-person control and stair readability
+
+- **User-visible:** disabled Unreal's legacy 2.5× controller mouse scales and added explicit horizontal/vertical Enhanced Input sensitivities. Vertical mouse input is now intentionally inverted at the controller boundary, and manual beam aim uses the same lower sensitivity scale.
+- **User-visible:** moved the first-person viewpoint from the capsule centre to a 152 cm standing eye height, switched crouch to the engine's supported crouch path, and tuned walk/sprint/crouch speeds, braking, and ground friction for the narrow helical stair.
+- **User-visible:** added one warm, unshadowed fill light per greybox tower floor. This improves stair visibility without changing geometry, collision, objectives, or the lighthouse beam.
+- Extended `BlackBeacon.M01.PlayerControls` to check human-scale eye height and bounded mouse yaw/pitch response. The isolated PlayerControls, GameplayFlow, and StairTraversal tests passed; the complete Vulkan `BlackBeacon.M01` suite then passed 3/3 and regenerated the five beam captures. `BlackBeaconEditor` built without warnings and `./Tools/validate.sh` remained green with 45/45 logic checks.
+
 ## 2026-09-22 — M0.1 Phase B — beam readability pass in progress
 
 - **User-visible:** connected the analytic additive shaft material to the lighthouse visual mesh and synchronized its world-space origin, direction, length, and cone angle with the gameplay beam. Kept BeamReveal queries and rotation behavior unchanged.

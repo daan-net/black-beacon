@@ -14,7 +14,7 @@ class UCameraComponent;
 class USpringArmComponent;
 class UBBInteractionComponent;
 
-UCLASS()
+UCLASS(config = Game)
 class ABBlackBeaconPlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
@@ -59,14 +59,20 @@ protected:
 private:
 	void UpdateStance(float DeltaSeconds);
 
-	UPROPERTY(EditAnywhere, Category = "BlackBeacon|Player|Movement")
-	float WalkSpeed = 600.0f;
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement")
+	float WalkSpeed = 330.0f;
 
-	UPROPERTY(EditAnywhere, Category = "BlackBeacon|Player|Movement")
-	float SprintSpeed = 1150.0f;
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement")
+	float SprintSpeed = 620.0f;
 
-	UPROPERTY(EditAnywhere, Category = "BlackBeacon|Player|Movement")
-	float CrouchSpeed = 320.0f;
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement")
+	float CrouchSpeed = 190.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement")
+	float StandEyeHeightCm = 152.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement")
+	float CrouchEyeHeightCm = 100.0f;
 
 	UPROPERTY(EditAnywhere, Category = "BlackBeacon|Player|Movement")
 	float BaseFov = 80.0f;

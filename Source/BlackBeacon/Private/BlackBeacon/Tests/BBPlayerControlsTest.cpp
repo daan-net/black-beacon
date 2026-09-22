@@ -5,6 +5,7 @@
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Components/CapsuleComponent.h"
+#include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "InputKeyEventArgs.h"
 #include "HAL/PlatformTime.h"
@@ -36,6 +37,7 @@ bool FBBPlayerControlsTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<ABBlackBeaconPlayerCharacter> Character;
         FVector StartLocation = FVector::ZeroVector;
         float StartYaw = 0.0f;
+        float StartPitch = 0.0f;
     };
     TSharedRef<FControlState> State = MakeShared<FControlState>();
 
@@ -72,6 +74,10 @@ bool FBBPlayerControlsTest::RunTest(const FString& Parameters)
             }
             State->StartLocation = State->Character->GetActorLocation();
             State->StartYaw = State->Controller->GetControlRotation().Yaw;
+            const float FootZ = State->Character->GetActorLocation().Z
+                - State->Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+            const float EyeHeight = State->Character->GetFirstPersonCamera()->GetComponentLocation().Z - FootZ;
+            TestTrue(TEXT("Standing eye height is human scale"), EyeHeight > 140.0f && EyeHeight < 165.0f);
             SendKey(State->Controller.Get(), EKeys::W, IE_Pressed, 1.0f);
             SendKey(State->Controller.Get(), EKeys::LeftShift, IE_Pressed, 1.0f);
             State->Stage = 1;
@@ -108,7 +114,18 @@ bool FBBPlayerControlsTest::RunTest(const FString& Parameters)
         }
         if (State->Stage == 3 && Now - State->StageAt >= 0.15)
         {
-            TestTrue(TEXT("Mouse changes look yaw"), !FMath::IsNearlyEqual(Controller->GetControlRotation().Yaw, State->StartYaw, 0.1f));
+            const float YawDelta = FMath::FindDeltaAngleDegrees(State->StartYaw, Controller->GetControlRotation().Yaw);
+            TestTrue(TEXT("Mouse yaw is responsive but controllable"), YawDelta > 0.1f && YawDelta < 10.0f);
+            State->StartPitch = Controller->GetControlRotation().Pitch;
+            SendKey(Controller, EKeys::MouseY, IE_Axis, 20.0f);
+            State->Stage = 4;
+            State->StageAt = Now;
+            return false;
+        }
+        if (State->Stage == 4 && Now - State->StageAt >= 0.15)
+        {
+            const float PitchDelta = FMath::FindDeltaAngleDegrees(State->StartPitch, Controller->GetControlRotation().Pitch);
+            TestTrue(TEXT("Mouse down looks down at a controllable rate"), PitchDelta < -0.1f && PitchDelta > -10.0f);
             return true;
         }
         return false;

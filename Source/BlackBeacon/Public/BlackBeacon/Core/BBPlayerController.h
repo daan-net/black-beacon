@@ -15,7 +15,7 @@ class UInputAction;
 class UInputMappingContext;
 class UBBPromptWidget;
 
-UCLASS()
+UCLASS(config = Game)
 class ABBlackBeaconPlayerController : public APlayerController
 {
 	GENERATED_BODY()
@@ -81,6 +81,12 @@ private:
 	UPROPERTY()
 	TObjectPtr<class ABBLighthouseController> CachedBeamController = nullptr;
 
-	UPROPERTY(EditAnywhere, Category = "BlackBeacon|Player|Aim")
-	float ManualAimSensitivity = 0.6f;
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Aim")
+	float MouseYawDegreesPerCount = 0.12f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Aim")
+	float MousePitchDegreesPerCount = 0.10f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Aim")
+	float ManualAimSensitivity = 0.12f;
 };

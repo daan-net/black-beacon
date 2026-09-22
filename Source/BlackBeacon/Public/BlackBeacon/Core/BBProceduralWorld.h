@@ -19,12 +19,21 @@
 class ABBLighthouseController;
 class ABBWeatherController;
 
-UCLASS()
+UCLASS(config = Game)
 class UBBProceduralWorld : public UObject
 {
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(config, EditDefaultsOnly, Category = "BlackBeacon|Greybox Lighting")
+	float StairFillLumens = 350.0f;
+
+	UPROPERTY(config, EditDefaultsOnly, Category = "BlackBeacon|Greybox Lighting")
+	float StairFillRadiusCm = 680.0f;
+
+	UPROPERTY(config, EditDefaultsOnly, Category = "BlackBeacon|Greybox Lighting")
+	FLinearColor StairFillColor = FLinearColor(1.0f, 0.72f, 0.48f, 1.0f);
+
 	// Entry point: spawns the whole greybox slice. Returns the number of
 	// actors spawned (sanity/coverage reporting for tests).
 	static int32 BuildSlice(UWorld* World);

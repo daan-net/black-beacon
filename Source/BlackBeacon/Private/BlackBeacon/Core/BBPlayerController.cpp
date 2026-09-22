@@ -147,8 +147,8 @@ void ABBlackBeaconPlayerController::HandleLook(const FInputActionValue& Value)
 		return;
 	}
 
-	AddYawInput(Axis.X);
-	AddPitchInput(Axis.Y);
+	AddYawInput(Axis.X * MouseYawDegreesPerCount);
+	AddPitchInput(-Axis.Y * MousePitchDegreesPerCount);
 }
 
 void ABBlackBeaconPlayerController::HandleSprintStarted()

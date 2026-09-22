@@ -2,6 +2,7 @@
 
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/PointLightComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
@@ -190,6 +191,7 @@ ABBLighthouseController* UBBProceduralWorld::SpawnLighthouse(UWorld* World)
 
 void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 {
+	const UBBProceduralWorld* const Lighting = GetDefault<UBBProceduralWorld>();
 	constexpr float kStepHeight = 24.0f;
 	constexpr int32 kStepsPerFloor = 22;
 	constexpr float kTurnPerStepDeg = 16.0f;
@@ -211,6 +213,17 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 		if (Wall)
 		{
 			Wall->SetActorEnableCollision(false);
+			// One unshadowed fill per floor keeps the greybox route readable
+			// without adding fixtures or changing stair collision.
+			UPointLightComponent* const Fill = NewObject<UPointLightComponent>(Wall, TEXT("StairFillLight"));
+			Fill->SetupAttachment(Wall->GetRootComponent());
+			Fill->SetMobility(EComponentMobility::Movable);
+			Fill->IntensityUnits = ELightUnits::Lumens;
+			Fill->SetIntensity(Lighting->StairFillLumens);
+			Fill->SetLightColor(Lighting->StairFillColor);
+			Fill->SetAttenuationRadius(Lighting->StairFillRadiusCm);
+			Fill->SetCastShadows(false);
+			Fill->RegisterComponent();
 		}
 
 		// Floor disc (cube: 100x100x100 -> scale to a thin disc).
