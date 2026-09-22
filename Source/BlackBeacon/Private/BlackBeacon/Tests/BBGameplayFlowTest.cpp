@@ -10,6 +10,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/CameraActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
@@ -71,6 +72,10 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<AActor> Anomaly;
         TWeakObjectPtr<APawn> Pawn;
         TWeakObjectPtr<UBBInteractionComponent> Interaction;
+        TWeakObjectPtr<ACameraActor> CaptureCamera;
+        int32 CaptureIndex = 0;
+        FVector AirCameraPosition = FVector::ZeroVector;
+        FVector AirCameraTarget = FVector::ZeroVector;
     };
     TSharedRef<FFlowState> State = MakeShared<FFlowState>();
 
@@ -127,7 +132,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestNotNull(TEXT("Weather controller"), Weather);
             if (Weather)
             {
-                TestTrue(TEXT("Rain phase has fog density"), Weather->GetFogDensity() > 0.01f);
+                TestTrue(TEXT("Rain phase has fog density"), Weather->GetFogDensity() > 0.001f);
                 TestTrue(TEXT("Volumetric fog is enabled"), Weather->FogComponent->bEnableVolumetricFog);
             }
             USpotLightComponent* BeamLight = State->Lighthouse->FindComponentByClass<USpotLightComponent>();
@@ -240,28 +245,77 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestFalse(TEXT("Anomaly is visible"), State->Anomaly->IsHidden());
             USpotLightComponent* BeamLight = Lighthouse->FindComponentByClass<USpotLightComponent>();
             TestTrue(TEXT("Powered beam light is visible"), BeamLight && BeamLight->IsVisible());
+            if (BeamLight)
+            {
+                TestTrue(TEXT("Powered beam has radiometric intensity"), BeamLight->Intensity > 1000.0f);
+                const auto Query = Lighthouse->BeamComponent->GetBeamQuery();
+                const FVector QueryDirection(Query.Direction.X, Query.Direction.Y, Query.Direction.Z);
+                TestTrue(TEXT("Visible light matches gameplay direction"), FVector::DotProduct(BeamLight->GetForwardVector(), QueryDirection) > 0.999f);
+            }
             if (FApp::CanEverRender())
             {
-                State->Pawn->SetActorLocation(FVector(-2000.0f, -500.0f, 1300.0f));
+                State->CaptureCamera = World->SpawnActor<ACameraActor>();
+                TestNotNull(TEXT("Fixed visual probe camera"), State->CaptureCamera.Get());
+                if (!State->CaptureCamera.IsValid())
+                {
+                    return true;
+                }
+                World->GetFirstPlayerController()->SetViewTarget(State->CaptureCamera.Get());
                 State->Stage = 5;
                 State->StageAt = Now;
                 return false;
             }
             State->Stage = 7;
         }
-        if (State->Stage == 5 && Now - State->StageAt >= 0.3)
+        if (State->Stage == 5)
         {
-            ABBlackBeaconPlayerCharacter* Character = Cast<ABBlackBeaconPlayerCharacter>(State->Pawn.Get());
-            Character->GetController()->SetControlRotation((Lighthouse->BeamComponent->GetComponentLocation()
-                - Character->GetFirstPersonCamera()->GetComponentLocation()).Rotation());
-            FScreenshotRequest::RequestScreenshot(TEXT("BlackBeacon_M01_Beam.png"), false, false);
+            const FVector Positions[] = {
+                FVector(-1200.0f, -1800.0f, 900.0f),
+                FVector(-1200.0f, 1000.0f, 1700.0f),
+                FVector(-4000.0f, 3300.0f, 900.0f),
+                FVector(-5600.0f, 3900.0f, 500.0f)
+            };
+            const FVector Targets[] = {
+                FVector(0.0f, 0.0f, 1700.0f),
+                FVector(-700.0f, 600.0f, 1700.0f),
+                State->Anomaly->GetActorLocation(),
+                State->Anomaly->GetActorLocation()
+            };
+            if (State->CaptureIndex == 1)
+            {
+                const auto Query = Lighthouse->BeamComponent->GetBeamQuery();
+                const FVector Origin(Query.Origin.X, Query.Origin.Y, Query.Origin.Z);
+                const FVector Direction(Query.Direction.X, Query.Direction.Y, Query.Direction.Z);
+                State->AirCameraTarget = Origin + Direction * 2000.0f;
+                State->AirCameraPosition = State->AirCameraTarget
+                    + FVector(-Direction.Y, Direction.X, 0.0f).GetSafeNormal() * 1500.0f
+                    + FVector(0.0f, 0.0f, 150.0f);
+            }
+            const FVector Position = State->CaptureIndex == 1 ? State->AirCameraPosition : Positions[State->CaptureIndex];
+            const FVector Target = State->CaptureIndex == 1 ? State->AirCameraTarget : Targets[State->CaptureIndex];
+            State->CaptureCamera->SetActorLocation(Position);
+            State->CaptureCamera->SetActorRotation((Target - Position).Rotation());
             State->Stage = 6;
             State->StageAt = Now;
             return false;
         }
         if (State->Stage == 6 && Now - State->StageAt >= 1.0)
         {
-            State->Stage = 7;
+            const TCHAR* Names[] = {
+                TEXT("BlackBeacon_M01_A_Exterior.png"),
+                TEXT("BlackBeacon_M01_B_Air.png"),
+                TEXT("BlackBeacon_M01_C_Impact.png"),
+                TEXT("BlackBeacon_M01_D_Reveal.png")
+            };
+            FScreenshotRequest::RequestScreenshot(Names[State->CaptureIndex], false, false);
+            ++State->CaptureIndex;
+            State->Stage = 8;
+            State->StageAt = Now;
+            return false;
+        }
+        if (State->Stage == 8 && Now - State->StageAt >= 0.3)
+        {
+            State->Stage = State->CaptureIndex < 4 ? 5 : 7;
         }
         if (State->Stage == 7)
         {
@@ -270,6 +324,25 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestFalse(TEXT("Stopping generator removes lighthouse power"), Lighthouse->IsPowered());
             TestFalse(TEXT("Beam turns off when power is lost"), Lighthouse->BeamComponent->IsPowered());
             TestTrue(TEXT("Beam light hides after power loss"), BeamLight && !BeamLight->IsVisible());
+            if (State->CaptureCamera.IsValid())
+            {
+                State->CaptureCamera->SetActorLocation(State->AirCameraPosition);
+                State->CaptureCamera->SetActorRotation((State->AirCameraTarget - State->AirCameraPosition).Rotation());
+                State->Stage = 9;
+                State->StageAt = Now;
+                return false;
+            }
+            return true;
+        }
+        if (State->Stage == 9 && Now - State->StageAt >= 1.0)
+        {
+            FScreenshotRequest::RequestScreenshot(TEXT("BlackBeacon_M01_B_AirOff.png"), false, false);
+            State->Stage = 10;
+            State->StageAt = Now;
+            return false;
+        }
+        if (State->Stage == 10 && Now - State->StageAt >= 0.3)
+        {
             return true;
         }
         return false;

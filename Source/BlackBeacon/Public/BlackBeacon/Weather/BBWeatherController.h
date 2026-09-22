@@ -18,6 +18,7 @@
 #include "BBWeatherController.generated.h"
 
 class UExponentialHeightFogComponent;
+class UDirectionalLightComponent;
 
 // UE-facing mirror of the logic-layer phase enum (config-friendly).
 UENUM(BlueprintType)
@@ -78,12 +79,18 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
 	TObjectPtr<UExponentialHeightFogComponent> FogComponent = nullptr;
 
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
+	TObjectPtr<UDirectionalLightComponent> MoonLight = nullptr;
+
 	// --- config ---
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
 	EBBWeatherPhase InitialPhase = EBBWeatherPhase::Rain;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
 	float TransitionSeconds = 8.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
+	float MoonlightLux = 1.5f;
 
 	// Palette overrides; leave phases out to keep the struct defaults.
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")

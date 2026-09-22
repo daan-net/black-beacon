@@ -22,7 +22,10 @@
 #include "BBLighthouseBeamComponent.generated.h"
 
 class USpotLightComponent;
+class UPointLightComponent;
 class UBBBeamRevealComponent;
+class UStaticMeshComponent;
+class UMaterialInstanceDynamic;
 
 UENUM(BlueprintType)
 enum class EBBBeamRotationMode : uint8
@@ -92,7 +95,19 @@ public:
 	float BeamHalfAngleDeg = 6.0f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
-	float BeamMaxIntensityLumens = 8000000.0f;
+	float BeamMaxIntensityLumens = 1500.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
+	float BeamVolumetricScatteringIntensity = 4.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
+	float BeamVisualLengthCm = 7000.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
+	float BeamVisualOpacity = 0.04f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
+	float BeamOriginGlowLumens = 300.0f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
 	FLinearColor BeamColor = FLinearColor(1.0f, 0.92f, 0.78f, 1.0f);
@@ -118,6 +133,24 @@ protected:
 	// Visible representation: the spotlight that reads as a volume in fog.
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Beam")
 	TObjectPtr<USpotLightComponent> BeamLight = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Beam")
+	TObjectPtr<UPointLightComponent> BeamOriginGlow = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Beam")
+	TObjectPtr<UStaticMeshComponent> BeamLensMesh = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Beam")
+	TObjectPtr<UStaticMeshComponent> BeamLensSupport = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Beam")
+	TObjectPtr<USceneComponent> BeamVisualPivot = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Beam")
+	TObjectPtr<UStaticMeshComponent> BeamVisualMesh = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> BeamVisualMaterial = nullptr;
 
 private:
 	bool UpdateRotation(float DeltaTime);

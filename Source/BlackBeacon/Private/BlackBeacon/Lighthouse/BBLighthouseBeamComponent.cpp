@@ -2,7 +2,12 @@
 
 #include "Components/LightComponentBase.h"
 #include "Components/SpotLightComponent.h"
+#include "Components/PointLightComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInterface.h"
+#include "UObject/ConstructorHelpers.h"
 
 #include "BlackBeacon/Lighthouse/BBBeamRevealComponent.h"
 
@@ -11,14 +16,63 @@ UBBLighthouseBeamComponent::UBBLighthouseBeamComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.TickGroup = TG_PrePhysics;
 
-	// Visible representation: a movable spotlight. In fog (volumetric fog
-	// enabled in DefaultEngine.ini) this reads as a solid beam; the final
-	// lens/glow presentation in 0.2 binds Niagara/light-shaft assets off
-	// the same intensity/color/cone values this component drives.
+	BeamVisualPivot = CreateDefaultSubobject<USceneComponent>(TEXT("BeamVisualPivot"));
+	BeamVisualPivot->SetupAttachment(this);
+
 	BeamLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("BeamLight"));
-	BeamLight->SetupAttachment(this);
+	BeamLight->SetupAttachment(BeamVisualPivot);
 	BeamLight->SetMobility(EComponentMobility::Movable);
 	BeamLight->SetCastShadows(true);
+	BeamOriginGlow = CreateDefaultSubobject<UPointLightComponent>(TEXT("BeamOriginGlow"));
+	BeamOriginGlow->SetupAttachment(this);
+	BeamOriginGlow->SetCastShadows(false);
+	BeamLensMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BeamLensMesh"));
+	BeamLensMesh->SetupAttachment(this);
+	BeamLensMesh->SetMobility(EComponentMobility::Movable);
+	BeamLensMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BeamLensMesh->SetCastShadow(false);
+	BeamLensMesh->SetRelativeScale3D(FVector(0.8f));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> LensSphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> LensMaterial(TEXT("/Game/BlackBeacon/Materials/M_LanternLens.M_LanternLens"));
+	if (LensSphere.Succeeded())
+	{
+		BeamLensMesh->SetStaticMesh(LensSphere.Object);
+	}
+	if (LensMaterial.Succeeded())
+	{
+		BeamLensMesh->SetMaterial(0, LensMaterial.Object);
+	}
+	// The runtime greybox has no authored lantern housing yet; a narrow mast
+	// grounds the light source on the tower without affecting traversal.
+	BeamLensSupport = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BeamLensSupport"));
+	BeamLensSupport->SetupAttachment(this);
+	BeamLensSupport->SetMobility(EComponentMobility::Movable);
+	BeamLensSupport->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BeamLensSupport->SetCastShadow(false);
+	BeamLensSupport->SetRelativeLocation(FVector(0.0f, 0.0f, -210.0f));
+	BeamLensSupport->SetRelativeScale3D(FVector(0.5f, 0.5f, 4.2f));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SupportCylinder(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+	if (SupportCylinder.Succeeded())
+	{
+		BeamLensSupport->SetStaticMesh(SupportCylinder.Object);
+	}
+
+	BeamVisualMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BeamVisualMesh"));
+	BeamVisualMesh->SetupAttachment(BeamVisualPivot);
+	BeamVisualMesh->SetMobility(EComponentMobility::Movable);
+	BeamVisualMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BeamVisualMesh->SetCastShadow(false);
+	BeamVisualMesh->SetReceivesDecals(false);
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cone(TEXT("/Engine/BasicShapes/Cone.Cone"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> VolumeMaterial(TEXT("/Game/BlackBeacon/Materials/M_BeamShaft.M_BeamShaft"));
+	if (Cone.Succeeded())
+	{
+		BeamVisualMesh->SetStaticMesh(Cone.Object);
+	}
+	if (VolumeMaterial.Succeeded())
+	{
+		BeamVisualMesh->SetMaterial(0, VolumeMaterial.Object);
+	}
 }
 
 void UBBLighthouseBeamComponent::BeginPlay()
@@ -33,7 +87,31 @@ void UBBLighthouseBeamComponent::BeginPlay()
 		BeamLight->SetAttenuationRadius(BeamRangeCm);
 		BeamLight->SetOuterConeAngle(BeamHalfAngleDeg);
 		BeamLight->SetInnerConeAngle(BeamHalfAngleDeg * 0.5f);
-		BeamLight->SetVolumetricScatteringIntensity(bVolumetricLight ? 1.0f : 0.0f);
+		BeamLight->SetVolumetricScatteringIntensity(bVolumetricLight ? BeamVolumetricScatteringIntensity : 0.0f);
+	}
+	if (BeamOriginGlow)
+	{
+		BeamOriginGlow->IntensityUnits = ELightUnits::Lumens;
+		BeamOriginGlow->SetIntensity(BeamOriginGlowLumens);
+		BeamOriginGlow->SetLightColor(BeamColor);
+		BeamOriginGlow->SetAttenuationRadius(1800.0f);
+		BeamOriginGlow->SetVolumetricScatteringIntensity(0.5f);
+	}
+	if (BeamVisualMesh)
+	{
+		const float VisualLength = FMath::Max(BeamVisualLengthCm, 100.0f);
+		const float EndRadius = FMath::Tan(FMath::DegreesToRadians(BeamHalfAngleDeg)) * VisualLength;
+		BeamVisualMesh->SetRelativeLocation(FVector(VisualLength * 0.5f, 0.0f, 0.0f));
+		BeamVisualMesh->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
+		BeamVisualMesh->SetRelativeScale3D(FVector(EndRadius / 50.0f, EndRadius / 50.0f, VisualLength / 100.0f));
+		BeamVisualMaterial = BeamVisualMesh->CreateDynamicMaterialInstance(0);
+		if (BeamVisualMaterial)
+		{
+			BeamVisualMaterial->SetScalarParameterValue(TEXT("BeamOpacity"), BeamVisualOpacity);
+			BeamVisualMaterial->SetScalarParameterValue(TEXT("VisualLengthCm"), VisualLength);
+			BeamVisualMaterial->SetScalarParameterValue(TEXT("BeamTanHalfAngle"), FMath::Tan(FMath::DegreesToRadians(BeamHalfAngleDeg)));
+			BeamVisualMaterial->SetVectorParameterValue(TEXT("BeamTint"), BeamColor);
+		}
 	}
 
 	if (bStartInAutoRotation)
@@ -227,11 +305,25 @@ void UBBLighthouseBeamComponent::ApplyVisibleState()
 
 	const bool bUseful = bPowered && IntensityCurrent > 0.01f;
 	BeamLight->SetVisibility(bUseful);
+	BeamOriginGlow->SetVisibility(bUseful);
+	BeamLensMesh->SetVisibility(bUseful);
 
 	// Scale the visible light with current intensity (lumens fall off with
 	// flicker sag so the fog volume "breathes" with the machine).
 	BeamLight->SetIntensity(BeamMaxIntensityLumens * IntensityCurrent);
-	BeamLight->SetRelativeRotation(FRotator(CurrentPitchDeg, CurrentYawDeg, 0.0f));
+	BeamVisualPivot->SetRelativeRotation(FRotator(CurrentPitchDeg, CurrentYawDeg, 0.0f));
+	if (BeamVisualMesh)
+	{
+		BeamVisualMesh->SetVisibility(bUseful);
+	}
+	if (BeamVisualMaterial)
+	{
+		BeamVisualMaterial->SetScalarParameterValue(TEXT("BeamOpacity"), BeamVisualOpacity * IntensityCurrent);
+		const FVector Origin = GetComponentLocation();
+		const FVector Direction = FRotator(CurrentPitchDeg, CurrentYawDeg, 0.0f).Vector();
+		BeamVisualMaterial->SetVectorParameterValue(TEXT("BeamOriginWS"), FLinearColor(Origin.X, Origin.Y, Origin.Z, 1.0f));
+		BeamVisualMaterial->SetVectorParameterValue(TEXT("BeamDirectionWS"), FLinearColor(Direction.X, Direction.Y, Direction.Z, 1.0f));
+	}
 }
 
 BlackBeacon::Logics::FBBBeamQuery UBBLighthouseBeamComponent::GetBeamQuery() const

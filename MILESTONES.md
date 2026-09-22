@@ -31,9 +31,10 @@ Build the UE 5.8.2 module, run the greybox slice, and verify the complete player
 - [x] First anomaly reveals and persists per current config (in-engine flow automation)
 - [x] Whole objective chain completes; HUD prompt updates (in-engine flow automation)
 
-Remaining check: inspect a readable beam through fog in the renderer. The flow
-automation reaches the lantern volume by teleporting the pawn; the separate stair
-traversal test moves the character physically across all 66 steps.
+Rendered captures now show the beam on/off, impact, and anomaly reveal. Review the
+moving beam directly in play and compare beam-on/off rendering cost before accepting
+its fog appearance. The flow automation reaches the lantern volume by teleporting
+the pawn; the separate stair traversal test moves the character across all 66 steps.
 
 ## M0.2 — Vertical slice 0.1 polish (first "playable prototype")
 

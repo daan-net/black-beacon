@@ -11,6 +11,17 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 ---
 
+## 2026-09-22 — M0.1 Phase B — beam readability pass in progress
+
+- **User-visible:** connected the analytic additive shaft material to the lighthouse visual mesh and synchronized its world-space origin, direction, length, and cone angle with the gameplay beam. Kept BeamReveal queries and rotation behavior unchanged.
+- **User-visible:** reduced visual shaft opacity to 0.025 and spotlight intensity to 1500 lumens. The rendered B_Air/B_AirOff pair shows reliable ON/OFF visibility; C_Impact and D_Reveal have substantially less clipping. The beam still shows a crisp geometric edge and A_Exterior remains too dark, so visual acceptance and M0.1 closure are pending.
+- UE 5.8.2 `BlackBeaconEditor Linux Development` built; rendered Vulkan `BlackBeacon.M01.GameplayFlow` passed and produced all five 1920×1080 captures on RTX 2060. `./Tools/validate.sh` passed, including the 45 logic checks. No M1 work was started.
+- **User-visible:** softened the shaft material by fading its silhouette according to view angle and optical thickness; set final opacity to 0.04. Added a dim movable moon light to the weather controller and a powered source glow to the beam component so the exterior tower and beam origin remain legible in the greybox night scene.
+- Rebuilt `BlackBeaconEditor`; the complete rendered `BlackBeacon.M01` suite passed (GameplayFlow, PlayerControls, StairTraversal). The five captures were regenerated. An RTX 2060 CSV capture measured 5.59 ms median frame time and 5.32 ms median GPU time over 3000 frames after the first 500, but was not an isolated beam-on/off benchmark. Direct visual review of the moving beam remains the M0.1 gate.
+- **User-visible:** added a small emissive lens at the beam query origin. It switches with beam power, making the source readable in the exterior capture. The lens has no collision and adds one unshadowed mesh draw; authored lantern housing is still future work.
+- **User-visible:** grounded the source lens on the tower with a narrow non-colliding greybox mast. It changes only the exterior visual read and does not alter the beam query or stair collision.
+- The full three-test rendered M0.1 suite passed again after the mast change. A longer CSV profiling attempt ended at the start of GameplayFlow and did not produce a usable beam-on/off comparison; the narrower earlier frame-time sample remains the available performance evidence.
+
 ## 2026-09-22 — M0.1 Phase B — runtime greybox bring-up
 
 - Corrected the reflected GameMode config path. The real `-game` launch then

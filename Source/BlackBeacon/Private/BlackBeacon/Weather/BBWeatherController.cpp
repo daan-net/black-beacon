@@ -1,6 +1,7 @@
 #include "BlackBeacon/Weather/BBWeatherController.h"
 
 #include "Components/ExponentialHeightFogComponent.h"
+#include "Components/DirectionalLightComponent.h"
 
 ABBWeatherController::ABBWeatherController()
 {
@@ -10,11 +11,21 @@ ABBWeatherController::ABBWeatherController()
 	FogComponent = CreateDefaultSubobject<UExponentialHeightFogComponent>(TEXT("FogComponent"));
 	RootComponent = FogComponent;
 	FogComponent->SetVolumetricFog(true);
+	FogComponent->SetVolumetricFogScatteringDistribution(0.0f);
+	FogComponent->SetVolumetricFogDistance(10000.0f);
+
+	MoonLight = CreateDefaultSubobject<UDirectionalLightComponent>(TEXT("MoonLight"));
+	MoonLight->SetupAttachment(FogComponent);
+	MoonLight->SetMobility(EComponentMobility::Movable);
+	MoonLight->SetRelativeRotation(FRotator(-35.0f, 35.0f, 0.0f));
+	MoonLight->SetLightColor(FLinearColor(0.32f, 0.48f, 0.75f));
+	MoonLight->SetCastShadows(false);
 }
 
 void ABBWeatherController::BeginPlay()
 {
 	Super::BeginPlay();
+	MoonLight->SetIntensity(MoonlightLux);
 	BuildInterpolatorPalette();
 	SetWeather(InitialPhase, /*InTransitionSeconds=*/0.0f);
 	ApplyToFog();
