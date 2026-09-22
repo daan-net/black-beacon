@@ -246,11 +246,11 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 		}
 	}
 
-	// Lantern room floor (top).
+	// A compact landing leaves the stair opening clear and reaches the control.
 	SpawnMeshActor(
 		World, kMeshCube,
-		FTransform(FRotator::ZeroRotator, FVector(0, 0, kTowerFloorHeightCm * 3.0f)),
-		FVector(kTowerRadiusCm * 2.6f / 100.0f, kTowerRadiusCm * 2.6f / 100.0f, 0.2f),
+		FTransform(FRotator::ZeroRotator, FVector(200.0f, 0.0f, kTowerFloorHeightCm * 3.0f)),
+		FVector(2.4f, 2.4f, 0.2f),
 		TEXT("BB_LanternFloor"));
 }
 

@@ -26,14 +26,14 @@ Build the UE 5.8.2 module, run the greybox slice, and verify the complete player
 - [x] `BlackBeacon` module compiles with zero errors (warnings avoided)
 - [x] Play the greybox slice: walk/look/sprint/crouch work (in-engine input automation)
 - [x] Interact with generator → spin-up → power on (in-engine flow automation)
-- [ ] Climb to lantern room, start the beam, manual rotation works
+- [x] Climb to lantern room, start the beam, manual rotation works (stair traversal and gameplay-flow automation)
 - [ ] Beam is visibly volumetric through fog
 - [x] First anomaly reveals and persists per current config (in-engine flow automation)
 - [x] Whole objective chain completes; HUD prompt updates (in-engine flow automation)
 
-Remaining checks: walk the complete stair route in editor Play and inspect the beam
-through fog from a side viewpoint. The flow automation reaches the lantern volume by
-teleporting the pawn, so it does not establish physical stair traversal.
+Remaining check: inspect a readable beam through fog in the renderer. The flow
+automation reaches the lantern volume by teleporting the pawn; the separate stair
+traversal test moves the character physically across all 66 steps.
 
 ## M0.2 — Vertical slice 0.1 polish (first "playable prototype")
 

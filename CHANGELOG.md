@@ -34,8 +34,15 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
   the flow also passed with Vulkan on the NVIDIA RTX 2060. It exercises pawn
   overlaps, trace interactions, prompts, generator spin-up and power loss,
   manual beam aim, persistent reveal, and completion of all objectives.
-- Physical stair traversal and final visual readability remain open M0.1
-  acceptance checks. No M1 work was started.
+- Final visual readability remains an open M0.1 acceptance check. No M1 work
+  was started.
+
+### Stair traversal follow-up
+
+- Replaced the obstructing full lantern floor with a compact landing beside
+  the control. Added `BlackBeacon.M01.StairTraversal`, which moved the actual
+  character over all 66 greybox steps to lantern height in the engine. All
+  three M0.1 automation tests pass together. Beam readability remains open.
 
 
 ## 2026-09-21 — M0.1 Phase A — UE 5.8.2 bring-up
