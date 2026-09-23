@@ -188,3 +188,9 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
   audio and authored content are out of 0.1 scope.
 - Full UE build/run status is tracked in `CURRENT_STATE.md`; M0.1 acceptance
   criteria live in `MILESTONES.md`.
+
+## 2026-09-23 - M0.2 Storm Rain Presentation (Aesthetic Polish)
+- Re-engineered weather rain presentation to use a dense 11x11 grid of lightweight fountain emitters tracking the camera to fill the local volume seamlessly.
+- Applied Z-scaling to particles to simulate long, fast-moving rain streaks while maintaining RTX 2060 performance (using unscalable C++ attachments).
+- Rotated particle emitters to point straight down, overcoming the fountain burst limits for sustained atmospheric downpours.
+- Implemented per-emitter vertical raycasting to cull rain components explicitly over rooftops, stopping indoor rain natively without relying on a global toggle.
