@@ -18,7 +18,9 @@ void UBBObjectiveTriggerComponent::OnRegister()
 	{
 		if (AActor* const Owner = GetOwner())
 		{
-			Owner->OnActorBeginOverlap.AddDynamic(this, &UBBObjectiveTriggerComponent::HandleActorBeginOverlap);
+			// Authored maps can serialize the editor-time binding. AddUnique keeps
+			// registration idempotent when that component is loaded for play.
+			Owner->OnActorBeginOverlap.AddUniqueDynamic(this, &UBBObjectiveTriggerComponent::HandleActorBeginOverlap);
 		}
 	}
 }

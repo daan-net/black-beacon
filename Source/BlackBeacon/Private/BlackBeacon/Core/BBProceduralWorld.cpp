@@ -47,11 +47,13 @@ AActor* UBBProceduralWorld::SpawnMeshActor(
 	}
 
 	USceneComponent* const Root = NewObject<USceneComponent>(Actor, TEXT("Root"));
+	Actor->AddInstanceComponent(Root);
 	Actor->SetRootComponent(Root);
 	Root->SetWorldTransform(Transform);
 	Root->RegisterComponent();
 
 	UStaticMeshComponent* const Mesh = NewObject<UStaticMeshComponent>(Actor, TEXT("Mesh"));
+	Actor->AddInstanceComponent(Mesh);
 	Mesh->SetupAttachment(Root);
 	Mesh->SetStaticMesh(LoadBasicShape(BasicShapePath));
 	Mesh->SetWorldScale3D(MeshScale);
@@ -88,6 +90,7 @@ AActor* UBBProceduralWorld::SpawnTriggerVolume(
 	}
 
 	UBoxComponent* const Box = NewObject<UBoxComponent>(Volume, TEXT("TriggerBox"));
+	Volume->AddInstanceComponent(Box);
 	Volume->SetRootComponent(Box);
 	Box->SetWorldLocation(Center);
 	Box->SetBoxExtent(HalfExtent);
@@ -98,6 +101,7 @@ AActor* UBBProceduralWorld::SpawnTriggerVolume(
 	Box->RegisterComponent();
 
 	UBBObjectiveTriggerComponent* const Trigger = NewObject<UBBObjectiveTriggerComponent>(Volume, TEXT("ObjectiveTrigger"));
+	Volume->AddInstanceComponent(Trigger);
 	Trigger->ObjectiveId = ObjectiveId;
 	Trigger->TriggerType = EBBObjectiveTriggerType::EnterVolume;
 	Trigger->bPlayerOnly = bPlayerOnly;
@@ -235,6 +239,7 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 			// One unshadowed fill per floor keeps the greybox route readable
 			// without adding fixtures or changing stair collision.
 			UPointLightComponent* const Fill = NewObject<UPointLightComponent>(Wall, TEXT("StairFillLight"));
+			Wall->AddInstanceComponent(Fill);
 			Fill->SetupAttachment(Wall->GetRootComponent());
 			Fill->SetMobility(EComponentMobility::Movable);
 			Fill->IntensityUnits = ELightUnits::Lumens;
@@ -330,6 +335,7 @@ void UBBProceduralWorld::SpawnGeneratorAnnex(UWorld* World)
 	if (GenActor)
 	{
 		UBBGeneratorComponent* const Generator = NewObject<UBBGeneratorComponent>(GenActor, TEXT("Generator"));
+		GenActor->AddInstanceComponent(Generator);
 		Generator->RegisterComponent();
 	}
 }
@@ -348,6 +354,7 @@ void UBBProceduralWorld::SpawnRevealAnomaly(UWorld* World)
 	if (Ruin)
 	{
 		UBBBeamRevealComponent* const Reveal = NewObject<UBBBeamRevealComponent>(Ruin, TEXT("BeamReveal"));
+		Ruin->AddInstanceComponent(Reveal);
 		Reveal->RegisterComponent();
 	}
 }

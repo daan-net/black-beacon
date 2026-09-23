@@ -81,7 +81,7 @@ Source/BlackBeacon/           single runtime module
   Private/BlackBeacon/        mirrors Public one-to-one
 Tests/                        CMake + standalone harness → bb_logic_tests (45 checks)
 Tools/validate.sh             local gate: JSON/ini sanity + logic tests
-Content/                      small authored material set; world remains code-built
+Content/BlackBeacon/          persistent M0.2 map + small authored material set
 ```
 
 Design notes you'll need:
@@ -111,7 +111,7 @@ Design notes you'll need:
 - A reveal-machine unit test failed because the *test* left the beam unpowered;
   machine logic was correct. Keep `bPowered = true` in beam fixtures.
 
-## 6. First session with an engine: M0.1 checklist
+## 6. Verified M0.1 checklist
 
 1. `./Tools/validate.sh` → green.
 2. Install/associate engine (§3); generate project files.

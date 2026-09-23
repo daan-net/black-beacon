@@ -11,6 +11,13 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 ---
 
+## 2026-09-23 — M0.2 — persistent vertical-slice map
+
+- Added `/Game/BlackBeacon/Maps/L_BlackBeacon_M02` as the authored game and editor startup map, containing the verified M0.1 actors and PlayerStart. Disabled runtime procedural bootstrap by default; the C++ builder remains available as development tooling.
+- Made dynamically created builder components persistent instance components so generated actors serialize correctly into an Unreal map.
+- Made objective overlap registration idempotent. The first authored-map run exposed a duplicate serialized delegate binding; `AddUniqueDynamic` removes the startup ensure without changing trigger behavior.
+- UE 5.8.2 `BlackBeaconEditor` built successfully. The complete rendered Vulkan suite passed 3/3 from the saved map with zero warnings or errors on the RTX 2060. The map is `TESTED`; its geometry remains `PLACEHOLDER` pending M0.2 polish.
+
 ## 2026-09-23 — M0.1 Phase B — reference-driven beam refinement
 
 - **Milestone complete:** direct play review accepted the moving beam, generator flow, player controls, revised stair entrance, and transitions. M0.1 now has a real UE 5.8.2 build, stable project startup, 3/3 rendered Vulkan automation tests, and 45/45 engine-independent checks. M0.2 is next; no broad M1 work has started.

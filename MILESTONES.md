@@ -36,13 +36,13 @@ accepted its moving fog appearance and the corrected stair entrance and transiti
 The flow automation reaches the lantern volume by teleporting the pawn; the separate
 stair traversal test moves the character across all 84 steps.
 
-## M0.2 — Vertical slice 0.1 polish (first "playable prototype")
+## M0.2 — Vertical slice 0.1 polish (in progress)
 
 Authored greybox level (first real `.umap`), weather storm state, rain Niagara,
 prompt/HUD polish, save/load seam, audio placeholders, performance sanity check.
 
 **Acceptance (M0.2)**
-- [ ] Authored map replaces procedural builder as default (builder kept as dev tool)
+- [x] Authored map replaces procedural builder as default (builder kept as dev tool)
 - [ ] Storm + fog + rain active; beam readable in all weather states
 - [ ] Save/load restores generator/beam/objective state
 - [ ] Stable 60+ fps on target PC config at reasonable settings

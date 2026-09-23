@@ -1,6 +1,6 @@
 # BLACK BEACON — Current State
 
-**Last updated:** 2026-09-23 · **Milestone:** M0.1 complete
+**Last updated:** 2026-09-23 · **Milestone:** M0.2 in progress
 
 ## Verified on this machine
 
@@ -17,12 +17,13 @@
 | Physical greybox stair climb | `TESTED` | Review of `Debug_Manual/Screencast From 2026-09-23 08-58-12.mp4` exposed an awkward doorway gap and treads intersecting the central column. The 84-step route now has a doorway landing, 220 cm path radius, 180 cm radial tread depth, and a smaller 70 cm core radius, leaving 60 cm of clear inner separation. StairTraversal reached lantern height and remained grounded; direct play review accepted the revised entrance and transitions. |
 | Configured rain fog and spotlight settings | `TESTED` | GameplayFlow checks fog, spotlight scattering, visibility, and gameplay beam direction. The analytic shaft uses wider silhouette falloff, low-frequency world-space mist variation, and a warmer linear light colour based on the local `Manual_Visuals` references. Spotlight intensity is 1200 lumens. Five rendered captures show a clear B_Air versus B_AirOff difference, and direct review of the supplied moving video confirmed that the beam starts, reads, and rotates correctly. |
 | M0.1 in-engine regression | `TESTED` | After the video-driven stair correction, UE 5.8.2 `BlackBeaconEditor` built and the full rendered Vulkan `BlackBeacon.M01` suite passed 3/3 on the RTX 2060: GameplayFlow, PlayerControls, and StairTraversal, with zero warnings or errors. `./Tools/validate.sh` also passed all 45 logic checks. |
+| Persistent M0.2 map | `TESTED` | `/Game/BlackBeacon/Maps/L_BlackBeacon_M02` is now the game and editor startup map. It contains the verified slice actors and PlayerStart, while runtime procedural bootstrap is disabled. The complete rendered Vulkan M0.1 suite passed 3/3 from this saved map with zero warnings or errors. |
 | Plain C++ logic and project sanity | `TESTED` | `./Tools/validate.sh`: project checks green; 45/45 logic tests pass. |
 | Procedural world geometry | `PLACEHOLDER` | Runtime greybox is correctly positioned and its objective volumes work; it remains a development stand-in for an authored level. |
 | Save serialization and authored visuals | `PLANNED` | Later milestones; not part of this bring-up. |
 
 ## M0.1 acceptance result
 
-M0.1 is complete. The real UE 5.8.2 editor target builds, the project starts, the full gameplay loop and physical stair route pass rendered Vulkan automation, the moving beam is readable through fog, and direct play review accepted the corrected stair entrance and floor transitions. `./Tools/validate.sh` remains green with 45/45 logic checks. The procedural geometry remains a `PLACEHOLDER`; M0.2 is the next scoped milestone.
+M0.1 is complete. M0.2 has begun with the first persistent Unreal map, replacing the runtime-generated default world while preserving the C++ builder as a development tool. The map geometry remains a `PLACEHOLDER`. Remaining M0.2 work is storm/rain presentation, HUD polish, save/load restoration, and a final performance pass.
 
 The UE 5.8.2 installed build is `/home/a1/WORK/_TOOLS/UE_5.8.2` (`~/UnrealEngine` points to it). Engine, build, logs, screenshots, and temporary test output are excluded from git.

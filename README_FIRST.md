@@ -32,7 +32,7 @@ BLACK_BEACON/
 │   └── Private/BlackBeacon/      #   implementations
 ├── Tests/                        # Standalone logic-layer unit tests (builds WITHOUT UE)
 ├── Tools/validate.sh             # Local validation: JSON/ini checks + logic tests
-├── Content/                      # Unreal content folders (no .uassets yet — editor-created later)
+├── Content/BlackBeacon/          # Persistent M0.2 map and the small authored material set
 └── *.md                          # This documentation set (see below)
 ```
 

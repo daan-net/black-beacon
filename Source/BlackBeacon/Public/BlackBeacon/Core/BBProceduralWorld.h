@@ -36,6 +36,7 @@ public:
 
 	// Entry point: spawns the whole greybox slice. Returns the number of
 	// actors spawned (sanity/coverage reporting for tests).
+	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Greybox", meta = (WorldContext = "World"))
 	static int32 BuildSlice(UWorld* World);
 
 	// Individual pieces (independent so an authored map could call these
