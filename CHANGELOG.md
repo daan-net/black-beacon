@@ -286,3 +286,19 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
 - UE 5.8.2 Linux Development build succeeded. Vulkan GameplayFlow passed with zero
   errors/warnings, including partial reveal, fade, objective progression, and restore.
   `./Tools/validate.sh` passed with 45/45 logic checks.
+
+## 2026-09-23 — M1 — authored hull and reveal evidence
+
+- Replaced the blockout-only hull with the 952-triangle Shipwreck Hull Section from
+  3DAssets.dev, oriented broadside to the lighthouse beam. Retained separately tagged
+  ribs and a broken mast so the existing BeamReveal query can reveal parts progressively.
+- Added a project-generated weathered hull albedo and disabled unnecessary Nanite data
+  on the imported meshes. This avoids a Nanite material fallback for the small mesh.
+- Added matched real Vulkan captures from one camera with the reveal visible and after it
+  fades: `BlackBeacon_M01_D_Reveal.png` and `BlackBeacon_M01_D_RevealOff.png`.
+- Recorded the original GLB, CC0 source, generated texture provenance, and checksums in
+  `ASSET_PROVENANCE.md`.
+- UE 5.8.2 Linux Development build succeeded. The rendered Vulkan M01 suite passed 3/3
+  with zero test warnings/errors; `./Tools/validate.sh` passed with 45/45 logic checks.
+  M1 remains open because the surrounding environment and reveal audio are still
+  placeholder/planned, and the five-second automation warm-up remains below 60 FPS.

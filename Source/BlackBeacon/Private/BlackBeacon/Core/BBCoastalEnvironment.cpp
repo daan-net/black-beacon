@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/Texture2D.h"
 #include "TimerManager.h"
 #include "EngineUtils.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -13,6 +14,7 @@
 
 #include "BlackBeacon/Power/BBGeneratorComponent.h"
 #include "BlackBeacon/Lighthouse/BBBeamRevealComponent.h"
+#include "BlackBeacon/Lighthouse/BBLighthouseController.h"
 
 namespace
 {
@@ -22,9 +24,9 @@ namespace
 	constexpr const TCHAR* PLANE_MESH = TEXT("/Engine/BasicShapes/Plane");
 	constexpr const TCHAR* COAST_MATERIAL = TEXT("/Game/BlackBeacon/Materials/M_CoastSurface.M_CoastSurface");
 	constexpr const TCHAR* BASALT_MATERIAL = TEXT("/Game/BlackBeacon/Materials/M_WetBasaltRock.M_WetBasaltRock");
+	constexpr const TCHAR* WRECK_HULL_TEXTURE = TEXT("/Game/BlackBeacon/Textures/T_WreckHullAlbedo.T_WreckHullAlbedo");
 	constexpr const TCHAR* OCEAN_MATERIAL = TEXT("/Engine/EngineMaterials/WaterMaterial.DefaultWaterMaterial");
 	constexpr float GENERATOR_SHED_LIGHT_LUMENS = 850.0f;
-	constexpr float REVEALED_RUIN_VISUAL_SCALE = 6.0f;
 
 	struct FCoastShape
 	{
@@ -529,47 +531,61 @@ void ABBCoastalEnvironment::BuildRevealedRuin()
 		}
 	}
 
-	UStaticMesh* const Cube = LoadObject<UStaticMesh>(nullptr, CUBE_MESH);
 	UMaterialInterface* const StoneMaterial = LoadObject<UMaterialInterface>(nullptr, BASALT_MATERIAL);
-	if (!Cube || !StoneMaterial)
+	UTexture2D* const HullAlbedo = LoadObject<UTexture2D>(nullptr, WRECK_HULL_TEXTURE);
+	if (!StoneMaterial)
 	{
 		return;
 	}
 
-	// A wrecked trawler reads more clearly at lighthouse distance than the old
-	// isolated columns: a broken hull line, exposed ribs, and one snapped mast.
-	// Keep every piece on the existing reveal seam so the beam still uncovers it
-	// in sections rather than switching the whole actor on at once.
-	const FCoastShape RuinParts[] = {
-		{{   0.0f,    0.0f,  35.0f}, { 0.0f,  0.0f,  0.0f}, {4.6f, 1.08f, 0.42f}}, // keel
-		{{ -10.0f,  -72.0f,  65.0f}, { 0.0f,  0.0f, -2.0f}, {3.8f, 0.16f, 0.22f}},
-		{{ -25.0f,   72.0f,  65.0f}, { 0.0f,  0.0f,  3.0f}, {3.5f, 0.16f, 0.22f}},
-		{{ 220.0f,    0.0f,  52.0f}, { 0.0f,  0.0f,  0.0f}, {1.15f, 0.74f, 0.34f}}, // broken bow
-		{{-215.0f,    0.0f,  35.0f}, { 0.0f,  0.0f, -4.0f}, {0.82f, 0.86f, 0.34f}}, // stern
-		{{-155.0f,    0.0f,  94.0f}, { 0.0f,  0.0f, 12.0f}, {0.16f, 0.92f, 0.20f}},
-		{{ -65.0f,    0.0f,  98.0f}, { 0.0f,  0.0f,-10.0f}, {0.14f, 0.98f, 0.18f}},
-		{{  35.0f,    0.0f,  94.0f}, { 0.0f,  0.0f, 16.0f}, {0.16f, 0.91f, 0.19f}},
-		{{ 130.0f,    0.0f,  82.0f}, { 0.0f,  0.0f,-18.0f}, {0.15f, 0.78f, 0.18f}},
-		{{-120.0f,  -78.0f, 112.0f}, { 0.0f,  0.0f, -8.0f}, {1.20f, 0.14f, 0.14f}},
-		{{  -5.0f,   78.0f, 116.0f}, { 0.0f,  0.0f,  9.0f}, {1.35f, 0.14f, 0.14f}},
-		{{-105.0f,    0.0f, 270.0f}, { 7.0f,  0.0f, -5.0f}, {0.18f, 0.20f, 3.10f}}, // broken mast
-		{{-100.0f,   10.0f, 430.0f}, { 0.0f,  0.0f, 24.0f}, {1.45f, 0.14f, 0.14f}},
-		{{ -55.0f,  -10.0f, 285.0f}, {28.0f,  0.0f,  0.0f}, {1.70f, 0.12f, 0.12f}}, // snapped spar
-		{{ 155.0f,   35.0f, 175.0f}, {-8.0f,  0.0f, 27.0f}, {1.00f, 0.13f, 0.13f}}
+	// This CC0 hull section provides authored curvature and frame detail; each
+	// imported material mesh remains a separate beam-reveal piece.
+	const TCHAR* const WreckMeshPaths[] = {
+		TEXT("/Game/BlackBeacon/Meshes/blackbeacon_wreck_hull/StaticMeshes/shipwreck-hull-section_0.shipwreck-hull-section_0"),
+		TEXT("/Game/BlackBeacon/Meshes/blackbeacon_wreck_hull/StaticMeshes/shipwreck-hull-section_1.shipwreck-hull-section_1"),
+		TEXT("/Game/BlackBeacon/Meshes/blackbeacon_wreck_hull/StaticMeshes/shipwreck-hull-section_2.shipwreck-hull-section_2"),
+		TEXT("/Game/BlackBeacon/Meshes/blackbeacon_wreck_hull/StaticMeshes/shipwreck-hull-section_3.shipwreck-hull-section_3")
+	};
+	UStaticMesh* const Cube = LoadObject<UStaticMesh>(nullptr, CUBE_MESH);
+	float WreckYawOffset = 0.0f;
+	for (TActorIterator<ABBLighthouseController> It(World); It; ++It)
+	{
+		if (It->BeamComponent)
+		{
+			const FVector ToWreck = Ruin->GetActorLocation() - It->BeamComponent->GetComponentLocation();
+			WreckYawOffset = ToWreck.Rotation().Yaw + 90.0f - Ruin->GetActorRotation().Yaw;
+			break;
+		}
+	}
+	const FCoastShape ExposedWreckFrame[] = {
+		{{-155.0f,   0.0f,  94.0f}, {0.0f, 0.0f,  12.0f}, {0.16f, 0.92f, 0.20f}},
+		{{ -65.0f,   0.0f,  98.0f}, {0.0f, 0.0f, -10.0f}, {0.14f, 0.98f, 0.18f}},
+		{{  35.0f,   0.0f,  94.0f}, {0.0f, 0.0f,  16.0f}, {0.16f, 0.91f, 0.19f}},
+		{{ 130.0f,   0.0f,  82.0f}, {0.0f, 0.0f, -18.0f}, {0.15f, 0.78f, 0.18f}},
+		{{-120.0f, -78.0f, 112.0f}, {0.0f, 0.0f,  -8.0f}, {1.20f, 0.14f, 0.14f}},
+		{{  -5.0f,  78.0f, 116.0f}, {0.0f, 0.0f,   9.0f}, {1.35f, 0.14f, 0.14f}},
+		{{-105.0f,   0.0f, 270.0f}, {7.0f, 0.0f,  -5.0f}, {0.18f, 0.20f, 3.10f}},
+		{{-100.0f,  10.0f, 430.0f}, {0.0f, 0.0f,  24.0f}, {1.45f, 0.14f, 0.14f}},
+		{{ -55.0f, -10.0f, 285.0f}, {28.0f, 0.0f, 0.0f}, {1.70f, 0.12f, 0.12f}},
+		{{ 155.0f,  35.0f, 175.0f}, {-8.0f, 0.0f, 27.0f}, {1.00f, 0.13f, 0.13f}}
 	};
 
-	for (int32 Index = 0; Index < UE_ARRAY_COUNT(RuinParts); ++Index)
+	int32 CreatedWreckParts = 0;
+	for (int32 Index = 0; Index < UE_ARRAY_COUNT(WreckMeshPaths); ++Index)
 	{
-		const FCoastShape& Part = RuinParts[Index];
+		UStaticMesh* const WreckMesh = LoadObject<UStaticMesh>(nullptr, WreckMeshPaths[Index]);
+		if (!WreckMesh)
+		{
+			continue;
+		}
+
 		UStaticMeshComponent* const Mesh = NewObject<UStaticMeshComponent>(
 			Ruin, *FString::Printf(TEXT("RevealedRuinPart_%02d"), Index));
 		Ruin->AddInstanceComponent(Mesh);
 		Mesh->SetupAttachment(Ruin->GetRootComponent());
-		Mesh->SetStaticMesh(Cube);
-		Mesh->SetRelativeTransform(FTransform(
-			Part.Rotation,
-			Part.Location * REVEALED_RUIN_VISUAL_SCALE,
-			Part.Scale * REVEALED_RUIN_VISUAL_SCALE));
+		Mesh->SetStaticMesh(WreckMesh);
+		Mesh->SetRelativeTransform(FTransform(FRotator(7.0f, -14.0f + WreckYawOffset, 11.0f),
+			FVector::ZeroVector, FVector(4.2f)));
 		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		Mesh->SetCastShadow(true);
 		Mesh->SetMaterial(0, StoneMaterial);
@@ -578,9 +594,44 @@ void ABBCoastalEnvironment::BuildRevealedRuin()
 		UMaterialInstanceDynamic* const Material = Mesh->CreateDynamicMaterialInstance(0);
 		if (Material)
 		{
-			Material->SetVectorParameterValue(TEXT("BaseColor"), FLinearColor(0.54f, 0.61f, 0.67f));
-			Material->SetScalarParameterValue(TEXT("Roughness"), 0.84f);
+			if (HullAlbedo)
+			{
+				Material->SetTextureParameterValue(TEXT("RockAlbedo"), HullAlbedo);
+			}
+			Material->SetScalarParameterValue(TEXT("Roughness"), 0.72f);
 		}
+		++CreatedWreckParts;
+	}
+	if (Cube)
+	{
+		for (int32 Index = 0; Index < UE_ARRAY_COUNT(ExposedWreckFrame); ++Index)
+		{
+			const FCoastShape& Part = ExposedWreckFrame[Index];
+			UStaticMeshComponent* const Mesh = NewObject<UStaticMeshComponent>(
+				Ruin, *FString::Printf(TEXT("RevealedRuinFrame_%02d"), Index));
+			Ruin->AddInstanceComponent(Mesh);
+			Mesh->SetupAttachment(Ruin->GetRootComponent());
+			Mesh->SetStaticMesh(Cube);
+			Mesh->SetRelativeTransform(FTransform(FRotator(Part.Rotation.Pitch,
+				Part.Rotation.Yaw + WreckYawOffset, Part.Rotation.Roll),
+				Part.Location * 6.0f, Part.Scale * 6.0f));
+			Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Mesh->SetCastShadow(true);
+			Mesh->SetMaterial(0, StoneMaterial);
+			Mesh->ComponentTags.Add(TEXT("BB_BeamRevealPart"));
+			Mesh->RegisterComponent();
+			UMaterialInstanceDynamic* const Material = Mesh->CreateDynamicMaterialInstance(0);
+			if (Material)
+			{
+				Material->SetVectorParameterValue(TEXT("BaseColor"), FLinearColor(0.54f, 0.61f, 0.67f));
+				Material->SetScalarParameterValue(TEXT("Roughness"), 0.84f);
+			}
+			++CreatedWreckParts;
+		}
+	}
+	if (CreatedWreckParts == 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("BBBeamReveal: failed to load any imported wreck meshes."));
 	}
 
 	if (UBBBeamRevealComponent* const Reveal = Ruin->FindComponentByClass<UBBBeamRevealComponent>())

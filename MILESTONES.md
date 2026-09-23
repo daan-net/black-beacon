@@ -56,12 +56,12 @@ already cover the route to the first anomaly. Avoid rebuilding these systems. Th
 reveal now evaluates tagged mesh parts independently through the existing beam query,
 fades transient parts when the beam leaves, and activates a next objective on discovery.
 
-**Current gate:** mechanics and automation are `TESTED`; the 15-part trawler blockout
-and its rendered reveal remain `PLACEHOLDER`. The storm capture shows a readable beam
-and a clearer wreck silhouette, but cube geometry and dark unfinished materials still
-fall short of the visual target.
-M1 remains open. No broad environment, asset, or audio expansion is authorized by this
-scoped pass.
+**Current gate:** mechanics and automation are `TESTED`; the wreck now combines a
+low-poly authored hull with individually revealed frame/mast blockout pieces. Paired
+Vulkan renders show the hull revealed by the beam and hidden after it leaves. The
+surrounding exterior, path, lighthouse interior dressing, and reveal audio remain
+`PLACEHOLDER` or `PLANNED`, so M1 remains open. Continue only within the approved
+10–15 minute first-reveal slice.
 
 ## M0.3 — Visual/audio pass
 

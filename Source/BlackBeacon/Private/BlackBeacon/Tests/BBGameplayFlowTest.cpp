@@ -17,6 +17,8 @@
 #include "Components/SpotLightComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
+#include "Engine/Texture2D.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 #include "BlackBeacon/Core/BBGameMode.h"
 #include "BlackBeacon/Core/BBCoastalEnvironment.h"
@@ -524,14 +526,27 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestFalse(TEXT("Anomaly is visible"), State->Anomaly->IsHidden());
             int32 VisibleRuinParts = 0;
             float TallestRuinPartExtent = 0.0f;
-            for (const UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(State->Anomaly.Get()))
-            {
-                if (Mesh && Mesh->GetName().StartsWith(TEXT("RevealedRuinPart_")))
+            UStaticMeshComponent* FirstRuinPart = nullptr;
+			for (UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(State->Anomaly.Get()))
+			{
+				if (Mesh && Mesh->ComponentHasTag(TEXT("BB_BeamRevealPart")))
                 {
+                    if (!FirstRuinPart)
+                    {
+                        FirstRuinPart = Mesh;
+                    }
                     TallestRuinPartExtent = FMath::Max(TallestRuinPartExtent, Mesh->Bounds.BoxExtent.Z);
                     VisibleRuinParts += Mesh->IsVisible() ? 1 : 0;
                 }
             }
+            UTexture2D* const WreckTexture = LoadObject<UTexture2D>(nullptr,
+                TEXT("/Game/BlackBeacon/Textures/T_WreckHullAlbedo.T_WreckHullAlbedo"));
+            UMaterialInstanceDynamic* const WreckMaterial = FirstRuinPart
+                ? Cast<UMaterialInstanceDynamic>(FirstRuinPart->GetMaterial(0)) : nullptr;
+            TestNotNull(TEXT("Wreck hull albedo asset loads"), WreckTexture);
+            TestTrue(TEXT("The wreck material uses its imported hull albedo"),
+                WreckMaterial && WreckTexture
+                && WreckMaterial->K2_GetTextureParameterValue(TEXT("RockAlbedo")) == WreckTexture);
             TestTrue(TEXT("BeamReveal exposes pieces intersecting the moving beam"), VisibleRuinParts > 0);
             TestTrue(TEXT("Only beam-intersected ruin parts are visible"),
                 VisibleRuinParts < State->TaggedRevealPartCount);
@@ -581,15 +596,14 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             {
                 return true;
             }
-            const FVector BeamOrigin = Lighthouse->BeamComponent->GetComponentLocation();
             const FVector Side = FVector::CrossProduct(ToRuin, FVector::UpVector).GetSafeNormal();
-            const FVector CameraLocation = BeamOrigin - ToRuin * 1400.0f + Side * 2400.0f
-                + FVector(0.0f, 0.0f, 350.0f);
+			const FVector CameraLocation = GetRevealPartCenter(State->Anomaly.Get())
+				- ToRuin * 6000.0f + Side * 800.0f + FVector(0.0f, 0.0f, 400.0f);
             State->CaptureCamera->SetActorLocation(CameraLocation);
             State->CaptureCamera->SetActorRotation((GetRevealPartCenter(State->Anomaly.Get()) - CameraLocation).Rotation());
             if (State->CaptureCamera->GetCameraComponent())
             {
-                State->CaptureCamera->GetCameraComponent()->SetFieldOfView(60.0f);
+				State->CaptureCamera->GetCameraComponent()->SetFieldOfView(70.0f);
             }
             World->GetFirstPlayerController()->SetViewTarget(State->CaptureCamera.Get());
             State->CaptureIndex = 3;
@@ -692,7 +706,14 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("Discovery remains recorded after transient visuals fade"), State->AnomalyReveal->WasFullyRevealed());
             TestTrue(TEXT("Next objective remains active after the reveal fades"),
                 Objectives->GetCurrentObjectiveId() == TEXT("BB_OBJ_APPROACH_REVEAL"));
+            FScreenshotRequest::RequestScreenshot(TEXT("BlackBeacon_M01_D_RevealOff.png"), false, false);
             State->bRevealFadeChecked = true;
+            State->Stage = 14;
+            State->StageAt = Now;
+            return false;
+        }
+        if (State->Stage == 14 && Now - State->StageAt >= 0.5)
+        {
             State->Stage = 7;
             return false;
         }
