@@ -216,8 +216,13 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
 - UE 5.8.2 `BlackBeaconEditor` build succeeded, `BlackBeacon.M01.GameplayFlow` passed 1/1 with regenerated exterior and indoor storm captures, and `./Tools/validate.sh` passed all engine-independent logic tests (45/45).
 - The exterior captures show rain across the view without the previous point-source appearance or camera-following field. The intended indoor capture still shows rain, and the effect needs direct visual review. Keep rain `PLACEHOLDER` and M0.2 open. The automation's 1920x1080 warm-up measured 45.69 FPS for five seconds; this is below the target and not a representative gameplay benchmark.
 
+## 2026-09-23 — M0.2 — allow downward look on stairs
+
+- **User-visible:** replaced the stair camera pitch lock with a configurable -45 to +30 degree pitch range. Players can look down to check the steps while descending; horizontal steering and turning remain responsive.
+- Updated `BlackBeacon.M01.PlayerControls` to check that pitch changes on a stair tread and remains within bounds. UE 5.8.2 `BlackBeaconEditor` built successfully. The Vulkan `BlackBeacon.M01.PlayerControls` test passed, including stair pitch response, pitch bounds, and yaw checks; `./Tools/validate.sh` passed all 45 logic tests. Direct player feel still needs review.
+
 ## 2026-09-23 — M0.2 — stair camera control
 
-- On tagged stair treads, vertical mouse look now holds the camera at the configurable forward pitch while horizontal mouse look remains active for steering and turning around. Ground look keeps its existing horizontal and vertical controls.
+- On tagged stair treads, vertical mouse look initially held the camera at the configurable forward pitch while horizontal mouse look remained active. This was replaced by bounded vertical look in the follow-up entry above.
 - `BlackBeacon.M01.PlayerControls` passed in UE 5.8.2 Vulkan with checks for stair-base detection, pitch lock, horizontal response, and unchanged ground look. The editor target builds and `./Tools/validate.sh` passes all 45 logic tests.
 - Direct stair feel remains for user review. The user has accepted the revised rain appearance and confirmed that the lighthouse interior stays dry; the rain gate is now accepted. Coast rocks and wreckage still have no collision and remain a traversal follow-up. M0.2 remains open because the 60 FPS gate is not met by the latest non-representative 45.69 FPS warm-up.

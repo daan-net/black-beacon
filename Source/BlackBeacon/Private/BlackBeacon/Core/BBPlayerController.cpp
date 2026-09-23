@@ -78,27 +78,6 @@ void ABBlackBeaconPlayerController::SetupInputComponent()
 	}
 }
 
-void ABBlackBeaconPlayerController::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
-
-	if (!PossessedCharacter)
-	{
-		PossessedCharacter = Cast<ABBlackBeaconPlayerCharacter>(GetPawn());
-	}
-
-	if (PossessedCharacter && PossessedCharacter->IsStandingOnStairTread())
-	{
-		FRotator Rotation = GetControlRotation();
-		if (!FMath::IsNearlyEqual(Rotation.Pitch, StairPitchLockDegrees, 0.01f) || !FMath::IsNearlyZero(Rotation.Roll, 0.01f))
-		{
-			Rotation.Pitch = StairPitchLockDegrees;
-			Rotation.Roll = 0.0f;
-			SetControlRotation(Rotation);
-		}
-	}
-}
-
 void ABBlackBeaconPlayerController::CreateInputAssets()
 {
 	// All input assets are constructed at runtime so the project stays free
@@ -200,10 +179,13 @@ void ABBlackBeaconPlayerController::HandleLook(const FInputActionValue& Value)
 
 	if (PossessedCharacter && PossessedCharacter->IsStandingOnStairTread())
 	{
-		// Keep the narrow spiral readable while preserving yaw for steering and turning around.
+		// Keep stair steering responsive while allowing the player to inspect the steps.
 		FRotator Rotation = GetControlRotation();
 		Rotation.Yaw += Axis.X * MouseYawDegreesPerCount;
-		Rotation.Pitch = StairPitchLockDegrees;
+		Rotation.Pitch = FMath::Clamp(
+			Rotation.Pitch + Axis.Y * MousePitchDegreesPerCount,
+			StairPitchMinDegrees,
+			StairPitchMaxDegrees);
 		Rotation.Roll = 0.0f;
 		SetControlRotation(Rotation);
 	}

@@ -36,7 +36,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaSeconds) override;
 	virtual void SetupInputComponent() override;
 
 private:
@@ -100,8 +99,11 @@ private:
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Aim")
 	float MousePitchDegreesPerCount = 0.18f;
 
-	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement", meta = (ClampMin = "-5.0", ClampMax = "5.0"))
-	float StairPitchLockDegrees = 0.0f;
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement", meta = (ClampMin = "-89.0", ClampMax = "0.0"))
+	float StairPitchMinDegrees = -45.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement", meta = (ClampMin = "0.0", ClampMax = "89.0"))
+	float StairPitchMaxDegrees = 30.0f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Aim")
 	float ManualAimSensitivity = 0.22f;
