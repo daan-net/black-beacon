@@ -153,7 +153,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 {
                     return false;
                 }
-                FScreenshotRequest::RequestScreenshot(TEXT("BlackBeacon_M02_Opening.png"), false, false);
+                FScreenshotRequest::RequestScreenshot(TEXT("BlackBeacon_M01_A_Exterior.png"), false, false);
                 State->bOpeningCaptured = true;
                 State->StageAt = Now;
                 return false;
@@ -238,6 +238,14 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             {
                 return true;
             }
+            UTexture2D* const LighthousePaint = LoadObject<UTexture2D>(nullptr,
+                TEXT("/Game/BlackBeacon/Textures/T_LighthousePaintAlbedo.T_LighthousePaintAlbedo"));
+            UMaterialInstanceDynamic* const TowerMaterial = State->Lighthouse->TowerExteriorSkin
+                ? Cast<UMaterialInstanceDynamic>(State->Lighthouse->TowerExteriorSkin->GetMaterial(0)) : nullptr;
+            TestNotNull(TEXT("Lighthouse weathered paint texture loads"), LighthousePaint);
+            TestTrue(TEXT("Lighthouse exterior uses the weathered paint texture"),
+                TowerMaterial && LighthousePaint
+                && TowerMaterial->K2_GetTextureParameterValue(TEXT("RockAlbedo")) == LighthousePaint);
             TArray<UStaticMeshComponent*> GeneratorMeshes;
             GeneratorActor->GetComponents<UStaticMeshComponent>(GeneratorMeshes);
             int32 NonBlockingGeneratorDetails = 0;
@@ -614,7 +622,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         if (State->Stage == 5)
         {
             const FVector Positions[] = {
-                FVector(-1200.0f, -1800.0f, 900.0f),
+                FVector(-4500.0f, -600.0f, 155.0f), // Shore-start player viewpoint
                 FVector(-1200.0f, 1000.0f, 1700.0f),
                 FVector(-4000.0f, 3300.0f, 900.0f),
                 FVector(-8500.0f, 9500.0f, 2600.0f),

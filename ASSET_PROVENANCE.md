@@ -13,3 +13,9 @@
 
 - `Content/BlackBeacon/Textures/T_WreckHullAlbedo.png` was generated for this project with OpenAI ImageGen on 2026-09-23.
 - Local SHA-256: `614fb0cb1cf7f2b18b783e5c20ba2905aa8341229cc54d31b621fa2754a7e264`
+
+## Lighthouse Paint Albedo
+
+- `Content/BlackBeacon/Textures/T_LighthousePaintAlbedo.png` was generated for this project with OpenAI ImageGen on 2026-09-23 as a weathered, north Atlantic lighthouse whitewash surface.
+- Local SHA-256: `d2705625ed889f4992e9f318018c4650a14b40454b9be7aa6fff2c7f612fbe57`
+- Imported as `T_LighthousePaintAlbedo.uasset` and applied to the existing non-colliding lighthouse exterior skin.

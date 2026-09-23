@@ -13,6 +13,10 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 - **User-visible:** The annex generator's flywheel now rotates in sync with its real running and spin-up state, accelerates as the four-second power ramp advances, and coasts down on shutdown. The environment binds to a new running-state event and updates the wheel on a 20 Hz timer only while it is turning. GameplayFlow asserts measurable wheel rotation during spin-up and coast-down. UE 5.8.2 built successfully; the full rendered Vulkan M01 suite passed 3/3 with zero test warnings/errors; `./Tools/validate.sh` passed with 45/45 logic checks. The five-second 1920x1080 automation warm-up measured 43.98 FPS, below the 60 FPS target and not a representative gameplay benchmark. The machine remains primitive greybox geometry.
 
+## 2026-09-23 — M1 — lighthouse exterior readability
+
+- **User-visible:** Added a generated weathered whitewash texture to the existing lighthouse tower skin and raised moon sky fill from 0.1 to 0.22 so the tower silhouette reads in the opening view. The material binding is asserted by GameplayFlow. UE 5.8.2 build succeeded; rendered Vulkan M01 automation passed 3/3 with zero test warnings/errors, and `./Tools/validate.sh` passed all 45 logic tests. The 1080p automation warm-up reached 44.77 FPS, below target and not a representative gameplay benchmark. The exterior remains blockout geometry; the close opening camera crops the lantern and the surrounding coast is still very dark.
+
 ---
 
 ## 2026-09-23 — M0.2 — shipwreck coast silhouette and atmosphere

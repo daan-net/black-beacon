@@ -5,6 +5,7 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/Texture2D.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
@@ -118,8 +119,14 @@ void ABBLighthouseController::BeginPlay()
 	{
 		if (UMaterialInstanceDynamic* const Material = TowerExteriorSkin->CreateAndSetMaterialInstanceDynamic(0))
 		{
-			Material->SetVectorParameterValue(TEXT("BaseColor"), FLinearColor(0.11f, 0.14f, 0.17f));
-			Material->SetScalarParameterValue(TEXT("Roughness"), 0.84f);
+			UTexture2D* const LighthousePaint = LoadObject<UTexture2D>(nullptr,
+				TEXT("/Game/BlackBeacon/Textures/T_LighthousePaintAlbedo.T_LighthousePaintAlbedo"));
+			if (LighthousePaint)
+			{
+				Material->SetTextureParameterValue(TEXT("RockAlbedo"), LighthousePaint);
+			}
+			Material->SetVectorParameterValue(TEXT("BaseColor"), FLinearColor(0.72f, 0.75f, 0.78f));
+			Material->SetScalarParameterValue(TEXT("Roughness"), 0.9f);
 		}
 	}
 	if (LanternFresnelBands)

@@ -58,10 +58,11 @@ fades transient parts when the beam leaves, and activates a next objective on di
 
 **Current gate:** mechanics and automation are `TESTED`; the wreck now combines a
 low-poly authored hull with individually revealed frame/mast blockout pieces. Paired
-Vulkan renders show the hull revealed by the beam and hidden after it leaves. The
-surrounding exterior, path, lighthouse interior dressing, and reveal audio remain
-`PLACEHOLDER` or `PLANNED`, so M1 remains open. Continue only within the approved
-10–15 minute first-reveal slice.
+Vulkan renders show the hull revealed by the beam and hidden after it leaves. A
+generated weathered paint albedo now improves tower readability in the first-person
+shore view, but the close view crops its lantern. The surrounding coast, path,
+lighthouse interior dressing, and reveal audio remain `PLACEHOLDER` or `PLANNED`, so
+M1 remains open. Continue only within the approved 10–15 minute first-reveal slice.
 
 ## M0.3 — Visual/audio pass
 
