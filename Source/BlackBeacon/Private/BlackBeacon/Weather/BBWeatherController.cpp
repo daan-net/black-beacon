@@ -45,7 +45,9 @@ ABBWeatherController::ABBWeatherController()
 
 	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> RainAsset(TEXT("/Game/BlackBeacon/Effects/NS_Rain.FountainLightweight"));
 	
-	// Dense grid attached around the camera
+	// A fixed world-space field prevents the rain from following the player.
+	const float EmitterSpacing = RainFieldRadiusCm / 5.0f;
+	FRandomStream RainLayoutRandom(0xBB2026);
 	for (int32 X = -5; X <= 5; ++X)
 	{
 		for (int32 Y = -5; Y <= 5; ++Y)
@@ -53,12 +55,14 @@ ABBWeatherController::ABBWeatherController()
 			FString CompName = FString::Printf(TEXT("RainGrid_%d_%d"), X, Y);
 			UNiagaraComponent* GridComp = CreateDefaultSubobject<UNiagaraComponent>(*CompName);
 			GridComp->SetupAttachment(RainRoot);
-			float ZOffset = FMath::RandRange(-200.0f, 200.0f);
-			GridComp->SetRelativeLocation(FVector(X * 200.0f, Y * 200.0f, ZOffset));
+			const FVector EmitterOffset(
+				X * EmitterSpacing + RainLayoutRandom.FRandRange(-EmitterSpacing * 0.3f, EmitterSpacing * 0.3f),
+				Y * EmitterSpacing + RainLayoutRandom.FRandRange(-EmitterSpacing * 0.3f, EmitterSpacing * 0.3f),
+				RainLayoutRandom.FRandRange(-150.0f, 150.0f));
+			GridComp->SetRelativeLocation(EmitterOffset);
 			GridComp->SetRelativeRotation(FRotator(180.0f, 0.0f, 0.0f)); // Point straight down
-			// The source Niagara sprite is broad; narrow it before stretching it
-			// into a short rain streak so each emitter does not read as a plume.
-			GridComp->SetRelativeScale3D(FVector(0.25f, 0.25f, 3.0f));
+			// FountainLightweight uses broad sprites, so keep the streaks narrow.
+			GridComp->SetRelativeScale3D(FVector(0.08f, 0.08f, 4.0f));
 			GridComp->bAutoActivate = false;
 			GridComp->SetCastShadow(false);
 			
@@ -77,6 +81,10 @@ void ABBWeatherController::BeginPlay()
 	Super::BeginPlay();
 	MoonLight->SetIntensity(MoonlightLux);
 	BuildInterpolatorPalette();
+	if (RainRoot)
+	{
+		RainRoot->SetWorldLocation(GetActorLocation() + FVector(0.0f, 0.0f, RainLayerHeightCm));
+	}
 	SetWeather(InitialPhase, /*InTransitionSeconds=*/0.0f);
 	ApplyToFog();
 }
@@ -174,13 +182,8 @@ void ABBWeatherController::ApplyOutputs()
 		APlayerController* PC = GetWorld()->GetFirstPlayerController();
 		if (PC)
 		{
-			// Keep the local rain area near the player's view so the finite Niagara
-			// emitters do not leave the camera as the player moves.
+			// The precipitation field is anchored to the level, independent of view movement.
 			FVector CamLoc = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetCameraLocation() : (PC->GetPawn() ? PC->GetPawn()->GetActorLocation() : FVector::ZeroVector);
-			FVector ForwardDir = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetActorForwardVector() : FVector(1,0,0);
-			ForwardDir.Z = 0; ForwardDir.Normalize();
-			RainRoot->SetWorldLocation(
-				CamLoc + ForwardDir * (100.0f + WindStrength * 250.0f) + FVector(0.0f, 0.0f, 200.0f));
 
 			// Roof visibility changes slowly compared with camera motion. One
 			// query at 4 Hz replaces a line trace per emitter per rendered frame.

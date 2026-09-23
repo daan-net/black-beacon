@@ -75,6 +75,8 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<AActor> Anomaly;
         TWeakObjectPtr<APawn> Pawn;
         TWeakObjectPtr<UBBInteractionComponent> Interaction;
+        TWeakObjectPtr<ABBWeatherController> Weather;
+        FVector RainFieldAnchor = FVector::ZeroVector;
         TWeakObjectPtr<ACameraActor> CaptureCamera;
         int32 CaptureIndex = 0;
         FVector AirCameraPosition = FVector::ZeroVector;
@@ -167,8 +169,12 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestNotNull(TEXT("Weather controller"), Weather);
             if (Weather)
             {
+                State->Weather = Weather;
+                State->RainFieldAnchor = Weather->RainRoot->GetComponentLocation();
                 TestTrue(TEXT("Rain phase has fog density"), Weather->GetFogDensity() > 0.001f);
                 TestTrue(TEXT("Volumetric fog is enabled"), Weather->FogComponent->bEnableVolumetricFog);
+                TestTrue(TEXT("Rain field is anchored above the level, not the player"),
+                    State->RainFieldAnchor.Z > State->Pawn->GetActorLocation().Z + 500.0f);
             }
             USpotLightComponent* BeamLight = State->Lighthouse->FindComponentByClass<USpotLightComponent>();
             TestNotNull(TEXT("Beam spotlight"), BeamLight);
@@ -387,6 +393,9 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestFalse(TEXT("Stopping generator removes lighthouse power"), Lighthouse->IsPowered());
             TestFalse(TEXT("Beam turns off when power is lost"), Lighthouse->BeamComponent->IsPowered());
             TestTrue(TEXT("Beam light hides after power loss"), BeamLight && !BeamLight->IsVisible());
+            TestTrue(TEXT("Rain field stays fixed as the player traverses the map"),
+                State->Weather.IsValid()
+                && State->Weather->RainRoot->GetComponentLocation().Equals(State->RainFieldAnchor, 1.0f));
 
             UBBSaveSubsystem* SaveSubsystem = World->GetGameInstance()
                 ? World->GetGameInstance()->GetSubsystem<UBBSaveSubsystem>() : nullptr;

@@ -47,7 +47,7 @@ prompt/HUD polish, save/load seam, audio placeholders, performance sanity check.
 - [x] Save/load restores generator, lighthouse/beam, objective, reveal, weather, and player state (GameplayFlow automation)
 - [ ] Stable 60+ fps on target PC config at reasonable settings (latest 1080p Vulkan automation warm-up: 43.37 FPS; gameplay benchmark still needed)
 
-M0.2 remains open. The current Niagara-based storm is functionally visible and roof-culled, but screenshots still show chunky streak clusters. Do not begin M1 until rain presentation and performance gates are reviewed and pass.
+M0.2 remains open. The Niagara field is anchored to the level and roof-culled, but the current fountain emitter still renders as separate streaks rather than natural rainfall. The latest 1080p Vulkan automation warm-up reached 42.33 FPS, so the 60 FPS gate also remains open. Do not begin M1 until rain presentation and performance gates are reviewed and pass.
 
 ## M0.3 — Visual/audio pass
 

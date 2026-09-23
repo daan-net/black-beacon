@@ -202,3 +202,9 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
 - Reduced rain sprite scale, emitter spacing, and camera-relative layer offset after user review found that the effect looked localized and was only apparent while looking upward. The regenerated Vulkan capture is still visibly clustered/chunky, so rain remains a `PLACEHOLDER` and its natural appearance is not accepted.
 - UE 5.8.2 `BlackBeaconEditor` build succeeded. The rendered Vulkan M0.1 regression suite passed 3/3: GameplayFlow, PlayerControls, and StairTraversal. `./Tools/validate.sh` passed with 45/45 engine-independent tests. The five-second automation warm-up measured 43.37 FPS at 1920x1080, below the 60 FPS target and not a representative gameplay benchmark; M0.2 remains open.
 - Repository hygiene: manual reference images/video and `.orig` backups were accidentally tracked in an earlier checkpoint. They remain present on disk and are now excluded from version control.
+
+## 2026-09-23 — M0.2 — anchor rain in world space
+
+- Removed the per-frame camera-relative repositioning that made precipitation move with the player. The Niagara emitters now keep deterministic, lightly jittered positions across the level around the weather actor, with configurable field radius and height. The roof probe still uses the player camera to suppress rain while indoors.
+- GameplayFlow now records the rain field anchor and asserts that it remains stationary after player traversal. UE 5.8.2 `BlackBeaconEditor` built, `BlackBeacon.M01.GameplayFlow` passed with the new assertion and rendered storm captures, and `./Tools/validate.sh` passed 45/45.
+- The field no longer follows the camera, but `FountainLightweight` still appears as distinct falling streaks in the rendered capture. Rain quality stays `PLACEHOLDER`; M0.2 remains open. Warm-up measured 42.33 FPS at 1920x1080 and still requires a representative performance pass.

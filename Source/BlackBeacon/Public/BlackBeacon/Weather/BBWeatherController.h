@@ -110,6 +110,12 @@ public:
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
 	float MoonlightLux = 1.5f;
 
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather|Rain")
+	float RainFieldRadiusCm = 5500.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather|Rain")
+	float RainLayerHeightCm = 1200.0f;
+
 	// Palette overrides; leave phases out to keep the struct defaults.
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
 	TArray<FBBWeatherPaletteConfig> Palette;
