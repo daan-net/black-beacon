@@ -1,8 +1,10 @@
 #include "BlackBeacon/Core/BBCoastalEnvironment.h"
 
 #include "Components/SceneComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "EngineUtils.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 
@@ -11,7 +13,10 @@ namespace
 	constexpr const TCHAR* CUBE_MESH = TEXT("/Engine/BasicShapes/Cube");
 	constexpr const TCHAR* CYLINDER_MESH = TEXT("/Engine/BasicShapes/Cylinder");
 	constexpr const TCHAR* SPHERE_MESH = TEXT("/Engine/BasicShapes/Sphere");
+	constexpr const TCHAR* PLANE_MESH = TEXT("/Engine/BasicShapes/Plane");
 	constexpr const TCHAR* COAST_MATERIAL = TEXT("/Game/BlackBeacon/Materials/M_CoastSurface.M_CoastSurface");
+	constexpr const TCHAR* BASALT_MATERIAL = TEXT("/Game/BlackBeacon/Materials/M_WetBasaltRock.M_WetBasaltRock");
+	constexpr const TCHAR* OCEAN_MATERIAL = TEXT("/Engine/EngineMaterials/WaterMaterial.DefaultWaterMaterial");
 
 	struct FCoastShape
 	{
@@ -158,20 +163,58 @@ ABBCoastalEnvironment::ABBCoastalEnvironment()
 	SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
 	RootComponent = SceneRoot;
 
-	for (int32 Index = 0; Index < UE_ARRAY_COUNT(ROCKS); ++Index)
+	// The island ground sits above this broad, engine-native water surface;
+	// its material supplies moving water without adding a plugin or simulation.
+	OceanSurface = AddShape(TEXT("CoastalOcean"), PLANE_MESH,
+		FVector(0.0f, 0.0f, -24.0f), FRotator::ZeroRotator, FVector(1400.0f, 1400.0f, 1.0f), false);
+	if (OceanSurface)
+	{
+		OceanSurface->SetMaterial(0, LoadObject<UMaterialInterface>(nullptr, OCEAN_MATERIAL));
+		OceanSurface->SetCastShadow(false);
+	}
+
+	// The low shelf stays a broad shore form. The remaining shapes are
+	// boulders: one instanced sphere mesh replaces dozens of hard-edged cubes.
+	const FCoastShape& Shelf = ROCKS[0];
+	RockSurfaces.Add(AddShape(
+		TEXT("CoastShelf"), CUBE_MESH,
+		Shelf.Location, Shelf.Rotation, Shelf.Scale, false));
+
+	RockField = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("CoastRockField"));
+	RockField->SetupAttachment(SceneRoot);
+	RockField->SetStaticMesh(LoadObject<UStaticMesh>(nullptr, SPHERE_MESH));
+	RockField->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	RockField->SetCollisionResponseToAllChannels(ECR_Block);
+	RockField->SetGenerateOverlapEvents(false);
+	RockField->SetCanEverAffectNavigation(false);
+	RockField->SetCastShadow(true);
+	RockSurfaces.Add(RockField);
+	for (int32 Index = 1; Index < UE_ARRAY_COUNT(ROCKS); ++Index)
 	{
 		const FCoastShape& Shape = ROCKS[Index];
-		RockSurfaces.Add(AddShape(
-			*FString::Printf(TEXT("Rock_%02d"), Index),
-			CUBE_MESH,
-			Shape.Location, Shape.Rotation, Shape.Scale, false));
+		const float Angle = static_cast<float>(Index) * 2.39996323f;
+		const FVector OffsetA(
+			FMath::Cos(Angle) * Shape.Scale.X * 24.0f,
+			FMath::Sin(Angle) * Shape.Scale.Y * 24.0f,
+			Shape.Scale.Z * 8.0f);
+		const FVector OffsetB(
+			-FMath::Sin(Angle) * Shape.Scale.X * 21.0f,
+			FMath::Cos(Angle) * Shape.Scale.Y * 21.0f,
+			-Shape.Scale.Z * 10.0f);
+
+		// Overlapping lobes break the perfect sphere silhouette without adding a mesh plugin.
+		RockField->AddInstance(FTransform(Shape.Rotation, Shape.Location, Shape.Scale * 0.68f));
+		RockField->AddInstance(FTransform(Shape.Rotation, Shape.Location + OffsetA,
+			Shape.Scale * FVector(0.43f, 0.50f, 0.45f)));
+		RockField->AddInstance(FTransform(Shape.Rotation, Shape.Location + OffsetB,
+			Shape.Scale * FVector(0.46f, 0.41f, 0.48f)));
 	}
 
 	for (int32 Index = 0; Index < UE_ARRAY_COUNT(PATH_STONES); ++Index)
 	{
 		const FCoastShape& Shape = PATH_STONES[Index];
 		PathSurfaces.Add(AddShape(
-			*FString::Printf(TEXT("Path_%02d"), Index), SPHERE_MESH,
+			*FString::Printf(TEXT("Path_%02d"), Index), CYLINDER_MESH,
 			Shape.Location, Shape.Rotation, Shape.Scale, false));
 	}
 
@@ -180,17 +223,36 @@ ABBCoastalEnvironment::ABBCoastalEnvironment()
 		const FCoastShape& Shape = WRECKAGE[Index];
 		WreckSurfaces.Add(AddShape(
 			*FString::Printf(TEXT("Wreck_%02d"), Index), CUBE_MESH,
-			Shape.Location, Shape.Rotation, Shape.Scale, false));
+			Shape.Location, Shape.Rotation, Shape.Scale, true));
 	}
+
+	// A small weather-beaten engine annex replaces the interaction cube with
+	// a traversable shell. The west wall leaves a centered doorway to the
+	// generator so the existing approach and interaction line stay clear.
+	const auto AddAnnexPart = [this](const TCHAR* Name, const FVector& Location,
+		const FRotator& Rotation, const FVector& Scale)
+	{
+		AnnexSurfaces.Add(AddShape(Name, CUBE_MESH, Location, Rotation, Scale, true));
+	};
+	AddAnnexPart(TEXT("AnnexFloor"), FVector(1560.0f, 1120.0f, -8.0f), FRotator::ZeroRotator, FVector(3.15f, 4.15f, 0.16f));
+	AddAnnexPart(TEXT("AnnexWestLeft"), FVector(1400.0f, 970.0f, 140.0f), FRotator::ZeroRotator, FVector(0.18f, 1.2f, 2.8f));
+	AddAnnexPart(TEXT("AnnexWestRight"), FVector(1400.0f, 1270.0f, 140.0f), FRotator::ZeroRotator, FVector(0.18f, 1.2f, 2.8f));
+	AddAnnexPart(TEXT("AnnexEastWall"), FVector(1720.0f, 1120.0f, 140.0f), FRotator::ZeroRotator, FVector(0.18f, 4.2f, 2.8f));
+	AddAnnexPart(TEXT("AnnexNorthWall"), FVector(1560.0f, 1330.0f, 140.0f), FRotator::ZeroRotator, FVector(3.2f, 0.18f, 2.8f));
+	AddAnnexPart(TEXT("AnnexSouthWall"), FVector(1560.0f, 910.0f, 140.0f), FRotator::ZeroRotator, FVector(3.2f, 0.18f, 2.8f));
+	AddAnnexPart(TEXT("AnnexRoofWest"), FVector(1480.0f, 1120.0f, 292.0f), FRotator(22.0f, 0.0f, 0.0f), FVector(1.72f, 2.2f, 0.18f));
+	AddAnnexPart(TEXT("AnnexRoofEast"), FVector(1640.0f, 1120.0f, 292.0f), FRotator(-22.0f, 0.0f, 0.0f), FVector(1.72f, 2.2f, 0.18f));
 }
 
 void ABBCoastalEnvironment::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UMaterialInterface* const BaseMaterial = LoadObject<UMaterialInterface>(nullptr, COAST_MATERIAL);
-	auto ApplyWetMaterial = [this, BaseMaterial](
+	UMaterialInterface* const CoastMaterial = LoadObject<UMaterialInterface>(nullptr, COAST_MATERIAL);
+	UMaterialInterface* const BasaltMaterial = LoadObject<UMaterialInterface>(nullptr, BASALT_MATERIAL);
+	auto ApplyWetMaterial = [this](
 		const TArray<TObjectPtr<UStaticMeshComponent>>& Components,
+		UMaterialInterface* BaseMaterial,
 		const FLinearColor& Color,
 		float Roughness)
 	{
@@ -207,9 +269,82 @@ void ABBCoastalEnvironment::BeginPlay()
 		}
 	};
 
-	ApplyWetMaterial(RockSurfaces, FLinearColor(0.012f, 0.018f, 0.022f), 0.24f);
-	ApplyWetMaterial(PathSurfaces, FLinearColor(0.022f, 0.028f, 0.030f), 0.16f);
-	ApplyWetMaterial(WreckSurfaces, FLinearColor(0.028f, 0.016f, 0.009f), 0.34f);
+	ApplyWetMaterial(RockSurfaces, BasaltMaterial, FLinearColor(0.78f, 0.84f, 0.88f), 0.82f);
+	ApplyWetMaterial(PathSurfaces, CoastMaterial, FLinearColor(0.050f, 0.065f, 0.075f), 0.52f);
+	ApplyWetMaterial(WreckSurfaces, CoastMaterial, FLinearColor(0.075f, 0.042f, 0.022f), 0.48f);
+	ApplyWetMaterial(AnnexSurfaces, CoastMaterial, FLinearColor(0.075f, 0.055f, 0.040f), 0.72f);
+	BuildRevealedRuin();
+}
+
+void ABBCoastalEnvironment::BuildRevealedRuin()
+{
+	UWorld* const World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	AActor* Ruin = nullptr;
+	for (TActorIterator<AActor> It(World); It; ++It)
+	{
+		if (It->ActorHasTag(TEXT("BB_Anomaly")))
+		{
+			Ruin = *It;
+			break;
+		}
+	}
+	if (!Ruin || !Ruin->GetRootComponent())
+	{
+		return;
+	}
+
+	// Keep the old greybox mesh out of the reveal. These stone fragments are
+	// attached to the same actor, so the real BeamReveal state owns visibility.
+	for (UStaticMeshComponent* const Mesh : TInlineComponentArray<UStaticMeshComponent*>(Ruin))
+	{
+		if (Mesh && Mesh->GetAttachParent() == Ruin->GetRootComponent())
+		{
+			Mesh->SetVisibility(false, false);
+		}
+	}
+
+	UStaticMesh* const Cube = LoadObject<UStaticMesh>(nullptr, CUBE_MESH);
+	UMaterialInterface* const StoneMaterial = LoadObject<UMaterialInterface>(nullptr, BASALT_MATERIAL);
+	if (!Cube || !StoneMaterial)
+	{
+		return;
+	}
+
+	const FCoastShape RuinParts[] = {
+		{{-160.0f, -155.0f, 150.0f}, {0.0f, 0.0f, -8.0f}, {0.50f, 0.48f, 3.0f}},
+		{{-160.0f,  155.0f, 150.0f}, {0.0f, 0.0f,  6.0f}, {0.50f, 0.48f, 3.0f}},
+		{{ 145.0f, -145.0f, 115.0f}, {0.0f, 0.0f, -3.0f}, {0.45f, 0.42f, 2.3f}},
+		{{ 145.0f,  155.0f, 150.0f}, {0.0f, 0.0f,  4.0f}, {0.45f, 0.42f, 3.0f}},
+		{{ -10.0f, -150.0f, 290.0f}, {0.0f, 0.0f, -5.0f}, {2.0f, 0.48f, 0.38f}},
+		{{ -25.0f,  145.0f, 245.0f}, {0.0f, 0.0f,  7.0f}, {1.6f, 0.45f, 0.32f}},
+		{{  -5.0f,    0.0f,  22.0f}, {0.0f, 0.0f,  0.0f}, {2.5f, 1.9f, 0.22f}}
+	};
+
+	for (int32 Index = 0; Index < UE_ARRAY_COUNT(RuinParts); ++Index)
+	{
+		const FCoastShape& Part = RuinParts[Index];
+		UStaticMeshComponent* const Mesh = NewObject<UStaticMeshComponent>(
+			Ruin, *FString::Printf(TEXT("RevealedRuinPart_%02d"), Index));
+		Ruin->AddInstanceComponent(Mesh);
+		Mesh->SetupAttachment(Ruin->GetRootComponent());
+		Mesh->SetStaticMesh(Cube);
+		Mesh->SetRelativeTransform(FTransform(Part.Rotation, Part.Location, Part.Scale));
+		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Mesh->SetCastShadow(true);
+		Mesh->SetMaterial(0, StoneMaterial);
+		Mesh->RegisterComponent();
+		UMaterialInstanceDynamic* const Material = Mesh->CreateDynamicMaterialInstance(0);
+		if (Material)
+		{
+			Material->SetVectorParameterValue(TEXT("BaseColor"), FLinearColor(0.54f, 0.61f, 0.67f));
+			Material->SetScalarParameterValue(TEXT("Roughness"), 0.84f);
+		}
+	}
 }
 
 UStaticMeshComponent* ABBCoastalEnvironment::AddShape(

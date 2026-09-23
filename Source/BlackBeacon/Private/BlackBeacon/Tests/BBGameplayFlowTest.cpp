@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/CameraActor.h"
+#include "Components/InstancedStaticMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
@@ -72,6 +73,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<UBBObjectiveSystem> Objectives;
         TWeakObjectPtr<UBBGeneratorComponent> Generator;
         TWeakObjectPtr<ABBLighthouseController> Lighthouse;
+        TArray<TWeakObjectPtr<UStaticMeshComponent>> LanternGlazingPanels;
         TWeakObjectPtr<AActor> Anomaly;
         TWeakObjectPtr<APawn> Pawn;
         TWeakObjectPtr<UBBInteractionComponent> Interaction;
@@ -89,9 +91,15 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
     ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this, State]()
     {
         const double Now = FPlatformTime::Seconds();
-        if (Now - State->StartedAt > 60.0)
+        // The rendered suite captures eight 1080p views after the real flow;
+        // shader warm-up and GPU readbacks can exceed the logic-only budget.
+        if (Now - State->StartedAt > 120.0)
         {
-            AddError(TEXT("Gameplay flow timed out"));
+            const AActor* FocusedActor = State->Interaction.IsValid()
+                ? State->Interaction->GetFocusedActor()
+                : nullptr;
+            AddError(FString::Printf(TEXT("Gameplay flow timed out in stage %d; focused actor: %s"),
+                State->Stage, *GetNameSafe(FocusedActor)));
             return true;
         }
 
@@ -130,6 +138,44 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             if (Coast)
             {
                 TestTrue(TEXT("Opening coast uses the map origin"), Coast->GetActorLocation().IsNearlyZero(1.0f));
+                UInstancedStaticMeshComponent* RockField = Coast->FindComponentByClass<UInstancedStaticMeshComponent>();
+                TestNotNull(TEXT("Coastal boulder field"), RockField);
+                if (RockField)
+                {
+                    TestEqual(TEXT("Coastal boulders block the player"),
+                        RockField->GetCollisionResponseToChannel(ECC_Pawn), ECR_Block);
+                    TestTrue(TEXT("Coastal boulders have collision enabled"),
+                        RockField->GetCollisionEnabled() == ECollisionEnabled::QueryAndPhysics);
+                    TestTrue(TEXT("Coastal rock field uses clustered lobe shapes"),
+                        RockField->GetInstanceCount() > 150);
+                }
+
+                TArray<UStaticMeshComponent*> CoastMeshes;
+                Coast->GetComponents<UStaticMeshComponent>(CoastMeshes);
+                int32 BlockingWreckageCount = 0;
+                int32 BlockingAnnexCount = 0;
+                bool bHasNearDoorFrame = false;
+                bool bHasFarDoorFrame = false;
+                for (const UStaticMeshComponent* Mesh : CoastMeshes)
+                {
+                    if (Mesh && Mesh->GetName().StartsWith(TEXT("Wreck_"))
+                        && Mesh->GetCollisionEnabled() == ECollisionEnabled::QueryAndPhysics
+                        && Mesh->GetCollisionResponseToChannel(ECC_Pawn) == ECR_Block)
+                    {
+                        ++BlockingWreckageCount;
+                    }
+                    if (Mesh && Mesh->GetName().StartsWith(TEXT("Annex"))
+                        && Mesh->GetCollisionEnabled() == ECollisionEnabled::QueryAndPhysics
+                        && Mesh->GetCollisionResponseToChannel(ECC_Pawn) == ECR_Block)
+                    {
+                        ++BlockingAnnexCount;
+                    }
+                    bHasNearDoorFrame |= Mesh && Mesh->GetName() == TEXT("AnnexWestLeft");
+                    bHasFarDoorFrame |= Mesh && Mesh->GetName() == TEXT("AnnexWestRight");
+                }
+                TestTrue(TEXT("Shipwreck debris blocks the player"), BlockingWreckageCount > 0);
+                TestTrue(TEXT("Generator annex has blocking walls and roof"), BlockingAnnexCount >= 8);
+                TestTrue(TEXT("Generator annex has both sides of an open doorway"), bHasNearDoorFrame && bHasFarDoorFrame);
             }
             UGameInstance* GameInstance = World->GetGameInstance();
             UBBObjectiveSystem* Objectives = GameInstance ? GameInstance->GetSubsystem<UBBObjectiveSystem>() : nullptr;
@@ -155,6 +201,21 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             {
                 return true;
             }
+            for (UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(State->Lighthouse.Get()))
+            {
+                if (Mesh && Mesh->GetName().StartsWith(TEXT("LanternGlass_")))
+                {
+                    State->LanternGlazingPanels.Add(Mesh);
+                }
+            }
+            TestEqual(TEXT("Lantern housing has eight glazing panels"), State->LanternGlazingPanels.Num(), 8);
+            int32 VisibleGlazingPanels = 0;
+            for (const TWeakObjectPtr<UStaticMeshComponent>& Panel : State->LanternGlazingPanels)
+            {
+                VisibleGlazingPanels += Panel.IsValid() && Panel->IsVisible() ? 1 : 0;
+                TestNotNull(TEXT("Unpowered glazing has a material"), Panel.IsValid() ? Panel->GetMaterial(0) : nullptr);
+            }
+            TestEqual(TEXT("Unpowered lantern glazing remains visible"), VisibleGlazingPanels, 8);
             UBBSaveSubsystem* SaveSubsystem = GameInstance->GetSubsystem<UBBSaveSubsystem>();
             TestNotNull(TEXT("Save subsystem"), SaveSubsystem);
             if (!SaveSubsystem || !SaveSubsystem->SaveWorldData(
@@ -164,6 +225,9 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 return true;
             }
             TestNotNull(TEXT("Reveal component"), State->Anomaly->FindComponentByClass<UBBBeamRevealComponent>());
+            TArray<UStaticMeshComponent*> AnomalyMeshes;
+            State->Anomaly->GetComponents<UStaticMeshComponent>(AnomalyMeshes);
+            TestTrue(TEXT("Anomaly has a modular ruin silhouette"), AnomalyMeshes.Num() >= 8);
             TActorIterator<ABBWeatherController> WeatherIt(World);
             ABBWeatherController* Weather = WeatherIt ? *WeatherIt : nullptr;
             TestNotNull(TEXT("Weather controller"), Weather);
@@ -244,7 +308,15 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             State->Pawn->SetActorLocation(FVector(-100.0f, 0.0f, 1650.0f));
             TestTrue(TEXT("Lantern volume completes climb objective"), Objectives->IsCompleted(TEXT("BB_OBJ_CLIMB")));
             ABBlackBeaconPlayerCharacter* Character = Cast<ABBlackBeaconPlayerCharacter>(State->Pawn.Get());
-            UStaticMeshComponent* ControlMesh = Lighthouse->FindComponentByClass<UStaticMeshComponent>();
+            UStaticMeshComponent* ControlMesh = nullptr;
+            for (UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(Lighthouse))
+            {
+                if (Mesh && Mesh->GetName() == TEXT("ControlMesh"))
+                {
+                    ControlMesh = Mesh;
+                    break;
+                }
+            }
             TestNotNull(TEXT("Traceable lantern control"), ControlMesh);
             if (!Character || !ControlMesh)
             {
@@ -263,6 +335,12 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             }
             TestTrue(TEXT("Player trace starts lighthouse"), State->Interaction->TryInteract());
             TestTrue(TEXT("Beam starts through lighthouse interaction"), Lighthouse->BeamComponent->IsPowered());
+            int32 VisibleGlazingPanels = 0;
+            for (const TWeakObjectPtr<UStaticMeshComponent>& Panel : State->LanternGlazingPanels)
+            {
+                VisibleGlazingPanels += Panel.IsValid() && Panel->IsVisible() ? 1 : 0;
+            }
+            TestEqual(TEXT("Lantern glazing remains visible when lit"), VisibleGlazingPanels, 8);
             ABBlackBeaconPlayerController* PlayerController = Cast<ABBlackBeaconPlayerController>(World->GetFirstPlayerController());
             if (PlayerController && PlayerController->PromptWidget)
             {
@@ -286,6 +364,15 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         {
             TestTrue(TEXT("Full objective chain completed"), Objectives->IsFinished());
             TestFalse(TEXT("Anomaly is visible"), State->Anomaly->IsHidden());
+            int32 VisibleRuinParts = 0;
+            for (const UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(State->Anomaly.Get()))
+            {
+                if (Mesh && Mesh->GetName().StartsWith(TEXT("RevealedRuinPart_")) && Mesh->IsVisible())
+                {
+                    ++VisibleRuinParts;
+                }
+            }
+            TestTrue(TEXT("BeamReveal exposes the ruin pieces"), VisibleRuinParts >= 7);
             USpotLightComponent* BeamLight = Lighthouse->FindComponentByClass<USpotLightComponent>();
             TestTrue(TEXT("Powered beam light is visible"), BeamLight && BeamLight->IsVisible());
             if (BeamLight)
@@ -392,6 +479,13 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             Generator->Stop();
             TestFalse(TEXT("Stopping generator removes lighthouse power"), Lighthouse->IsPowered());
             TestFalse(TEXT("Beam turns off when power is lost"), Lighthouse->BeamComponent->IsPowered());
+            int32 VisibleGlazingPanels = 0;
+            for (const TWeakObjectPtr<UStaticMeshComponent>& Panel : State->LanternGlazingPanels)
+            {
+                VisibleGlazingPanels += Panel.IsValid() && Panel->IsVisible() ? 1 : 0;
+                TestNotNull(TEXT("Glazing retains a material after power loss"), Panel.IsValid() ? Panel->GetMaterial(0) : nullptr);
+            }
+            TestEqual(TEXT("Lantern glazing remains visible after power loss"), VisibleGlazingPanels, 8);
             TestTrue(TEXT("Beam light hides after power loss"), BeamLight && !BeamLight->IsVisible());
             TestTrue(TEXT("Rain field stays fixed as the player traverses the map"),
                 State->Weather.IsValid()

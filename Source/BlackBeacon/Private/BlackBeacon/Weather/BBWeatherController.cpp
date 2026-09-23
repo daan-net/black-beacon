@@ -7,6 +7,7 @@
 #include "Components/SkyAtmosphereComponent.h"
 #include "Components/SkyLightComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 
 ABBWeatherController::ABBWeatherController()
@@ -33,9 +34,31 @@ ABBWeatherController::ABBWeatherController()
 	SkyLight = CreateDefaultSubobject<USkyLightComponent>(TEXT("SkyLight"));
 	SkyLight->SetupAttachment(FogComponent);
 	SkyLight->bRealTimeCapture = true;
-	SkyLight->SetIntensity(0.1f);
+	SkyLight->SetLightColor(FLinearColor(0.48f, 0.60f, 0.86f));
 
-	
+	SkyCloudDome = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SkyCloudDome"));
+	SkyCloudDome->SetupAttachment(RootComponent);
+	SkyCloudDome->SetMobility(EComponentMobility::Movable);
+	SkyCloudDome->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SkyCloudDome->SetCastShadow(false);
+	SkyCloudDome->SetReceivesDecals(false);
+	SkyCloudDome->SetCanEverAffectNavigation(false);
+	SkyCloudDome->SetReverseCulling(false);
+	SkyCloudDome->SetRelativeScale3D(FVector(40000.0f));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SkyDomeMesh(
+		TEXT("/Engine/EngineSky/SM_SkySphere.SM_SkySphere"));
+	if (SkyDomeMesh.Succeeded())
+	{
+		SkyCloudDome->SetStaticMesh(SkyDomeMesh.Object);
+	}
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> SkyCloudBase(
+		TEXT("/Game/BlackBeacon/Materials/M_StormSky.M_StormSky"));
+	if (SkyCloudBase.Succeeded())
+	{
+		SkyCloudDome->SetMaterial(0, SkyCloudBase.Object);
+		SkyCloudMaterial = SkyCloudDome->CreateAndSetMaterialInstanceDynamic(0);
+	}
+
 	RainRoot = CreateDefaultSubobject<USceneComponent>(TEXT("RainRoot"));
 	RainRoot->SetupAttachment(RootComponent);
 	RainField = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("RainField"));
@@ -66,6 +89,7 @@ void ABBWeatherController::BeginPlay()
 {
 	Super::BeginPlay();
 	MoonLight->SetIntensity(MoonlightLux);
+	SkyLight->SetIntensity(MoonSkyFillIntensity);
 	BuildInterpolatorPalette();
 	if (RainRoot)
 	{
@@ -163,6 +187,12 @@ void ABBWeatherController::ApplyToFog()
 void ABBWeatherController::ApplyOutputs()
 {
 	const float RainIntensity = static_cast<float>(Interpolator.GetRainIntensity());
+	const float Cloudiness = static_cast<float>(Interpolator.GetCloudiness());
+	const float WindStrength = static_cast<float>(Interpolator.GetWindStrength());
+	if (SkyCloudMaterial)
+	{
+		SkyCloudMaterial->SetScalarParameterValue(TEXT("CloudOpacity"), SkyCloudOpacity * Cloudiness);
+	}
 
 	if (RainRoot && GetWorld())
 	{
@@ -171,6 +201,10 @@ void ABBWeatherController::ApplyOutputs()
 		{
 			// The precipitation field is anchored to the level, independent of view movement.
 			FVector CamLoc = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetCameraLocation() : (PC->GetPawn() ? PC->GetPawn()->GetActorLocation() : FVector::ZeroVector);
+			if (SkyCloudDome)
+			{
+				SkyCloudDome->SetWorldLocation(CamLoc);
+			}
 
 			// A single roof probe is enough to cull the local rain field indoors.
 			RainOutputUpdateCountdown -= GetWorld()->GetDeltaSeconds();

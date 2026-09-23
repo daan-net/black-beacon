@@ -13,6 +13,10 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 ## 2026-09-23 — M0.2 — shipwreck coast silhouette and atmosphere
 
+- **User-visible:** Added a continuous wet-basalt tower shell as a non-colliding child of the lighthouse controller. It covers the visual gaps between the serialized floor sections while preserving the interior stair route. The rendered opening capture confirms the tower silhouette; a gameplay test was updated to target the named lantern control after the new mesh changed component order.
+- **User-visible:** Reduced configured moonlight and sky fill from 5.0/0.35 to 1.5/0.1 lux after Vulkan captures showed an overly bright blue night. This darkens the shoreline, though the generated storm panorama remains bluer and brighter than the supplied reference direction.
+- UE 5.8.2 `BlackBeaconEditor` built successfully. The full Vulkan `BlackBeacon.M01` automation report passed 3/3 (GameplayFlow, PlayerControls, StairTraversal), zero warnings/errors, and regenerated the visual captures. The automation process returned 1 while UnrealTrace shut down after all tests had passed; the report itself records success. `./Tools/validate.sh` passes with 45/45 logic checks. The new shell and coast are still blockout geometry; no M1 work started.
+
 - **User-visible:** Replaced the geometric basic shapes of the shipwreck coast with a denser, procedural array of non-uniformly scaled and rotated cubic structures. This creates a more natural, jagged rocky silhouette framing the lighthouse.
 - **User-visible:** Added a physical SkyAtmosphere and SkyLight component to the weather controller, and tied the moon's directional light into the atmosphere. The opening frame now features a cohesive dark sky and moody nocturnal atmosphere instead of an empty black void.
 - UE 5.8.2 `BlackBeaconEditor` built successfully. The Vulkan M0.1 suite passed, regenerating the `BlackBeacon_M02_Opening.png` screenshot. `./Tools/validate.sh` remains green with 45/45 logic checks. The opening presentation is now much more atmospheric.

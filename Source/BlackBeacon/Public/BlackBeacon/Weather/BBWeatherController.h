@@ -22,6 +22,8 @@ class UDirectionalLightComponent;
 class USkyAtmosphereComponent;
 class USkyLightComponent;
 class UInstancedStaticMeshComponent;
+class UStaticMeshComponent;
+class UMaterialInstanceDynamic;
 
 // UE-facing mirror of the logic-layer phase enum (config-friendly).
 UENUM(BlueprintType)
@@ -92,6 +94,9 @@ public:
 	TObjectPtr<USkyLightComponent> SkyLight = nullptr;
 
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
+	TObjectPtr<UStaticMeshComponent> SkyCloudDome = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
 	TObjectPtr<USceneComponent> RainRoot = nullptr;
 
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
@@ -106,6 +111,12 @@ public:
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
 	float MoonlightLux = 1.5f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
+	float MoonSkyFillIntensity = 0.1f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather|Sky")
+	float SkyCloudOpacity = 0.8f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather|Rain")
 	float RainFieldRadiusCm = 5500.0f;
@@ -159,6 +170,8 @@ private:
 	};
 
 	BlackBeacon::Logics::FBBWeatherInterpolator Interpolator;
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> SkyCloudMaterial = nullptr;
 	TArray<FRainParticleState> RainParticles;
 	TArray<FTransform> RainInstanceTransforms;
 	FRandomStream RainRandomStream;

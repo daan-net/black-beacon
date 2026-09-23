@@ -16,6 +16,10 @@
 
 #include "BBLighthouseController.generated.h"
 
+class UInstancedStaticMeshComponent;
+class UMaterialInterface;
+class UStaticMeshComponent;
+
 UCLASS()
 class ABBLighthouseController : public AActor,
 	public IBBPowerConsumerInterface,
@@ -29,6 +33,9 @@ public:
 	// --- components ---
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Lighthouse")
 	TObjectPtr<UBBLighthouseBeamComponent> BeamComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Lighthouse")
+	TObjectPtr<UStaticMeshComponent> TowerExteriorSkin = nullptr;
 
 	// --- power consumer ---
 	virtual FName GetConsumerId() const override;
@@ -81,9 +88,22 @@ private:
 	void RegisterWithPowerSystem();
 	void HandleFirstPower(float SuppliedWatts);
 	void ToggleBeamControl();
+	void UpdateLanternHousingState();
 
 	bool bPowered = false;
 	bool bPowerGrantedOnce = false;
 	bool bBeamStarted = false;
 	bool bAimObjectiveCompleted = false;
+
+	UPROPERTY()
+	TObjectPtr<UInstancedStaticMeshComponent> LanternFrame = nullptr;
+
+	UPROPERTY()
+    TArray<TObjectPtr<UStaticMeshComponent>> LanternGlazingPanels;
+
+	UPROPERTY()
+	TObjectPtr<UMaterialInterface> LanternDarkMaterial = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UMaterialInterface> LanternLitMaterial = nullptr;
 };

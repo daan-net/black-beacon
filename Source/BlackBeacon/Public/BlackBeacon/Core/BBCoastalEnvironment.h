@@ -9,6 +9,7 @@
 
 class USceneComponent;
 class UStaticMeshComponent;
+class UInstancedStaticMeshComponent;
 
 UCLASS()
 class ABBCoastalEnvironment : public AActor
@@ -22,6 +23,7 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	void BuildRevealedRuin();
 	UStaticMeshComponent* AddShape(
 		const TCHAR* Name,
 		const TCHAR* MeshPath,
@@ -33,6 +35,12 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> SceneRoot = nullptr;
 
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Coast")
+	TObjectPtr<UInstancedStaticMeshComponent> RockField = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Coast")
+	TObjectPtr<UStaticMeshComponent> OceanSurface = nullptr;
+
 	UPROPERTY()
 	TArray<TObjectPtr<UStaticMeshComponent>> RockSurfaces;
 
@@ -41,4 +49,7 @@ private:
 
 	UPROPERTY()
 	TArray<TObjectPtr<UStaticMeshComponent>> WreckSurfaces;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UStaticMeshComponent>> AnnexSurfaces;
 };
