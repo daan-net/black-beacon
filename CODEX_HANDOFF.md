@@ -5,7 +5,7 @@ the root docs; here is the operational picture and the exact next steps.
 
 > 2026-09-21 update: the engine-install blocker described below is resolved.
 > UE 5.8.2 is installed at `~/WORK/_TOOLS/UE_5.8.2`; the editor target builds
-> and the project opens. See CURRENT_STATE.md for live M0.1 Phase B status.
+> and the project opens. M0.1 is complete; see CURRENT_STATE.md for live status.
 
 ## 0. TL;DR
 
@@ -13,11 +13,11 @@ BLACK BEACON is a UE5 PC-first, C++-first, single-player mystery built around on
 reusable mechanic: the lighthouse beam reveals things invisible under normal
 light. M0 is complete. UE 5.8.2 is installed; the editor target builds and the
 actual project opens. The plain-C++ Logics layer passes 45/45 tests, and M0.1
-input and gameplay-flow automation run in the engine. See CURRENT_STATE.md for
-remaining physical traversal and visual checks.
+input, gameplay-flow, and stair traversal automation pass in the engine. Direct
+play review accepted the moving beam and corrected stair route.
 
-Continue M0.1 acceptance (`MILESTONES.md`) without expanding scope
-(GAME_DESIGN §1, §7).
+Continue with the scoped M0.2 work in `MILESTONES.md` without expanding the
+vertical slice (GAME_DESIGN §1, §7).
 
 ---
 
@@ -51,25 +51,11 @@ cmake -S Tests -B Tests/build -G Ninja && cmake --build Tests/build && ./Tests/b
 `BlackBeacon.uproject` has `"EngineAssociation": ""` on purpose: a fresh engine
 associates on first open (or set it to the installed version, e.g. `5.4`).
 
-## 3. Unreal Engine setup (the blocker)
+## 3. Unreal Engine setup
 
-No engine is installed on this machine. Paths (as of 2026-09-21):
-
-- **Windows (easiest, official):** install *Epic Games Launcher* → *Unreal
-  Engine* → 5.4.x or newer (5.4+ is the documented baseline). Launcher-based
-  installs don't need Epic GitHub access. Then open `BlackBeacon.uproject`.
-- **Linux:** there is **no native launcher** for UE5 consumer builds on this
-  platform. Options:
-  1. Build the engine from source: requires an **Epic-linked GitHub account**
-     (`EpicGames/UnrealEngine` access is granted per-account by Epic). Then use
-     the `Linux/Build.sh` command above.
-  2. Develop in the editor on a Windows machine/instance and keep this repo in
-     sync; both Target files build Win64 out of the box.
-- Do **not** pursue cracked/unofficial distributions; credentials/policy is a
-  hard stop per AGENTS.md §6.
-
-"Engine is working" = the `BlackBeacon` module compiles with zero errors **and**
-`Play` boots the greybox slice (see §6 checklist).
+UE 5.8.2 is installed at `/home/a1/WORK/_TOOLS/UE_5.8.2`; `~/UnrealEngine`
+points to it. The Linux editor target, project startup, NVIDIA Vulkan runtime,
+and rendered automation are verified.
 
 ## 4. Repo map (short version)
 
@@ -95,7 +81,7 @@ Source/BlackBeacon/           single runtime module
   Private/BlackBeacon/        mirrors Public one-to-one
 Tests/                        CMake + standalone harness → bb_logic_tests (45 checks)
 Tools/validate.sh             local gate: JSON/ini sanity + logic tests
-Content/                      no .uassets — greybox is code-built via BBProceduralWorld
+Content/                      small authored material set; world remains code-built
 ```
 
 Design notes you'll need:

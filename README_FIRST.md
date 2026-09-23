@@ -68,9 +68,9 @@ The logic layer (`Source/BlackBeacon/Public/BlackBeacon/Logics/`) is plain, engi
 (beam math, beam-reveal state machine, objective graph resolver, weather interpolation)
 that is unit-tested by `Tests/`. Those tests run on any machine with a C++ compiler.
 
-The UE C++ systems compile in the actual engine, and the greybox gameplay path has
-passed in-engine automation. The moving-beam visual review remains open; see
-[CURRENT_STATE.md](CURRENT_STATE.md) for exact status.
+The UE C++ systems compile in the actual engine, and the complete M0.1 greybox path
+has passed in-engine automation and direct play review. See
+[CURRENT_STATE.md](CURRENT_STATE.md) for exact status and the next milestone.
 
 ## Ground rules (abridged)
 

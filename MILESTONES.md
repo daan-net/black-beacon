@@ -18,7 +18,7 @@ unit tests, greybox bootstrap world, git history, handoff docs.
 - [x] Honest CURRENT_STATE.md + CODEX_HANDOFF.md
 - [x] Unreal Engine 5.8.2 installed; UE systems compile
 
-## M0.1 — Engine bring-up (Phase A complete; Phase B in progress)
+## M0.1 — Engine bring-up (complete)
 
 Build the UE 5.8.2 module, run the greybox slice, and verify the complete player path.
 
@@ -27,14 +27,14 @@ Build the UE 5.8.2 module, run the greybox slice, and verify the complete player
 - [x] Play the greybox slice: walk/look/sprint/crouch work (in-engine input automation)
 - [x] Interact with generator → spin-up → power on (in-engine flow automation)
 - [x] Climb to lantern room, start the beam, manual rotation works (stair traversal and gameplay-flow automation)
-- [ ] Beam is visibly volumetric through fog
+- [x] Beam is visibly volumetric through fog
 - [x] First anomaly reveals and persists per current config (in-engine flow automation)
 - [x] Whole objective chain completes; HUD prompt updates (in-engine flow automation)
 
-Rendered captures now show the beam on/off, impact, and anomaly reveal. Review the
-moving beam directly in play and compare beam-on/off rendering cost before accepting
-its fog appearance. The flow automation reaches the lantern volume by teleporting
-the pawn; the separate stair traversal test moves the character across all 84 steps.
+Rendered captures show the beam on/off, impact, and anomaly reveal. Direct play review
+accepted its moving fog appearance and the corrected stair entrance and transitions.
+The flow automation reaches the lantern volume by teleporting the pawn; the separate
+stair traversal test moves the character across all 84 steps.
 
 ## M0.2 — Vertical slice 0.1 polish (first "playable prototype")
 
