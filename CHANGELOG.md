@@ -16,6 +16,7 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 - **User-visible:** adjusted the shaft against the local `Manual_Visuals` references: warmer linear light colour, broader silhouette falloff, and subtle low-frequency world-space mist variation. The material remains one texture-free analytic cone synchronized with the gameplay query.
 - **User-visible:** reduced the spotlight from 1500 to 1200 lumens to soften impact clipping while retaining a clear B_Air/B_AirOff difference. BeamReveal geometry and state logic are unchanged.
 - UE 5.8.2 `BlackBeaconEditor` built successfully. The rendered Vulkan `BlackBeacon.M01` suite passed 3/3 and regenerated all five 1920×1080 captures. A 3000-frame RTX 2060 CSV capture measured 5.78 ms median frame time and 5.35 ms median GPU time after the first 500 frames; this is aggregate startup/early-game evidence rather than an isolated ON/OFF comparison. `./Tools/validate.sh` remains required before checkpointing. M0.1 awaits direct moving-beam visual review.
+- **User-visible:** fixed the generator prompt failing to appear at a natural viewing angle. The greybox generator was partly below the floor and ended below eye height; it now stands from floor level to 180 cm, and interaction uses a configurable 24 cm sphere sweep instead of a zero-width ray. The sweep still stops at the first blocking surface. GameplayFlow now verifies focus and startup while aiming horizontally at camera height.
 
 ## 2026-09-22 — M0.1 Phase B — first-person control and stair readability
 

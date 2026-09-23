@@ -17,7 +17,7 @@ class IBBInteractableInterface;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FBBInteractionFocusChanged, AActor* /*FocusedActor*/, const FText& /*Prompt*/);
 
-UCLASS(ClassGroup = (BlackBeacon), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (BlackBeacon), config = Game, meta = (BlueprintSpawnableComponent))
 class UBBInteractionComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -35,10 +35,15 @@ public:
 	// Fired whenever the focused interactable changes (or focus is lost).
 	FBBInteractionFocusChanged OnFocusChanged;
 
-	UPROPERTY(EditAnywhere, Category = "BlackBeacon|Interaction")
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Interaction")
 	float TraceDistance = 600.0f;
 
-	UPROPERTY(EditAnywhere, Category = "BlackBeacon|Interaction")
+	// A small sweep is forgiving at normal first-person aim while the first
+	// blocking surface still prevents interaction through walls.
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Interaction")
+	float TraceRadius = 24.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Interaction")
 	float TraceInterval = 0.1f; // 10 Hz - plenty for a prompt
 
 protected:

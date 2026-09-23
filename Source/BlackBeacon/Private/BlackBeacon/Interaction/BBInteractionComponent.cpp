@@ -2,6 +2,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "CollisionQueryParams.h"
+#include "CollisionShape.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 
@@ -83,7 +84,9 @@ void UBBInteractionComponent::RefreshFocus()
 	const FVector Start = Camera->GetComponentLocation();
 	const FVector End = Start + Camera->GetForwardVector() * TraceDistance;
 
-	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	if (GetWorld()->SweepSingleByChannel(
+		Hit, Start, End, FQuat::Identity, ECC_Visibility,
+		FCollisionShape::MakeSphere(FMath::Max(TraceRadius, 0.0f)), Params))
 	{
 		if (FindInteractableOnActor(Hit.GetActor()))
 		{

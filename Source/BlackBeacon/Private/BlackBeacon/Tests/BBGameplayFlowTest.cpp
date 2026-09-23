@@ -141,7 +141,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             {
                 TestTrue(TEXT("Beam contributes to volumetric fog"), BeamLight->VolumetricScatteringIntensity > 0.0f);
             }
-            TestTrue(TEXT("Generator spawned in annex"), GeneratorActor->GetActorLocation().Equals(FVector(1560.0f, 1120.0f, 40.0f), 1.0f));
+            TestTrue(TEXT("Generator spawned at usable height in annex"), GeneratorActor->GetActorLocation().Equals(FVector(1560.0f, 1120.0f, 90.0f), 1.0f));
             TestTrue(TEXT("Anomaly spawned on far cliff"), State->Anomaly->GetActorLocation().Equals(FVector(-5200.0f, 4200.0f, 80.0f), 1.0f));
             TestTrue(TEXT("Player starts at landing"), FVector2D(State->Pawn->GetActorLocation()).Equals(FVector2D(-4500.0f, -600.0f), 10.0f));
             State->Pawn->SetActorLocation(FVector(360.0f, 0.0f, 100.0f));
@@ -149,7 +149,9 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             State->Pawn->SetActorLocation(FVector(1560.0f, 1120.0f, 100.0f));
             TestTrue(TEXT("Entering annex volume finds generator"), Objectives->IsCompleted(TEXT("BB_OBJ_FIND_GENERATOR")));
             State->Pawn->SetActorLocation(FVector(1300.0f, 1120.0f, 100.0f));
-            Character->GetController()->SetControlRotation((GeneratorActor->GetActorLocation() - Character->GetFirstPersonCamera()->GetComponentLocation()).Rotation());
+            const FVector CameraLocation = Character->GetFirstPersonCamera()->GetComponentLocation();
+            const FVector NaturalAimTarget(GeneratorActor->GetActorLocation().X, GeneratorActor->GetActorLocation().Y, CameraLocation.Z);
+            Character->GetController()->SetControlRotation((NaturalAimTarget - CameraLocation).Rotation());
             TestEqual(TEXT("Generator start is current"), Objectives->GetCurrentObjectiveId(), FString(TEXT("BB_OBJ_START_GENERATOR")));
             State->Stage = 1;
             State->StageAt = Now;

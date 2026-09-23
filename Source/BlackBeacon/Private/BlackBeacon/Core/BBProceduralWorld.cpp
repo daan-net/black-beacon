@@ -313,8 +313,8 @@ void UBBProceduralWorld::SpawnGeneratorAnnex(UWorld* World)
 	// The generator itself (interactable, power source).
 	AActor* const GenActor = SpawnMeshActor(
 		World, kMeshCube,
-		FTransform(FRotator(0, 0, 0), FVector(1560.0f, 1120.0f, 40.0f)),
-		FVector(1.6f, 1.3f, 1.4f),
+		FTransform(FRotator(0, 0, 0), FVector(1560.0f, 1120.0f, 90.0f)),
+		FVector(1.6f, 1.3f, 1.8f),
 		TEXT("BB_Generator"));
 	if (GenActor)
 	{
