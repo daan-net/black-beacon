@@ -169,6 +169,11 @@ void UBBSaveSubsystem::RestoreSnapshot(UWorld* World, const FBBWorldSaveData& Da
 			{
 				Reveal->SetRevealedForRestore(Data.PersistentlyRevealedActors.Contains(It->GetName()));
 			}
+			else
+			{
+				// Transient reveals are part of the current beam moment, not saved world state.
+				Reveal->ResetForRestore();
+			}
 		}
 	}
 

@@ -251,3 +251,25 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
 - Increased only the seven BeamReveal-owned ruin pieces to form a roughly 18 m tall silhouette that can be read from the lighthouse. The anomaly actor's location, hidden initial state, collision, beam query, and objective progression are unchanged.
 - Improved the rendered test framing to capture the reveal from beside the lighthouse, with an offset view and narrower field of view so the distant silhouette is visible in the scene.
 - UE 5.8.2 Linux Development build succeeded. The full rendered Vulkan `BlackBeacon.M01` suite passed 3/3 with zero test warnings/errors, including the new visible-size assertion; `./Tools/validate.sh` passed with 45/45 logic tests. The ruin remains greybox primitives, and the coast and lighthouse still need authored visual work.
+## 2026-09-23 — M1 — beam-following first reveal (in progress)
+
+- Inspected the existing gameplay flow before implementation: generator, lighthouse
+  power, stair traversal, beam control, weather, save/load, and the first anomaly were
+  already present. No duplicate systems were added.
+- Extended the existing BeamReveal component to evaluate tagged static-mesh parts
+  independently against the subscribed beam query. The current ruin's visible parts
+  now follow the moving beam, fade after it leaves while power remains on, and hide
+  after the fade. First discovery activates a shoreline search objective. Save restore
+  resets this transient visual state.
+- Corrected the existing BeamReveal config keys to the component's actual UPROPERTY
+  names. The first reveal is transient by default; persistent behavior remains available
+  through the existing property.
+- Expanded rendered GameplayFlow assertions for partial reveal, beam departure fade,
+  discovery progression, and transient reveal reset on load. The storm capture now waits
+  for beam alignment and frames the reveal from near the lighthouse.
+- UE 5.8.2 Linux Development build succeeded. The full Vulkan `BlackBeacon.M01` suite
+  passed 3/3 after the final capture adjustment. `./Tools/validate.sh` passed with 45/45 logic tests.
+- The generated `BlackBeacon_M01_D_Reveal.png` is an actual storm render. It confirms
+  the fog beam but shows that the seven-piece ruin is still too dark and crude. This is
+  a tested mechanic with placeholder art, not a completed M1 reveal or visual-review
+  checkpoint.

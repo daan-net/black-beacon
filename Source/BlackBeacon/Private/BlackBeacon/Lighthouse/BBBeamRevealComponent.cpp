@@ -3,6 +3,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 #include "BlackBeacon/Lighthouse/BBLighthouseBeamComponent.h"
 #include "BlackBeacon/Lighthouse/BBLighthouseController.h"
@@ -33,6 +34,11 @@ void UBBBeamRevealComponent::BeginPlay()
 		Owner->SetActorEnableCollision(false);
 		FadeMesh = Owner->FindComponentByClass<UStaticMeshComponent>();
 	}
+	if (FadeMesh && !FadeMaterialParameterName.IsNone())
+	{
+		FadeMaterial = FadeMesh->CreateAndSetMaterialInstanceDynamic(0);
+	}
+	CacheTaggedParts();
 
 	if (bAutoSubscribeToBeam)
 	{
@@ -94,7 +100,25 @@ void UBBBeamRevealComponent::UpdateFromBeam(const BlackBeacon::Logics::FBBBeamQu
 		return;
 	}
 
-	const bool bWasFullyRevealed = Machine.WasFullyRevealed();
+	const bool bWasFullyRevealed = WasFullyRevealed();
+	if (bUseTaggedPartReveal && !TaggedPartStates.IsEmpty())
+	{
+		for (FTaggedPartState& Part : TaggedPartStates)
+		{
+			if (UStaticMeshComponent* const Mesh = Part.Mesh.Get())
+			{
+				const FVector Position = Mesh->Bounds.Origin;
+				Part.Machine.Tick(DeltaTime, BeamQuery,
+					BlackBeacon::Logics::BBVec3(Position.X, Position.Y, Position.Z));
+			}
+		}
+		ApplyTaggedPartVisibility();
+		if (!bWasFullyRevealed && WasFullyRevealed())
+		{
+			HandleFirstFullReveal();
+		}
+		return;
+	}
 
 	Machine.Tick(DeltaTime, BeamQuery, BlackBeacon::Logics::BBVec3(
 		Owner->GetActorLocation().X,
@@ -103,7 +127,7 @@ void UBBBeamRevealComponent::UpdateFromBeam(const BlackBeacon::Logics::FBBBeamQu
 
 	ApplyVisibility(Machine.GetVisibilityAmount());
 
-	if (!bWasFullyRevealed && Machine.WasFullyRevealed())
+	if (!bWasFullyRevealed && WasFullyRevealed())
 	{
 		HandleFirstFullReveal();
 	}
@@ -125,12 +149,131 @@ void UBBBeamRevealComponent::ApplyVisibility(float Amount)
 	// named scalar; otherwise the visibility toggle carries the reveal).
 	if (FadeMesh && !FadeMaterialParameterName.IsNone())
 	{
-		UMaterialInstanceDynamic* const MIC = FadeMesh->CreateAndSetMaterialInstanceDynamic(0);
-		if (MIC)
+		if (FadeMaterial)
 		{
-			MIC->SetScalarParameterValue(FadeMaterialParameterName, Amount);
+			FadeMaterial->SetScalarParameterValue(FadeMaterialParameterName, Amount);
 		}
 	}
+}
+
+void UBBBeamRevealComponent::EnableTaggedPartReveal()
+{
+	bUseTaggedPartReveal = true;
+	Machine.Reset();
+	CacheTaggedParts();
+}
+
+void UBBBeamRevealComponent::CacheTaggedParts()
+{
+	if (!bUseTaggedPartReveal)
+	{
+		return;
+	}
+
+	AActor* const Owner = GetOwner();
+	if (!Owner)
+	{
+		return;
+	}
+
+	TArray<UStaticMeshComponent*> TaggedMeshes;
+	Owner->GetComponents<UStaticMeshComponent>(TaggedMeshes);
+	TaggedMeshes.RemoveAll([this](const UStaticMeshComponent* Mesh)
+	{
+		return !Mesh || !Mesh->ComponentHasTag(RevealPartTag);
+	});
+
+	if (TaggedMeshes.Num() == TaggedPartStates.Num())
+	{
+		bool bSameParts = true;
+		for (int32 Index = 0; Index < TaggedMeshes.Num(); ++Index)
+		{
+			bSameParts &= TaggedPartStates[Index].Mesh.Get() == TaggedMeshes[Index];
+		}
+		if (bSameParts)
+		{
+			return;
+		}
+	}
+
+	BlackBeacon::Logics::FBBRevealParams Params;
+	Params.RevealDelay = RevealDelay;
+	Params.FadeTime = FadeTime;
+	Params.MinBeamIntensity = MinBeamIntensity;
+	Params.VisibilityDuration = VisibilityDuration;
+	Params.bPersistent = bPersistent;
+
+	TaggedPartStates.Reset(TaggedMeshes.Num());
+	for (UStaticMeshComponent* const Mesh : TaggedMeshes)
+	{
+		FTaggedPartState& Part = TaggedPartStates.AddDefaulted_GetRef();
+		Part.Mesh = Mesh;
+		Part.Machine.SetParams(Params);
+		Part.Material = Cast<UMaterialInstanceDynamic>(Mesh->GetMaterial(0));
+		if (!Part.Material.IsValid())
+		{
+			Part.Material = Mesh->CreateAndSetMaterialInstanceDynamic(0);
+		}
+		Mesh->SetVisibility(false, false);
+	}
+	ApplyTaggedPartVisibility();
+}
+
+void UBBBeamRevealComponent::ApplyTaggedPartVisibility()
+{
+	AActor* const Owner = GetOwner();
+	if (!Owner)
+	{
+		return;
+	}
+
+	bool bAnyVisible = false;
+	for (FTaggedPartState& Part : TaggedPartStates)
+	{
+		const float Amount = static_cast<float>(Part.Machine.GetVisibilityAmount());
+		const bool bPartVisible = Amount > 0.01f;
+		if (UStaticMeshComponent* const Mesh = Part.Mesh.Get())
+		{
+			Mesh->SetVisibility(bPartVisible, false);
+		}
+		if (UMaterialInstanceDynamic* const Material = Part.Material.Get())
+		{
+			Material->SetVectorParameterValue(TEXT("BaseColor"), RevealedPartTint * Amount);
+		}
+		bAnyVisible |= bPartVisible;
+	}
+	Owner->SetActorHiddenInGame(!bAnyVisible);
+	Owner->SetActorEnableCollision(false);
+}
+
+bool UBBBeamRevealComponent::WasFullyRevealed() const
+{
+	if (!bUseTaggedPartReveal || TaggedPartStates.IsEmpty())
+	{
+		return Machine.WasFullyRevealed();
+	}
+	for (const FTaggedPartState& Part : TaggedPartStates)
+	{
+		if (Part.Machine.WasFullyRevealed())
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+float UBBBeamRevealComponent::GetVisibilityAmount() const
+{
+	if (!bUseTaggedPartReveal || TaggedPartStates.IsEmpty())
+	{
+		return static_cast<float>(Machine.GetVisibilityAmount());
+	}
+	float MaxAmount = 0.0f;
+	for (const FTaggedPartState& Part : TaggedPartStates)
+	{
+		MaxAmount = FMath::Max(MaxAmount, static_cast<float>(Part.Machine.GetVisibilityAmount()));
+	}
+	return MaxAmount;
 }
 
 void UBBBeamRevealComponent::HandleFirstFullReveal()
@@ -158,6 +301,16 @@ void UBBBeamRevealComponent::HandleFirstFullReveal()
 }
 void UBBBeamRevealComponent::ForceReveal()
 {
+	if (bUseTaggedPartReveal && !TaggedPartStates.IsEmpty())
+	{
+		for (FTaggedPartState& Part : TaggedPartStates)
+		{
+			Part.Machine.ForceReveal();
+		}
+		ApplyTaggedPartVisibility();
+		HandleFirstFullReveal();
+		return;
+	}
 	Machine.ForceReveal();
 	ApplyVisibility(1.0f);
 	HandleFirstFullReveal();
@@ -166,17 +319,39 @@ void UBBBeamRevealComponent::ForceReveal()
 void UBBBeamRevealComponent::ResetForRestore()
 {
 	Machine.Reset();
+	for (FTaggedPartState& Part : TaggedPartStates)
+	{
+		Part.Machine.Reset();
+	}
 	bCompletedCallbackFired = false;
-	ApplyVisibility(0.0f);
+	if (bUseTaggedPartReveal && !TaggedPartStates.IsEmpty())
+	{
+		ApplyTaggedPartVisibility();
+	}
+	else
+	{
+		ApplyVisibility(0.0f);
+	}
 }
 
 void UBBBeamRevealComponent::SetRevealedForRestore(bool bRevealed)
 {
 	if (bRevealed)
 	{
-		Machine.ForceReveal();
+		if (bUseTaggedPartReveal && !TaggedPartStates.IsEmpty())
+		{
+			for (FTaggedPartState& Part : TaggedPartStates)
+			{
+				Part.Machine.ForceReveal();
+			}
+			ApplyTaggedPartVisibility();
+		}
+		else
+		{
+			Machine.ForceReveal();
+			ApplyVisibility(1.0f);
+		}
 		bCompletedCallbackFired = true;
-		ApplyVisibility(1.0f);
 	}
 	else
 	{

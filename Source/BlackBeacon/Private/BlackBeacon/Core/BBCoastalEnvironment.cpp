@@ -12,6 +12,7 @@
 #include "Materials/MaterialInterface.h"
 
 #include "BlackBeacon/Power/BBGeneratorComponent.h"
+#include "BlackBeacon/Lighthouse/BBBeamRevealComponent.h"
 
 namespace
 {
@@ -560,6 +561,7 @@ void ABBCoastalEnvironment::BuildRevealedRuin()
 		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		Mesh->SetCastShadow(true);
 		Mesh->SetMaterial(0, StoneMaterial);
+		Mesh->ComponentTags.Add(TEXT("BB_BeamRevealPart"));
 		Mesh->RegisterComponent();
 		UMaterialInstanceDynamic* const Material = Mesh->CreateDynamicMaterialInstance(0);
 		if (Material)
@@ -567,6 +569,11 @@ void ABBCoastalEnvironment::BuildRevealedRuin()
 			Material->SetVectorParameterValue(TEXT("BaseColor"), FLinearColor(0.54f, 0.61f, 0.67f));
 			Material->SetScalarParameterValue(TEXT("Roughness"), 0.84f);
 		}
+	}
+
+	if (UBBBeamRevealComponent* const Reveal = Ruin->FindComponentByClass<UBBBeamRevealComponent>())
+	{
+		Reveal->EnableTaggedPartReveal();
 	}
 }
 

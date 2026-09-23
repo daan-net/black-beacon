@@ -20,6 +20,7 @@
 
 class UBBLighthouseBeamComponent;
 class AActor;
+class UMaterialInstanceDynamic;
 
 DECLARE_MULTICAST_DELEGATE(FBBRevealCompleted);
 
@@ -38,13 +39,14 @@ public:
 	void ForceReveal();
 	void ResetForRestore();
 	void SetRevealedForRestore(bool bRevealed);
+	void EnableTaggedPartReveal();
 
 	// --- state ---
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Reveal")
-	bool WasFullyRevealed() const { return Machine.WasFullyRevealed(); }
+	bool WasFullyRevealed() const;
 
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Reveal")
-	float GetVisibilityAmount() const { return Machine.GetVisibilityAmount(); }
+	float GetVisibilityAmount() const;
 
 	BlackBeacon::Logics::EBBRevealPhase GetPhase() const { return Machine.GetPhase(); }
 
@@ -67,6 +69,12 @@ public:
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Reveal")
 	bool bPersistent = true;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Reveal")
+	FName RevealPartTag = TEXT("BB_BeamRevealPart");
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Reveal")
+	FLinearColor RevealedPartTint = FLinearColor(0.54f, 0.61f, 0.67f, 1.0f);
 
 	// Find and subscribe to the world's lighthouse beam in BeginPlay.
 	UPROPERTY(EditAnywhere, Category = "BlackBeacon|Reveal")
@@ -92,10 +100,21 @@ private:
 	void LocateBeam();
 	void HandleFirstFullReveal();
 	void ApplyVisibility(float Amount);
+	void ApplyTaggedPartVisibility();
+	void CacheTaggedParts();
+
+	struct FTaggedPartState
+	{
+		TWeakObjectPtr<UStaticMeshComponent> Mesh;
+		TWeakObjectPtr<UMaterialInstanceDynamic> Material;
+		BlackBeacon::Logics::FBBRevealMachine Machine;
+	};
 
 	BlackBeacon::Logics::FBBRevealMachine Machine;
+	TArray<FTaggedPartState> TaggedPartStates;
 	TWeakObjectPtr<UBBLighthouseBeamComponent> Beam = nullptr;
 	bool bCompletedCallbackFired = false;
+	bool bUseTaggedPartReveal = false;
 
 	// Bounded retries when the beam spawns after this component (dev races).
 	static constexpr int32 MaxAutoSubscribeAttempts = 4;
@@ -103,4 +122,7 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<class UStaticMeshComponent> FadeMesh = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> FadeMaterial = nullptr;
 };

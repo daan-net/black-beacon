@@ -61,6 +61,25 @@ namespace
         return nullptr;
     }
 
+    FVector GetRevealPartCenter(AActor* Actor)
+    {
+        if (!Actor)
+        {
+            return FVector::ZeroVector;
+        }
+        FVector Center = FVector::ZeroVector;
+        int32 PartCount = 0;
+        for (const UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(Actor))
+        {
+            if (Mesh && Mesh->ComponentHasTag(TEXT("BB_BeamRevealPart")))
+            {
+                Center += Mesh->Bounds.Origin;
+                ++PartCount;
+            }
+        }
+        return PartCount > 0 ? Center / static_cast<float>(PartCount) : Actor->GetActorLocation();
+    }
+
 }
 
 bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
@@ -78,6 +97,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<UInstancedStaticMeshComponent> LanternFresnelBands;
         TArray<TWeakObjectPtr<UStaticMeshComponent>> LanternGlazingPanels;
         TWeakObjectPtr<AActor> Anomaly;
+        TWeakObjectPtr<UBBBeamRevealComponent> AnomalyReveal;
         TWeakObjectPtr<APawn> Pawn;
         TWeakObjectPtr<UBBInteractionComponent> Interaction;
         TWeakObjectPtr<ABBWeatherController> Weather;
@@ -92,8 +112,13 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         bool bGeneratorCaptured = false;
         bool bFlywheelMotionChecked = false;
         bool bFlywheelCoastChecked = false;
+        bool bRevealFadeChecked = false;
+        int32 RevealFadePhase = 0;
+        double RevealCaptureStartedAt = 0.0;
+        int32 TaggedRevealPartCount = 0;
         float GeneratorFlywheelStartRoll = 0.0f;
         float GeneratorFlywheelStopRoll = 0.0f;
+        float RevealVisibilityBeforePowerLoss = 0.0f;
         FString SaveSlot = TEXT("BB_M02_Automation_Restore");
     };
     TSharedRef<FFlowState> State = MakeShared<FFlowState>();
@@ -292,10 +317,20 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 AddError(TEXT("Could not write initial save snapshot"));
                 return true;
             }
-            TestNotNull(TEXT("Reveal component"), State->Anomaly->FindComponentByClass<UBBBeamRevealComponent>());
+            State->AnomalyReveal = State->Anomaly->FindComponentByClass<UBBBeamRevealComponent>();
+            TestNotNull(TEXT("Reveal component"), State->AnomalyReveal.Get());
+            TestFalse(TEXT("The first anomaly is a transient beam reveal"),
+                State->AnomalyReveal.IsValid() && State->AnomalyReveal->bPersistent);
             TArray<UStaticMeshComponent*> AnomalyMeshes;
             State->Anomaly->GetComponents<UStaticMeshComponent>(AnomalyMeshes);
             TestTrue(TEXT("Anomaly has a modular ruin silhouette"), AnomalyMeshes.Num() >= 8);
+            int32 TaggedRevealParts = 0;
+            for (const UStaticMeshComponent* Mesh : AnomalyMeshes)
+            {
+                TaggedRevealParts += Mesh && Mesh->ComponentHasTag(TEXT("BB_BeamRevealPart")) ? 1 : 0;
+            }
+            TestTrue(TEXT("Ruin fragments are registered as individual reveal parts"), TaggedRevealParts >= 7);
+            State->TaggedRevealPartCount = TaggedRevealParts;
             TActorIterator<ABBWeatherController> WeatherIt(World);
             ABBWeatherController* Weather = WeatherIt ? *WeatherIt : nullptr;
             TestNotNull(TEXT("Weather controller"), Weather);
@@ -473,7 +508,8 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             }
             TestTrue(TEXT("Manual beam control active"), Lighthouse->IsBeamInManualMode());
             TestTrue(TEXT("Aim objective completed"), Objectives->IsCompleted(TEXT("BB_OBJ_AIM_BEAM")));
-            const FVector ToAnomaly = State->Anomaly->GetActorLocation() - Lighthouse->BeamComponent->GetComponentLocation();
+            const FVector ToAnomaly = GetRevealPartCenter(State->Anomaly.Get())
+                - Lighthouse->BeamComponent->GetComponentLocation();
             Lighthouse->BeamComponent->SetManualYawTarget(FMath::RadiansToDegrees(FMath::Atan2(ToAnomaly.Y, ToAnomaly.X)));
             Lighthouse->BeamComponent->SetManualPitchDegrees(FMath::RadiansToDegrees(FMath::Atan2(ToAnomaly.Z, FVector2D(ToAnomaly.X, ToAnomaly.Y).Size())));
             State->Stage = 4;
@@ -482,20 +518,26 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         }
         if (State->Stage == 4 && Objectives->IsCompleted(TEXT("BB_OBJ_DISCOVER_ANOMALY")))
         {
-            TestTrue(TEXT("Full objective chain completed"), Objectives->IsFinished());
+            TestFalse(TEXT("The slice still has an objective after the reveal"), Objectives->IsFinished());
+            TestEqual(TEXT("Discovery activates the approach objective"), Objectives->GetCurrentObjectiveId(),
+                FString(TEXT("BB_OBJ_APPROACH_REVEAL")));
             TestFalse(TEXT("Anomaly is visible"), State->Anomaly->IsHidden());
             int32 VisibleRuinParts = 0;
             float TallestRuinPartExtent = 0.0f;
             for (const UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(State->Anomaly.Get()))
             {
-                if (Mesh && Mesh->GetName().StartsWith(TEXT("RevealedRuinPart_")) && Mesh->IsVisible())
+                if (Mesh && Mesh->GetName().StartsWith(TEXT("RevealedRuinPart_")))
                 {
-                    ++VisibleRuinParts;
                     TallestRuinPartExtent = FMath::Max(TallestRuinPartExtent, Mesh->Bounds.BoxExtent.Z);
+                    VisibleRuinParts += Mesh->IsVisible() ? 1 : 0;
                 }
             }
-            TestTrue(TEXT("BeamReveal exposes the ruin pieces"), VisibleRuinParts >= 7);
-            TestTrue(TEXT("Revealed cliff ruin has a distant landmark silhouette"), TallestRuinPartExtent >= 800.0f);
+            TestTrue(TEXT("BeamReveal exposes pieces intersecting the moving beam"), VisibleRuinParts > 0);
+            TestTrue(TEXT("Only beam-intersected ruin parts are visible"),
+                VisibleRuinParts < State->TaggedRevealPartCount);
+            TestTrue(TEXT("Ruin structure has a distant landmark silhouette"), TallestRuinPartExtent >= 800.0f);
+            TestTrue(TEXT("The anomaly has completed its reveal transition"), State->AnomalyReveal->WasFullyRevealed());
+            TestTrue(TEXT("The revealed fragment has full visible weight"), State->AnomalyReveal->GetVisibilityAmount() >= 0.99f);
             USpotLightComponent* BeamLight = Lighthouse->FindComponentByClass<USpotLightComponent>();
             TestTrue(TEXT("Powered beam light is visible"), BeamLight && BeamLight->IsVisible());
             if (BeamLight)
@@ -507,18 +549,53 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             }
             if (FApp::CanEverRender())
             {
-                State->CaptureCamera = World->SpawnActor<ACameraActor>();
-                TestNotNull(TEXT("Fixed visual probe camera"), State->CaptureCamera.Get());
-                if (!State->CaptureCamera.IsValid())
+                TActorIterator<ABBWeatherController> WeatherIt(World);
+                if (WeatherIt)
                 {
-                    return true;
+                    WeatherIt->SetWeather(EBBWeatherPhase::Storm, 0.0f);
                 }
-                World->GetFirstPlayerController()->SetViewTarget(State->CaptureCamera.Get());
-                State->Stage = 5;
+                State->RevealCaptureStartedAt = Now;
+                State->Stage = 13;
                 State->StageAt = Now;
                 return false;
             }
             State->Stage = 7;
+        }
+        if (State->Stage == 13)
+        {
+            const auto Query = Lighthouse->BeamComponent->GetBeamQuery();
+            const FVector BeamDirection(Query.Direction.X, Query.Direction.Y, Query.Direction.Z);
+            const FVector ToRuin = (GetRevealPartCenter(State->Anomaly.Get())
+                - Lighthouse->BeamComponent->GetComponentLocation()).GetSafeNormal();
+            const bool bBeamSettledOnRuin = FVector::DotProduct(BeamDirection, ToRuin) >= 0.995f;
+            const bool bTimedOut = Now - State->RevealCaptureStartedAt >= 8.0;
+            if (!bBeamSettledOnRuin && !bTimedOut)
+            {
+                return false;
+            }
+            TestTrue(TEXT("Beam settles on the anomaly before the reveal capture"), bBeamSettledOnRuin);
+
+            State->CaptureCamera = World->SpawnActor<ACameraActor>();
+            TestNotNull(TEXT("Fixed visual probe camera"), State->CaptureCamera.Get());
+            if (!State->CaptureCamera.IsValid())
+            {
+                return true;
+            }
+            const FVector BeamOrigin = Lighthouse->BeamComponent->GetComponentLocation();
+            const FVector Side = FVector::CrossProduct(ToRuin, FVector::UpVector).GetSafeNormal();
+            const FVector CameraLocation = BeamOrigin - ToRuin * 1400.0f + Side * 2400.0f
+                + FVector(0.0f, 0.0f, 350.0f);
+            State->CaptureCamera->SetActorLocation(CameraLocation);
+            State->CaptureCamera->SetActorRotation((GetRevealPartCenter(State->Anomaly.Get()) - CameraLocation).Rotation());
+            if (State->CaptureCamera->GetCameraComponent())
+            {
+                State->CaptureCamera->GetCameraComponent()->SetFieldOfView(60.0f);
+            }
+            World->GetFirstPlayerController()->SetViewTarget(State->CaptureCamera.Get());
+            State->CaptureIndex = 3;
+            State->Stage = 6;
+            State->StageAt = Now;
+            return false;
         }
         if (State->Stage == 5)
         {
@@ -526,7 +603,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 FVector(-1200.0f, -1800.0f, 900.0f),
                 FVector(-1200.0f, 1000.0f, 1700.0f),
                 FVector(-4000.0f, 3300.0f, 900.0f),
-                FVector(2500.0f, 3100.0f, 1850.0f),
+                FVector(-8500.0f, 9500.0f, 2600.0f),
                 FVector(-1200.0f, 1000.0f, 1700.0f), // Storm Dir 1
                 FVector(-1200.0f, 1000.0f, 1700.0f), // Storm Dir 2
                 FVector(-8200.0f, 6500.0f, 1300.0f),  // Storm Indoors (Reveal view)
@@ -536,7 +613,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 FVector(0.0f, 0.0f, 1700.0f),
                 FVector(-700.0f, 600.0f, 1700.0f),
                 State->Anomaly->GetActorLocation(),
-                State->Anomaly->GetActorLocation(),
+                GetRevealPartCenter(State->Anomaly.Get()),
                 FVector(-700.0f, 600.0f, 1700.0f), // Storm Dir 1
                 FVector(-1700.0f, 1400.0f, 1700.0f), // Storm Dir 2 (looking different way)
                 State->Anomaly->GetActorLocation(), // Storm Indoors (looking at anomaly inside)
@@ -600,7 +677,26 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 State->Stage = State->CaptureIndex < 8 ? 5 : 7;
             }
         }
-        if (State->Stage == 11 && Now - State->StageAt >= 0.25)
+        if (State->Stage == 11 && State->RevealFadePhase == 0 && Now - State->StageAt >= 0.3)
+        {
+            TestTrue(TEXT("BeamReveal starts fading when the moving beam leaves"),
+                State->AnomalyReveal.IsValid()
+                && State->AnomalyReveal->GetVisibilityAmount() < State->RevealVisibilityBeforePowerLoss - 0.1f);
+            State->RevealFadePhase = 1;
+            State->StageAt = Now;
+            return false;
+        }
+        if (State->Stage == 11 && State->RevealFadePhase == 1 && Now - State->StageAt >= 1.0)
+        {
+            TestTrue(TEXT("Ruin fragments disappear after the beam leaves"), State->Anomaly->IsHidden());
+            TestTrue(TEXT("Discovery remains recorded after transient visuals fade"), State->AnomalyReveal->WasFullyRevealed());
+            TestTrue(TEXT("Next objective remains active after the reveal fades"),
+                Objectives->GetCurrentObjectiveId() == TEXT("BB_OBJ_APPROACH_REVEAL"));
+            State->bRevealFadeChecked = true;
+            State->Stage = 7;
+            return false;
+        }
+        if (State->Stage == 12 && Now - State->StageAt >= 0.3)
         {
             TestTrue(TEXT("Flywheel coasts after generator shutdown"),
                 State->GeneratorFlywheelPivot.IsValid()
@@ -612,12 +708,23 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         }
         if (State->Stage == 7)
         {
+            if (!State->bRevealFadeChecked)
+            {
+                Lighthouse->BeamComponent->SetManualYawTarget(
+                    Lighthouse->BeamComponent->GetCurrentYawDegrees() + 90.0f);
+                State->RevealVisibilityBeforePowerLoss = State->AnomalyReveal.IsValid()
+                    ? State->AnomalyReveal->GetVisibilityAmount() : 0.0f;
+                State->RevealFadePhase = 0;
+                State->Stage = 11;
+                State->StageAt = Now;
+                return false;
+            }
             if (!State->bFlywheelCoastChecked)
             {
                 Generator->Stop();
                 State->GeneratorFlywheelStopRoll = State->GeneratorFlywheelPivot.IsValid()
                     ? State->GeneratorFlywheelPivot->GetRelativeRotation().Roll : 0.0f;
-                State->Stage = 11;
+                State->Stage = 12;
                 State->StageAt = Now;
                 return false;
             }
@@ -652,6 +759,8 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 TestTrue(TEXT("Load restores the earlier objective"),
                     Objectives->GetCurrentObjectiveId() == TEXT("BB_OBJ_ENTER_LIGHTHOUSE"));
                 TestTrue(TEXT("Load hides the not-yet-revealed anomaly"), State->Anomaly->IsHidden());
+                TestTrue(TEXT("Load resets transient reveal visuals"),
+                    State->AnomalyReveal.IsValid() && State->AnomalyReveal->GetVisibilityAmount() <= 0.01f);
                 TestTrue(TEXT("Load restores the player to the shore"),
                     FVector2D(State->Pawn->GetActorLocation()).Equals(FVector2D(-4500.0f, -600.0f), 10.0f));
             }
