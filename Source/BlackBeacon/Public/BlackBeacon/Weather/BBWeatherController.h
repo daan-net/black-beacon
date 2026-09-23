@@ -21,6 +21,7 @@ class UExponentialHeightFogComponent;
 class UDirectionalLightComponent;
 class USkyAtmosphereComponent;
 class USkyLightComponent;
+class UNiagaraComponent;
 
 // UE-facing mirror of the logic-layer phase enum (config-friendly).
 UENUM(BlueprintType)
@@ -89,6 +90,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
 	TObjectPtr<USkyLightComponent> SkyLight = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
+	TObjectPtr<UNiagaraComponent> RainComponent = nullptr;
 
 	// --- config ---
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")

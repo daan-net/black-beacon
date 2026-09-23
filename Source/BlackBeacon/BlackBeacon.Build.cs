@@ -15,7 +15,8 @@ public class BlackBeacon : ModuleRules
 			"EnhancedInput",
 			"UMG",
 			"Slate",
-			"SlateCore"
+			"SlateCore",
+			"Niagara"
 		});
 
 		// No PrivateDependencyModuleNames yet: keeping the dependency

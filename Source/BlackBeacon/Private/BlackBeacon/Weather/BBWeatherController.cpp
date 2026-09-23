@@ -1,4 +1,7 @@
 #include "BlackBeacon/Weather/BBWeatherController.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
+#include "UObject/ConstructorHelpers.h"
 
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/DirectionalLightComponent.h"
@@ -31,7 +34,15 @@ ABBWeatherController::ABBWeatherController()
 	SkyLight->bRealTimeCapture = true;
 	SkyLight->SetIntensity(0.1f);
 
-	MoonLight->bAtmosphereSunLight = true;
+	
+	RainComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("RainComponent"));
+	RainComponent->SetupAttachment(RootComponent);
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> RainAsset(TEXT("/Game/BlackBeacon/Effects/NS_Rain.NS_Rain"));
+	if (RainAsset.Succeeded())
+	{
+		RainComponent->SetAsset(RainAsset.Object);
+	}
+MoonLight->bAtmosphereSunLight = true;
 }
 
 void ABBWeatherController::BeginPlay()
@@ -123,7 +134,12 @@ void ABBWeatherController::ApplyToFog()
 
 void ABBWeatherController::ApplyOutputs()
 {
-	// Wind/rain/cloudiness are exposed for future particle/vegetation
-	// systems (Niagara rain in 0.2 binds to GetRainIntensity-equivalents).
-	// Nothing to write in 0.1 beyond the fog above.
+	if (RainComponent)
+	{
+		float RainIntensity = static_cast<float>(Interpolator.GetRainIntensity());
+		RainComponent->SetFloatParameter(TEXT("RainIntensity"), RainIntensity);
+		
+		float WindStrength = static_cast<float>(Interpolator.GetWindStrength());
+		RainComponent->SetFloatParameter(TEXT("WindStrength"), WindStrength);
+	}
 }
