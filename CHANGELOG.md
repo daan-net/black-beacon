@@ -11,6 +11,12 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 ---
 
+## 2026-09-23 — M0.2 — shipwreck coast silhouette and atmosphere
+
+- **User-visible:** Replaced the geometric basic shapes of the shipwreck coast with a denser, procedural array of non-uniformly scaled and rotated cubic structures. This creates a more natural, jagged rocky silhouette framing the lighthouse.
+- **User-visible:** Added a physical SkyAtmosphere and SkyLight component to the weather controller, and tied the moon's directional light into the atmosphere. The opening frame now features a cohesive dark sky and moody nocturnal atmosphere instead of an empty black void.
+- UE 5.8.2 `BlackBeaconEditor` built successfully. The Vulkan M0.1 suite passed, regenerating the `BlackBeacon_M02_Opening.png` screenshot. `./Tools/validate.sh` remains green with 45/45 logic checks. The opening presentation is now much more atmospheric.
+
 ## 2026-09-23 — M0.2 — shipwreck opening foundation
 
 - **User-visible:** the slice now fades in from black on the island shore with the player's view aimed at the distant, unpowered lighthouse. The ARRIVE objective describes waking on the shore, and the design documents record the shipwreck-survivor premise plus the asylum and illegal-experiment thread as wider story direction.

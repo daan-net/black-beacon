@@ -2,6 +2,8 @@
 
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/DirectionalLightComponent.h"
+#include "Components/SkyAtmosphereComponent.h"
+#include "Components/SkyLightComponent.h"
 
 ABBWeatherController::ABBWeatherController()
 {
@@ -20,6 +22,16 @@ ABBWeatherController::ABBWeatherController()
 	MoonLight->SetRelativeRotation(FRotator(-35.0f, 35.0f, 0.0f));
 	MoonLight->SetLightColor(FLinearColor(0.32f, 0.48f, 0.75f));
 	MoonLight->SetCastShadows(false);
+
+	SkyAtmosphere = CreateDefaultSubobject<USkyAtmosphereComponent>(TEXT("SkyAtmosphere"));
+	SkyAtmosphere->SetupAttachment(FogComponent);
+	
+	SkyLight = CreateDefaultSubobject<USkyLightComponent>(TEXT("SkyLight"));
+	SkyLight->SetupAttachment(FogComponent);
+	SkyLight->bRealTimeCapture = true;
+	SkyLight->SetIntensity(0.1f);
+
+	MoonLight->bAtmosphereSunLight = true;
 }
 
 void ABBWeatherController::BeginPlay()
