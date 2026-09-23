@@ -16,6 +16,7 @@
 #include "Components/ExponentialHeightFogComponent.h"
 
 #include "BlackBeacon/Core/BBGameMode.h"
+#include "BlackBeacon/Core/BBCoastalEnvironment.h"
 #include "BlackBeacon/Core/BBPlayerCharacter.h"
 #include "BlackBeacon/Core/BBPlayerController.h"
 #include "BlackBeacon/Interaction/BBInteractionComponent.h"
@@ -76,6 +77,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         int32 CaptureIndex = 0;
         FVector AirCameraPosition = FVector::ZeroVector;
         FVector AirCameraTarget = FVector::ZeroVector;
+        bool bOpeningCaptured = false;
     };
     TSharedRef<FFlowState> State = MakeShared<FFlowState>();
 
@@ -95,6 +97,21 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             {
                 return false;
             }
+            if (FApp::CanEverRender() && !State->bOpeningCaptured)
+            {
+                if (Now - State->StartedAt < 3.0)
+                {
+                    return false;
+                }
+                FScreenshotRequest::RequestScreenshot(TEXT("BlackBeacon_M02_Opening.png"), false, false);
+                State->bOpeningCaptured = true;
+                State->StageAt = Now;
+                return false;
+            }
+            if (State->bOpeningCaptured && Now - State->StageAt < 0.3)
+            {
+                return false;
+            }
             State->World = World;
             State->Pawn = World->GetFirstPlayerController() ? World->GetFirstPlayerController()->GetPawn() : nullptr;
             TestNotNull(TEXT("Player pawn"), State->Pawn.Get());
@@ -102,6 +119,13 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             State->Interaction = Character ? Character->GetInteractionComponent() : nullptr;
             TestNotNull(TEXT("Player interaction component"), State->Interaction.Get());
             TestNotNull(TEXT("BlackBeacon GameMode"), Cast<ABBlackBeaconGameMode>(World->GetAuthGameMode()));
+            TActorIterator<ABBCoastalEnvironment> CoastIt(World);
+            ABBCoastalEnvironment* Coast = CoastIt ? *CoastIt : nullptr;
+            TestNotNull(TEXT("Opening coast environment"), Coast);
+            if (Coast)
+            {
+                TestTrue(TEXT("Opening coast uses the map origin"), Coast->GetActorLocation().IsNearlyZero(1.0f));
+            }
             UGameInstance* GameInstance = World->GetGameInstance();
             UBBObjectiveSystem* Objectives = GameInstance ? GameInstance->GetSubsystem<UBBObjectiveSystem>() : nullptr;
             TestNotNull(TEXT("Objective subsystem"), Objectives);

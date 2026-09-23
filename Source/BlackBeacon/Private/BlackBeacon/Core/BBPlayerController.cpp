@@ -5,6 +5,7 @@
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
+#include "Camera/PlayerCameraManager.h"
 
 #include "BlackBeacon/Core/BBPlayerCharacter.h"
 #include "BlackBeacon/Interaction/BBInteractionComponent.h"
@@ -21,6 +22,16 @@ void ABBlackBeaconPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	CreatePromptWidget();
+
+	// The slice opens with the survivor regaining consciousness on the shore.
+	// Face the unpowered lighthouse as the first readable landmark and let the
+	// scene emerge from black without taking control away from the player.
+	SetControlRotation(OpeningViewRotation);
+	if (PlayerCameraManager && OpeningFadeSeconds > 0.0f)
+	{
+		PlayerCameraManager->StartCameraFade(
+			1.0f, 0.0f, OpeningFadeSeconds, FLinearColor::Black, false, true);
+	}
 
 	PossessedCharacter = Cast<ABBlackBeaconPlayerCharacter>(GetPawn());
 	if (PossessedCharacter)

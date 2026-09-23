@@ -2,10 +2,11 @@
 
 ## The pitch
 
-**BLACK BEACON** is a cinematic first-person mystery/exploration game. You travel to a
-remote North Atlantic island, wracked by storms and heavy fog, to find out why the
-automated lighthouse stopped transmitting. The island is abandoned: a derelict fishing
-village, wet black rocks, an ancient industrial lighthouse machine.
+**BLACK BEACON** is a cinematic first-person mystery/exploration game. You regain
+consciousness after a wreck on the coast of a remote North Atlantic island. In the
+moonlight, an unpowered lighthouse stands in the distance as the only clear landmark.
+The island is abandoned: a derelict fishing village, wet black rocks, and an ancient
+industrial lighthouse machine.
 
 The lighthouse beam is the signature mechanic. Its light does more than illuminate:
 where it rests, it can make visible what ordinary light cannot — hidden structures,
@@ -45,7 +46,10 @@ wet surfaces · volumetric lighting · a lighthouse beam cutting through fog and
 
 - A small island; one lighthouse, one abandoned village, one landing point.
 - The lighthouse was automated decades ago; the last keepers are part of the mystery.
-- The player is a visitor/investigator. The story is discovered, not dumped.
+- The player is a shipwreck survivor drawn inland by the dead lighthouse. The story is
+  discovered, not dumped.
+- The wider mystery connects the island to an asylum and illegal experiments. The
+  vertical slice establishes this through restrained environmental evidence only.
 - Emotional register: curiosity, awe, solitude — not cheap fear.
 
 ## What we are NOT

@@ -6,6 +6,11 @@ A small coastal section of the island, one lighthouse (exterior + interior), and
 complete, convincing gameplay loop built around the beam. Exactly one example of the
 signature Beam-Reveal mechanic, built on a reusable system.
 
+The slice opens as the player regains consciousness on the wreck coast. Moonlight and
+the silhouette of the unpowered lighthouse establish the destination without a
+cutscene or waypoint. The asylum and illegal-experiment mystery belongs to the wider
+story; 0.1 may imply it through the single reveal but does not add those locations.
+
 ### 1.1 Concrete player verbs (0.1)
 
 | Verb | Implementation |

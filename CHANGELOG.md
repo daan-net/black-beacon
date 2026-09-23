@@ -11,6 +11,12 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 ---
 
+## 2026-09-23 — M0.2 — shipwreck opening foundation
+
+- **User-visible:** the slice now fades in from black on the island shore with the player's view aimed at the distant, unpowered lighthouse. The ARRIVE objective describes waking on the shore, and the design documents record the shipwreck-survivor premise plus the asylum and illegal-experiment thread as wider story direction.
+- Added a placed coast presentation actor with dark wet rock forms, a restrained route toward the lighthouse, and sparse wreckage. Its geometry has no collision, so it cannot alter the accepted player route or objective flow. Added a parameterized coast material instead of relying on the fixed white Engine shape material.
+- Extended GameplayFlow with a real post-fade opening capture and checks that the placed coast actor loads at the intended origin. UE 5.8.2 `BlackBeaconEditor` built successfully; the full rendered Vulkan M0.1 suite passed 3/3 after placement, and GameplayFlow passed again after the material correction. The opening composition is `PLACEHOLDER`: the framing reads, but the basic coast forms and empty sky still require M0.2 presentation work.
+
 ## 2026-09-23 — M0.2 — persistent vertical-slice map
 
 - Added `/Game/BlackBeacon/Maps/L_BlackBeacon_M02` as the authored game and editor startup map, containing the verified M0.1 actors and PlayerStart. Disabled runtime procedural bootstrap by default; the C++ builder remains available as development tooling.

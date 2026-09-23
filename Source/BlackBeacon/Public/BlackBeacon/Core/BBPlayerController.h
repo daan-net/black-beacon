@@ -89,4 +89,10 @@ private:
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Aim")
 	float ManualAimSensitivity = 0.22f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Opening")
+	FRotator OpeningViewRotation = FRotator(-2.0f, 8.0f, 0.0f);
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Opening", meta = (ClampMin = "0.0"))
+	float OpeningFadeSeconds = 2.5f;
 };
