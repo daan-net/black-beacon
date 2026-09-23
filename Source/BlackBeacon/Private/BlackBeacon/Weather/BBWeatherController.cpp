@@ -45,17 +45,22 @@ ABBWeatherController::ABBWeatherController()
 
 	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> RainAsset(TEXT("/Game/BlackBeacon/Effects/NS_Rain.FountainLightweight"));
 	
-	// Create a 3x3 grid of emitters to cover a wide area without a visible single origin
-	for (int32 X = -1; X <= 1; ++X)
+	// Dense grid attached around the camera
+	for (int32 X = -5; X <= 5; ++X)
 	{
-		for (int32 Y = -1; Y <= 1; ++Y)
+		for (int32 Y = -5; Y <= 5; ++Y)
 		{
 			FString CompName = FString::Printf(TEXT("RainGrid_%d_%d"), X, Y);
 			UNiagaraComponent* GridComp = CreateDefaultSubobject<UNiagaraComponent>(*CompName);
 			GridComp->SetupAttachment(RainRoot);
-			GridComp->SetRelativeLocation(FVector(X * 1200.0f, Y * 1200.0f, 0.0f));
-			GridComp->SetRelativeRotation(FRotator(180.0f, 0.0f, 0.0f)); // Upside down so fountain shoots down
-			GridComp->SetRelativeScale3D(FVector(4.0f, 4.0f, 1.0f));
+			float ZOffset = FMath::RandRange(-200.0f, 200.0f);
+			GridComp->SetRelativeLocation(FVector(X * 300.0f, Y * 300.0f, ZOffset));
+			GridComp->SetRelativeRotation(FRotator(180.0f, 0.0f, 0.0f)); // Point straight down
+			// Stretch Z slightly for visual streaks
+			GridComp->SetRelativeScale3D(FVector(1.0f, 1.0f, 8.0f));
+			GridComp->bAutoActivate = false;
+			GridComp->SetCastShadow(false);
+			
 			if (RainAsset.Succeeded())
 			{
 				GridComp->SetAsset(RainAsset.Object);
@@ -163,49 +168,54 @@ void ABBWeatherController::ApplyOutputs()
 	float RainIntensity = static_cast<float>(Interpolator.GetRainIntensity());
 	float WindStrength = static_cast<float>(Interpolator.GetWindStrength());
 
-	bool bIsIndoors = false;
 	if (RainRoot && GetWorld())
 	{
 		APlayerController* PC = GetWorld()->GetFirstPlayerController();
-		if (PC && PC->GetPawn())
+		if (PC)
 		{
-			FVector PlayerLoc = PC->GetPawn()->GetActorLocation();
-			RainRoot->SetWorldLocation(FVector(PlayerLoc.X, PlayerLoc.Y, PlayerLoc.Z + 2500.0f));
-
-			// Raycast up to see if under a roof
-			FHitResult Hit;
-			FCollisionQueryParams Params;
-			Params.AddIgnoredActor(PC->GetPawn());
-			Params.AddIgnoredActor(this);
+			// Track CAMERA! But spawn it CLOSE to the camera so particles enter the frame in 1.0 second
+			FVector CamLoc = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetCameraLocation() : (PC->GetPawn() ? PC->GetPawn()->GetActorLocation() : FVector::ZeroVector);
 			
-			if (GetWorld()->LineTraceSingleByChannel(Hit, PlayerLoc, PlayerLoc + FVector(0, 0, 10000.0f), ECC_Visibility, Params))
+			// Offset the root Z by only +1000, and shift it forward so rain is in front of camera
+			FVector ForwardDir = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetActorForwardVector() : FVector(1,0,0);
+			ForwardDir.Z = 0; ForwardDir.Normalize();
+			
+			RainRoot->SetWorldLocation(CamLoc + ForwardDir * 800.0f + FVector(0.0f, 0.0f, 1000.0f));
+
+			FCollisionQueryParams Params(SCENE_QUERY_STAT(WeatherIndoorTrace), false, GetOwner());
+			if (PC->GetPawn()) Params.AddIgnoredActor(PC->GetPawn());
+			if (PC->GetViewTarget()) Params.AddIgnoredActor(PC->GetViewTarget());
+
+			for (UNiagaraComponent* GridComp : RainGrid)
 			{
-				bIsIndoors = true;
+				if (!GridComp) continue;
+
+				if (RainIntensity <= 0.05f)
+				{
+					if (GridComp->IsActive()) GridComp->Deactivate();
+					continue;
+				}
+
+				// Check if this individual emitter is above a roof
+				FVector EmitterLoc = GridComp->GetComponentLocation();
+				FHitResult Hit;
+				bool bHitRoof = GetWorld()->LineTraceSingleByChannel(Hit, EmitterLoc, EmitterLoc - FVector(0, 0, 10000.0f), ECC_WorldStatic, Params);
+				
+				// Deactivate if the hit point is higher than the camera, meaning the roof is between the rain and the ground
+				if (bHitRoof && Hit.ImpactPoint.Z > CamLoc.Z - 200.0f) 
+				{
+					if (GridComp->IsActive()) GridComp->Deactivate();
+				}
+				else
+				{
+					if (!GridComp->IsActive()) 
+					{
+						GridComp->Activate(true);
+					}
+					// Just in case it accepts it
+					GridComp->SetFloatParameter(TEXT("SpawnRate"), RainIntensity * 500.0f);
+				}
 			}
-		}
-	}
-
-	if (bIsIndoors)
-	{
-		RainIntensity = 0.0f;
-	}
-
-	for (UNiagaraComponent* GridComp : RainGrid)
-	{
-		if (!GridComp) continue;
-
-		GridComp->SetFloatParameter(TEXT("RainIntensity"), RainIntensity);
-		GridComp->SetFloatParameter(TEXT("WindStrength"), WindStrength);
-
-		if (RainIntensity > 0.01f)
-		{
-			if (!GridComp->IsActive()) GridComp->Activate(true);
-			// Fountain specific logic to spread and scale
-			GridComp->SetFloatParameter(TEXT("SpawnRate"), RainIntensity * 2000.0f); 
-		}
-		else
-		{
-			if (GridComp->IsActive()) GridComp->Deactivate();
 		}
 	}
 }
