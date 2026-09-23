@@ -328,7 +328,7 @@ void ABBLighthouseController::UpdateLanternHousingState()
 		return;
 	}
 	const bool bLanternLit = bPowered && bBeamStarted;
-	const auto SetSurface = [](UStaticMeshComponent* Mesh, UMaterialInterface* Base,
+	const auto SetSurface = [this](UStaticMeshComponent* Mesh, UMaterialInterface* Base,
 		const FLinearColor& Color, float Roughness)
 	{
 		if (Mesh && Base)
@@ -337,9 +337,14 @@ void ABBLighthouseController::UpdateLanternHousingState()
 			{
 				Mesh->SetMaterial(0, Base);
 			}
-		if (UMaterialInstanceDynamic* const Material = Mesh->CreateAndSetMaterialInstanceDynamic(0))
+			if (UMaterialInstanceDynamic* const Material = Mesh->CreateAndSetMaterialInstanceDynamic(0))
 			{
 				Material->SetVectorParameterValue(TEXT("BaseColor"), Color);
+				if (Base == LanternLitMaterial)
+				{
+					Material->SetVectorParameterValue(TEXT("LensTint"), Color);
+					Material->SetScalarParameterValue(TEXT("LensIntensity"), 1.25f);
+				}
 				Material->SetScalarParameterValue(TEXT("Roughness"), Roughness);
 			}
 		}
@@ -348,7 +353,7 @@ void ABBLighthouseController::UpdateLanternHousingState()
 	for (UStaticMeshComponent* const GlassPanel : LanternGlazingPanels)
 	{
 		SetSurface(GlassPanel, bLanternLit ? LanternLitMaterial : LanternDarkMaterial,
-			bLanternLit ? FLinearColor(1.0f, 0.56f, 0.22f) : FLinearColor(0.012f, 0.018f, 0.026f),
+			bLanternLit ? FLinearColor(0.72f, 0.30f, 0.065f) : FLinearColor(0.012f, 0.018f, 0.026f),
 			bLanternLit ? 0.25f : 0.62f);
 	}
 }

@@ -113,6 +113,14 @@ void UBBLighthouseBeamComponent::BeginPlay()
 			BeamVisualMaterial->SetVectorParameterValue(TEXT("BeamTint"), BeamColor);
 		}
 	}
+	if (BeamLensMesh)
+	{
+		if (UMaterialInstanceDynamic* const LensMaterial = BeamLensMesh->CreateAndSetMaterialInstanceDynamic(0))
+		{
+			LensMaterial->SetVectorParameterValue(TEXT("LensTint"), BeamColor);
+			LensMaterial->SetScalarParameterValue(TEXT("LensIntensity"), 0.85f);
+		}
+	}
 
 	if (bStartInAutoRotation)
 	{

@@ -13,6 +13,8 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 ## 2026-09-23 — M0.2 — shipwreck coast silhouette and atmosphere
 
+- **User-visible:** Corrected the lantern-pane and beam-lens material bindings. The authored `M_LanternLens` exposes `LensTint` and `LensIntensity`; the controller had been writing unrelated parameter names, leaving the panes clipped white. It now sets the real warm tint and a restrained runtime emission. Vulkan GameplayFlow passed and regenerated the exterior/beam captures; full PlayerControls and StairTraversal coverage remains from the immediately preceding 3/3 suite.
+
 - **User-visible:** Added a continuous wet-basalt tower shell as a non-colliding child of the lighthouse controller. It covers the visual gaps between the serialized floor sections while preserving the interior stair route. The rendered opening capture confirms the tower silhouette; a gameplay test was updated to target the named lantern control after the new mesh changed component order.
 - **User-visible:** Reduced configured moonlight and sky fill from 5.0/0.35 to 1.5/0.1 lux after Vulkan captures showed an overly bright blue night. This darkens the shoreline, though the generated storm panorama remains bluer and brighter than the supplied reference direction.
 - UE 5.8.2 `BlackBeaconEditor` built successfully. The full Vulkan `BlackBeacon.M01` automation report passed 3/3 (GameplayFlow, PlayerControls, StairTraversal), zero warnings/errors, and regenerated the visual captures. The automation process returned 1 while UnrealTrace shut down after all tests had passed; the report itself records success. `./Tools/validate.sh` passes with 45/45 logic checks. The new shell and coast are still blockout geometry; no M1 work started.
