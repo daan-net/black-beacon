@@ -273,3 +273,16 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
   the fog beam but shows that the seven-piece ruin is still too dark and crude. This is
   a tested mechanic with placeholder art, not a completed M1 reveal or visual-review
   checkpoint.
+
+## 2026-09-23 — M1 — wreck silhouette blockout
+
+- Replaced the seven isolated ruin columns with a 15-part trawler wreck silhouette:
+  hull, exposed ribs, deck beams, and a snapped mast. Each part remains tagged and
+  revealed through the existing beam query; actor position, detection, and objective
+  logic are unchanged.
+- The storm D capture now reads more clearly as a wreck within the sweeping light.
+  It remains primitive engine-cube geometry with unfinished materials and is still
+  `PLACEHOLDER` art.
+- UE 5.8.2 Linux Development build succeeded. Vulkan GameplayFlow passed with zero
+  errors/warnings, including partial reveal, fade, objective progression, and restore.
+  `./Tools/validate.sh` passed with 45/45 logic checks.

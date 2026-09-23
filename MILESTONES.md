@@ -56,9 +56,10 @@ already cover the route to the first anomaly. Avoid rebuilding these systems. Th
 reveal now evaluates tagged mesh parts independently through the existing beam query,
 fades transient parts when the beam leaves, and activates a next objective on discovery.
 
-**Current gate:** mechanics and automation are `TESTED`; the seven-piece primitive ruin
-and its rendered reveal remain `PLACEHOLDER`. The actual storm capture shows a readable
-beam through fog but the structure is too dark and crude to meet the visual target.
+**Current gate:** mechanics and automation are `TESTED`; the 15-part trawler blockout
+and its rendered reveal remain `PLACEHOLDER`. The storm capture shows a readable beam
+and a clearer wreck silhouette, but cube geometry and dark unfinished materials still
+fall short of the visual target.
 M1 remains open. No broad environment, asset, or audio expansion is authorized by this
 scoped pass.
 

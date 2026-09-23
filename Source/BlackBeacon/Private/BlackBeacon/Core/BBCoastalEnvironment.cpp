@@ -536,14 +536,26 @@ void ABBCoastalEnvironment::BuildRevealedRuin()
 		return;
 	}
 
+	// A wrecked trawler reads more clearly at lighthouse distance than the old
+	// isolated columns: a broken hull line, exposed ribs, and one snapped mast.
+	// Keep every piece on the existing reveal seam so the beam still uncovers it
+	// in sections rather than switching the whole actor on at once.
 	const FCoastShape RuinParts[] = {
-		{{-160.0f, -155.0f, 150.0f}, {0.0f, 0.0f, -8.0f}, {0.50f, 0.48f, 3.0f}},
-		{{-160.0f,  155.0f, 150.0f}, {0.0f, 0.0f,  6.0f}, {0.50f, 0.48f, 3.0f}},
-		{{ 145.0f, -145.0f, 115.0f}, {0.0f, 0.0f, -3.0f}, {0.45f, 0.42f, 2.3f}},
-		{{ 145.0f,  155.0f, 150.0f}, {0.0f, 0.0f,  4.0f}, {0.45f, 0.42f, 3.0f}},
-		{{ -10.0f, -150.0f, 290.0f}, {0.0f, 0.0f, -5.0f}, {2.0f, 0.48f, 0.38f}},
-		{{ -25.0f,  145.0f, 245.0f}, {0.0f, 0.0f,  7.0f}, {1.6f, 0.45f, 0.32f}},
-		{{  -5.0f,    0.0f,  22.0f}, {0.0f, 0.0f,  0.0f}, {2.5f, 1.9f, 0.22f}}
+		{{   0.0f,    0.0f,  35.0f}, { 0.0f,  0.0f,  0.0f}, {4.6f, 1.08f, 0.42f}}, // keel
+		{{ -10.0f,  -72.0f,  65.0f}, { 0.0f,  0.0f, -2.0f}, {3.8f, 0.16f, 0.22f}},
+		{{ -25.0f,   72.0f,  65.0f}, { 0.0f,  0.0f,  3.0f}, {3.5f, 0.16f, 0.22f}},
+		{{ 220.0f,    0.0f,  52.0f}, { 0.0f,  0.0f,  0.0f}, {1.15f, 0.74f, 0.34f}}, // broken bow
+		{{-215.0f,    0.0f,  35.0f}, { 0.0f,  0.0f, -4.0f}, {0.82f, 0.86f, 0.34f}}, // stern
+		{{-155.0f,    0.0f,  94.0f}, { 0.0f,  0.0f, 12.0f}, {0.16f, 0.92f, 0.20f}},
+		{{ -65.0f,    0.0f,  98.0f}, { 0.0f,  0.0f,-10.0f}, {0.14f, 0.98f, 0.18f}},
+		{{  35.0f,    0.0f,  94.0f}, { 0.0f,  0.0f, 16.0f}, {0.16f, 0.91f, 0.19f}},
+		{{ 130.0f,    0.0f,  82.0f}, { 0.0f,  0.0f,-18.0f}, {0.15f, 0.78f, 0.18f}},
+		{{-120.0f,  -78.0f, 112.0f}, { 0.0f,  0.0f, -8.0f}, {1.20f, 0.14f, 0.14f}},
+		{{  -5.0f,   78.0f, 116.0f}, { 0.0f,  0.0f,  9.0f}, {1.35f, 0.14f, 0.14f}},
+		{{-105.0f,    0.0f, 270.0f}, { 7.0f,  0.0f, -5.0f}, {0.18f, 0.20f, 3.10f}}, // broken mast
+		{{-100.0f,   10.0f, 430.0f}, { 0.0f,  0.0f, 24.0f}, {1.45f, 0.14f, 0.14f}},
+		{{ -55.0f,  -10.0f, 285.0f}, {28.0f,  0.0f,  0.0f}, {1.70f, 0.12f, 0.12f}}, // snapped spar
+		{{ 155.0f,   35.0f, 175.0f}, {-8.0f,  0.0f, 27.0f}, {1.00f, 0.13f, 0.13f}}
 	};
 
 	for (int32 Index = 0; Index < UE_ARRAY_COUNT(RuinParts); ++Index)
