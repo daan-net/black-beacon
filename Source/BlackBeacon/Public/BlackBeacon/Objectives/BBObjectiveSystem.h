@@ -49,6 +49,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Objectives")
 	bool CompleteObjective(const FString& ObjectiveId);
 
+	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Objectives")
+	TArray<FString> GetCompletedObjectives() const;
+
+	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Objectives")
+	void RestoreCompletedObjectives(const TArray<FString>& Objectives);
+
 	bool IsCompleted(const FString& ObjectiveId) const;
 	bool IsActive(const FString& ObjectiveId) const;
 	bool IsFinished() const;

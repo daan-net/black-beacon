@@ -12,6 +12,8 @@
 #include "BBPromptWidget.generated.h"
 
 class STextBlock;
+class SOverlay;
+class SVerticalBox;
 
 UCLASS()
 class UBBPromptWidget : public UUserWidget
@@ -22,6 +24,8 @@ public:
 	// Sets the prompt text; empty text hides the widget.
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|UI")
 	void SetPromptText(const FText& InText);
+	void SetObjectiveText(const FText& InText);
+	void SetNotificationText(const FText& InText);
 
 	const FText& GetCurrentPrompt() const { return CurrentPrompt; }
 
@@ -31,6 +35,8 @@ protected:
 
 private:
 	TSharedPtr<STextBlock> PromptTextBlock;
+	TSharedPtr<STextBlock> ObjectiveTextBlock;
+	TSharedPtr<STextBlock> NotificationTextBlock;
 
 	UPROPERTY()
 	FText CurrentPrompt;

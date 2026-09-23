@@ -156,3 +156,9 @@ void UBBBeamRevealComponent::HandleFirstFullReveal()
 		}
 	}
 }
+void UBBBeamRevealComponent::ForceReveal()
+{
+	Machine.ForceReveal();
+	ApplyVisibility(1.0f);
+	HandleFirstFullReveal();
+}

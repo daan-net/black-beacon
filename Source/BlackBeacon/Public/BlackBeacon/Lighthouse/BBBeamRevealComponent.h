@@ -34,6 +34,9 @@ public:
 	// Called by the beam every tick it drives (see UBBLighthouseBeamComponent).
 	void UpdateFromBeam(const BlackBeacon::Logics::FBBBeamQuery& Beam, float DeltaTime);
 
+	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Reveal")
+	void ForceReveal();
+
 	// --- state ---
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Reveal")
 	bool WasFullyRevealed() const { return Machine.WasFullyRevealed(); }

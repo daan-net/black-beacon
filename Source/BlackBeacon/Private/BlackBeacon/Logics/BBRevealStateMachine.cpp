@@ -138,3 +138,10 @@ namespace BlackBeacon::Logics
 		bIlluminatedLastTick = bLit;
 	}
 }
+
+	void BlackBeacon::Logics::FBBRevealMachine::ForceReveal()
+	{
+		Phase = EBBRevealPhase::Visible;
+		VisibilityAmount = 1.0;
+		bWasFullyRevealed = true;
+	}

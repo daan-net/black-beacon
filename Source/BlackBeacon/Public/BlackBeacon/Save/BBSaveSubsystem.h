@@ -34,6 +34,7 @@ public:
 	// (Implemented in 0.2 when checkpointing lands; the subsystem owns the
 	//  piecewise writers so gameplay code stays decoupled.)
 	static FBBWorldSaveData BuildSnapshot(class UWorld* World);
+	static void RestoreSnapshot(class UWorld* World, const FBBWorldSaveData& Data);
 
 private:
 	static FString ResolveSlot(const FString& SlotName);

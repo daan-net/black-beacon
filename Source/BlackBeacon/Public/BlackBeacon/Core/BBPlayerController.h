@@ -27,6 +27,8 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|UI")
 	TObjectPtr<UBBPromptWidget> PromptWidget = nullptr;
 
+	FTimerHandle NotificationTimer;
+
 	// Manual beam aim hook (0.1: horizontal look sweeps the lantern while
 	// the player is manning the beam - see HandleLook).
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Player")
@@ -47,10 +49,14 @@ private:
 	void HandleSprintCompleted();
 	void HandleCrouch();
 	void HandleInteract();
+	void HandleSave();
+	void HandleLoad();
 
 	// --- prompt UI ---
 	void CreatePromptWidget();
 	void OnInteractionFocusChanged(AActor* FocusedActor, const FText& Prompt);
+	void OnUiObjectiveChanged(const FString& Id, const FString& Text);
+	void ClearNotification();
 
 	// Held at runtime (created in CreateInputAssets) so GC keeps them alive.
 	UPROPERTY()
@@ -67,6 +73,12 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UInputAction> InteractAction = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Input")
+	TObjectPtr<UInputAction> SaveAction = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Input")
+	TObjectPtr<UInputAction> LoadAction = nullptr;
 
 	UPROPERTY()
 	TObjectPtr<UInputMappingContext> MappingContext = nullptr;

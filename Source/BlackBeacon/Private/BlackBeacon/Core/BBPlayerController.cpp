@@ -8,10 +8,13 @@
 #include "Camera/PlayerCameraManager.h"
 
 #include "BlackBeacon/Core/BBPlayerCharacter.h"
+#include "BlackBeacon/Core/BBGameState.h"
 #include "BlackBeacon/Interaction/BBInteractionComponent.h"
 #include "BlackBeacon/Interaction/BBPromptWidget.h"
 #include "BlackBeacon/Lighthouse/BBLighthouseBeamComponent.h"
 #include "BlackBeacon/Lighthouse/BBLighthouseController.h"
+#include "BlackBeacon/Save/BBSaveSubsystem.h"
+
 
 ABBlackBeaconPlayerController::ABBlackBeaconPlayerController()
 {
@@ -42,6 +45,12 @@ void ABBlackBeaconPlayerController::BeginPlay()
 			InteractionComponent->OnFocusChanged.AddUObject(this, &ABBlackBeaconPlayerController::OnInteractionFocusChanged);
 		}
 	}
+
+	if (ABBlackBeaconGameState* GS = GetWorld()->GetGameState<ABBlackBeaconGameState>())
+	{
+		GS->OnUiObjectiveChanged.AddUObject(this, &ABBlackBeaconPlayerController::OnUiObjectiveChanged);
+		OnUiObjectiveChanged(GS->GetCurrentObjectiveId(), GS->GetCurrentObjectiveText());
+	}
 }
 
 void ABBlackBeaconPlayerController::SetupInputComponent()
@@ -56,7 +65,7 @@ void ABBlackBeaconPlayerController::SetupInputComponent()
 		Subsystem->AddMappingContext(MappingContext, /*Priority=*/0);
 	}
 
-	if (UEnhancedInputComponent* const Enhanced = Cast<UEnhancedInputComponent>(InputComponent))
+		if (UEnhancedInputComponent* const Enhanced = Cast<UEnhancedInputComponent>(InputComponent))
 	{
 		Enhanced->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABBlackBeaconPlayerController::HandleMove);
 		Enhanced->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABBlackBeaconPlayerController::HandleLook);
@@ -64,6 +73,8 @@ void ABBlackBeaconPlayerController::SetupInputComponent()
 		Enhanced->BindAction(SprintAction, ETriggerEvent::Completed, this, &ABBlackBeaconPlayerController::HandleSprintCompleted);
 		Enhanced->BindAction(CrouchAction, ETriggerEvent::Started, this, &ABBlackBeaconPlayerController::HandleCrouch);
 		Enhanced->BindAction(InteractAction, ETriggerEvent::Started, this, &ABBlackBeaconPlayerController::HandleInteract);
+		Enhanced->BindAction(SaveAction, ETriggerEvent::Started, this, &ABBlackBeaconPlayerController::HandleSave);
+		Enhanced->BindAction(LoadAction, ETriggerEvent::Started, this, &ABBlackBeaconPlayerController::HandleLoad);
 	}
 }
 
@@ -85,8 +96,14 @@ void ABBlackBeaconPlayerController::CreateInputAssets()
 	CrouchAction = NewObject<UInputAction>(this, TEXT("IA_Crouch"));
 	CrouchAction->ValueType = EInputActionValueType::Boolean;
 
-	InteractAction = NewObject<UInputAction>(this, TEXT("IA_Interact"));
+		InteractAction = NewObject<UInputAction>(this, TEXT("IA_Interact"));
 	InteractAction->ValueType = EInputActionValueType::Boolean;
+
+	SaveAction = NewObject<UInputAction>(this, TEXT("IA_Save"));
+	SaveAction->ValueType = EInputActionValueType::Boolean;
+
+	LoadAction = NewObject<UInputAction>(this, TEXT("IA_Load"));
+	LoadAction->ValueType = EInputActionValueType::Boolean;
 
 	MappingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_Default"));
 	auto MapMove = [this](FKey Key, bool bForwardAxis, bool bNegate)
@@ -118,7 +135,9 @@ void ABBlackBeaconPlayerController::CreateInputAssets()
 
 	MappingContext->MapKey(CrouchAction, EKeys::C);
 
-	MappingContext->MapKey(InteractAction, EKeys::E);
+		MappingContext->MapKey(InteractAction, EKeys::E);
+	MappingContext->MapKey(SaveAction, EKeys::F5);
+	MappingContext->MapKey(LoadAction, EKeys::F9);
 }
 
 void ABBlackBeaconPlayerController::HandleMove(const FInputActionValue& Value)
@@ -232,5 +251,60 @@ void ABBlackBeaconPlayerController::OnInteractionFocusChanged(AActor* FocusedAct
 	if (PromptWidget)
 	{
 		PromptWidget->SetPromptText(Prompt);
+	}
+}
+
+void ABBlackBeaconPlayerController::HandleSave()
+{
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UBBSaveSubsystem* SaveSys = GI->GetSubsystem<UBBSaveSubsystem>())
+		{
+			FBBWorldSaveData Data = SaveSys->BuildSnapshot(GetWorld());
+			if (SaveSys->SaveWorldData(Data, TEXT("")))
+			{
+				if (PromptWidget)
+				{
+					PromptWidget->SetNotificationText(FText::FromString("GAME SAVED"));
+					GetWorldTimerManager().SetTimer(NotificationTimer, this, &ABBlackBeaconPlayerController::ClearNotification, 3.0f, false);
+				}
+			}
+		}
+	}
+}
+
+void ABBlackBeaconPlayerController::HandleLoad()
+{
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UBBSaveSubsystem* SaveSys = GI->GetSubsystem<UBBSaveSubsystem>())
+		{
+			FBBWorldSaveData Data;
+			if (SaveSys->LoadWorldData(Data, TEXT("")))
+			{
+				SaveSys->RestoreSnapshot(GetWorld(), Data);
+				if (PromptWidget)
+				{
+					PromptWidget->SetNotificationText(FText::FromString("GAME LOADED"));
+					GetWorldTimerManager().SetTimer(NotificationTimer, this, &ABBlackBeaconPlayerController::ClearNotification, 3.0f, false);
+				}
+			}
+		}
+	}
+}
+
+void ABBlackBeaconPlayerController::ClearNotification()
+{
+	if (PromptWidget)
+	{
+		PromptWidget->SetNotificationText(FText::GetEmpty());
+	}
+}
+
+void ABBlackBeaconPlayerController::OnUiObjectiveChanged(const FString& Id, const FString& Text)
+{
+	if (PromptWidget)
+	{
+		PromptWidget->SetObjectiveText(FText::FromString(Text));
 	}
 }

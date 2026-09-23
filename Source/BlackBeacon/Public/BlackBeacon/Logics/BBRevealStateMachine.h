@@ -53,6 +53,9 @@ namespace BlackBeacon::Logics
 
 		void Reset();
 
+		// Force the machine into the fully revealed state (for save restores).
+		void ForceReveal();
+
 	private:
 		bool IsIlluminated(const FBBBeamQuery& Beam, const BBVec3& ObjectPosition) const;
 

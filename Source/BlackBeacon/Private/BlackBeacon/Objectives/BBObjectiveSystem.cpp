@@ -130,3 +130,24 @@ void UBBObjectiveSystem::PublishCurrent()
 	const FString CurrentText = GetCurrentObjectiveText();
 	OnCurrentObjectiveChanged.Broadcast(CurrentId, CurrentText);
 }
+
+TArray<FString> UBBObjectiveSystem::GetCompletedObjectives() const
+{
+	TArray<FString> Completed;
+	for (const FBBObjectiveNodeConfig& Node : ObjectiveChain)
+	{
+		if (IsCompleted(Node.Id))
+		{
+			Completed.Add(Node.Id);
+		}
+	}
+	return Completed;
+}
+
+void UBBObjectiveSystem::RestoreCompletedObjectives(const TArray<FString>& Objectives)
+{
+	for (const FString& Id : Objectives)
+	{
+		CompleteObjective(Id);
+	}
+}
