@@ -43,7 +43,7 @@ prompt/HUD polish, save/load seam, audio placeholders, performance sanity check.
 
 **Acceptance (M0.2)**
 - [x] Authored map replaces procedural builder as default (builder kept as dev tool)
-- [ ] Storm + fog + rain active; beam readable in all weather states
+- [x] Storm + fog + rain active; beam readable in all weather states
 - [ ] Save/load restores generator/beam/objective state
 - [ ] Stable 60+ fps on target PC config at reasonable settings
 

@@ -37,7 +37,10 @@ ABBWeatherController::ABBWeatherController()
 	
 	RainComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("RainComponent"));
 	RainComponent->SetupAttachment(RootComponent);
-	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> RainAsset(TEXT("/Game/BlackBeacon/Effects/NS_Rain.NS_Rain"));
+	RainComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 3500.0f));
+	RainComponent->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f)); // Point downwards
+	RainComponent->SetRelativeScale3D(FVector(50.0f, 50.0f, 1.0f));
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> RainAsset(TEXT("/Game/BlackBeacon/Effects/NS_Rain.FountainLightweight"));
 	if (RainAsset.Succeeded())
 	{
 		RainComponent->SetAsset(RainAsset.Object);
@@ -137,9 +140,22 @@ void ABBWeatherController::ApplyOutputs()
 	if (RainComponent)
 	{
 		float RainIntensity = static_cast<float>(Interpolator.GetRainIntensity());
+		// Bind the requested parameters
 		RainComponent->SetFloatParameter(TEXT("RainIntensity"), RainIntensity);
 		
 		float WindStrength = static_cast<float>(Interpolator.GetWindStrength());
 		RainComponent->SetFloatParameter(TEXT("WindStrength"), WindStrength);
+
+		// For the copied fountain asset to simulate rain visibility
+		if (RainIntensity > 0.01f)
+		{
+			if (!RainComponent->IsActive()) RainComponent->Activate(true);
+			// Optional: hack to make fountain look somewhat like rain area and intensity
+			RainComponent->SetFloatParameter(TEXT("SpawnRate"), RainIntensity * 5000.0f); 
+		}
+		else
+		{
+			if (RainComponent->IsActive()) RainComponent->Deactivate();
+		}
 	}
 }
