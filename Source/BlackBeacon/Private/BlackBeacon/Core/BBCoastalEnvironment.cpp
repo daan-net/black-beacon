@@ -19,6 +19,7 @@ namespace
 	constexpr const TCHAR* BASALT_MATERIAL = TEXT("/Game/BlackBeacon/Materials/M_WetBasaltRock.M_WetBasaltRock");
 	constexpr const TCHAR* OCEAN_MATERIAL = TEXT("/Engine/EngineMaterials/WaterMaterial.DefaultWaterMaterial");
 	constexpr float GENERATOR_SHED_LIGHT_LUMENS = 850.0f;
+	constexpr float REVEALED_RUIN_VISUAL_SCALE = 6.0f;
 
 	struct FCoastShape
 	{
@@ -485,7 +486,10 @@ void ABBCoastalEnvironment::BuildRevealedRuin()
 		Ruin->AddInstanceComponent(Mesh);
 		Mesh->SetupAttachment(Ruin->GetRootComponent());
 		Mesh->SetStaticMesh(Cube);
-		Mesh->SetRelativeTransform(FTransform(Part.Rotation, Part.Location, Part.Scale));
+		Mesh->SetRelativeTransform(FTransform(
+			Part.Rotation,
+			Part.Location * REVEALED_RUIN_VISUAL_SCALE,
+			Part.Scale * REVEALED_RUIN_VISUAL_SCALE));
 		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		Mesh->SetCastShadow(true);
 		Mesh->SetMaterial(0, StoneMaterial);

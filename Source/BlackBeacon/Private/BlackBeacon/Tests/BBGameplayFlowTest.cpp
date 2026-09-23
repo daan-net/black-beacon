@@ -461,14 +461,17 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("Full objective chain completed"), Objectives->IsFinished());
             TestFalse(TEXT("Anomaly is visible"), State->Anomaly->IsHidden());
             int32 VisibleRuinParts = 0;
+            float TallestRuinPartExtent = 0.0f;
             for (const UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(State->Anomaly.Get()))
             {
                 if (Mesh && Mesh->GetName().StartsWith(TEXT("RevealedRuinPart_")) && Mesh->IsVisible())
                 {
                     ++VisibleRuinParts;
+                    TallestRuinPartExtent = FMath::Max(TallestRuinPartExtent, Mesh->Bounds.BoxExtent.Z);
                 }
             }
             TestTrue(TEXT("BeamReveal exposes the ruin pieces"), VisibleRuinParts >= 7);
+            TestTrue(TEXT("Revealed cliff ruin has a distant landmark silhouette"), TallestRuinPartExtent >= 800.0f);
             USpotLightComponent* BeamLight = Lighthouse->FindComponentByClass<USpotLightComponent>();
             TestTrue(TEXT("Powered beam light is visible"), BeamLight && BeamLight->IsVisible());
             if (BeamLight)
@@ -499,10 +502,10 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 FVector(-1200.0f, -1800.0f, 900.0f),
                 FVector(-1200.0f, 1000.0f, 1700.0f),
                 FVector(-4000.0f, 3300.0f, 900.0f),
-                FVector(-5600.0f, 3900.0f, 500.0f),
+                FVector(2500.0f, 3100.0f, 1850.0f),
                 FVector(-1200.0f, 1000.0f, 1700.0f), // Storm Dir 1
                 FVector(-1200.0f, 1000.0f, 1700.0f), // Storm Dir 2
-                FVector(-5600.0f, 3900.0f, 500.0f),  // Storm Indoors (Reveal pos)
+                FVector(-8200.0f, 6500.0f, 1300.0f),  // Storm Indoors (Reveal view)
                 FVector(-1200.0f, 1000.0f, 1700.0f)  // Clear uses same position as B_Air
             };
             const FVector Targets[] = {
@@ -529,6 +532,10 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             const FVector Target = (State->CaptureIndex == 1 || State->CaptureIndex == 4 || State->CaptureIndex == 5 || State->CaptureIndex == 7) ? State->AirCameraTarget : Targets[State->CaptureIndex];
             State->CaptureCamera->SetActorLocation(Position);
             State->CaptureCamera->SetActorRotation((Target - Position).Rotation());
+            if (State->CaptureIndex == 3 && State->CaptureCamera->GetCameraComponent())
+            {
+                State->CaptureCamera->GetCameraComponent()->SetFieldOfView(60.0f);
+            }
             State->Stage = 6;
             State->StageAt = Now;
             return false;

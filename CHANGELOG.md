@@ -241,3 +241,9 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
 - Dressed the existing generator with a compact engine casing, cylinder head, skids, ribs, flywheel, hub, gauge, and regulators. Added a warm, unshadowed 850 lumen point light in the annex. These pieces use existing engine primitives and materials, so they remain a low-cost blockout rather than authored final art.
 - Added in-engine assertions for the shell, hidden source cube, collider, machine details, and annex light, plus the rendered `BlackBeacon_M02_Generator.png` capture.
 - UE 5.8.2 Linux Development build succeeded. The complete Vulkan `BlackBeacon.M01` suite passed 3/3 (GameplayFlow, PlayerControls, StairTraversal) with zero test warnings/errors; `./Tools/validate.sh` passed with 45/45 logic tests. M0.2 and visual art remain in progress.
+
+## 2026-09-23 — M0.2 — distant reveal landmark
+
+- Increased only the seven BeamReveal-owned ruin pieces to form a roughly 18 m tall silhouette that can be read from the lighthouse. The anomaly actor's location, hidden initial state, collision, beam query, and objective progression are unchanged.
+- Improved the rendered test framing to capture the reveal from beside the lighthouse, with an offset view and narrower field of view so the distant silhouette is visible in the scene.
+- UE 5.8.2 Linux Development build succeeded. The full rendered Vulkan `BlackBeacon.M01` suite passed 3/3 with zero test warnings/errors, including the new visible-size assertion; `./Tools/validate.sh` passed with 45/45 logic tests. The ruin remains greybox primitives, and the coast and lighthouse still need authored visual work.
