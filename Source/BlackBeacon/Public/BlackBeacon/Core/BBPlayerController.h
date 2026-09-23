@@ -99,6 +99,9 @@ private:
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Aim")
 	float MousePitchDegreesPerCount = 0.18f;
 
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement", meta = (ClampMin = "-5.0", ClampMax = "5.0"))
+	float StairPitchLockDegrees = 0.0f;
+
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Aim")
 	float ManualAimSensitivity = 0.22f;
 

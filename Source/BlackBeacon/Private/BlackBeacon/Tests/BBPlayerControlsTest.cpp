@@ -4,6 +4,7 @@
 
 #include "Engine/Engine.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -126,6 +127,46 @@ bool FBBPlayerControlsTest::RunTest(const FString& Parameters)
         {
             const float PitchDelta = FMath::FindDeltaAngleDegrees(State->StartPitch, Controller->GetControlRotation().Pitch);
             TestTrue(TEXT("Mouse down looks down at a controllable rate"), PitchDelta > 0.1f && PitchDelta < 10.0f);
+
+            AActor* StairTread = nullptr;
+            for (TActorIterator<AActor> It(Character->GetWorld()); It; ++It)
+            {
+                if (It->ActorHasTag(TEXT("BB_StairStep")))
+                {
+                    StairTread = *It;
+                    break;
+                }
+            }
+            TestNotNull(TEXT("Greybox stair tread for stair-look test"), StairTread);
+            if (!StairTread)
+            {
+                return true;
+            }
+
+            Character->SetCrouched(false);
+            Character->SetActorLocation(StairTread->GetActorLocation() + FVector(0.0f, 0.0f, 120.0f));
+            Controller->SetControlRotation(FRotator(15.0f, Controller->GetControlRotation().Yaw, 0.0f));
+            State->Stage = 5;
+            State->StageAt = Now;
+            return false;
+        }
+        if (State->Stage == 5 && Now - State->StageAt >= 0.3)
+        {
+            TestTrue(TEXT("Character recognizes the stair tread as its movement base"), Character->IsStandingOnStairTread());
+            State->StartYaw = Controller->GetControlRotation().Yaw;
+            SendKey(Controller, EKeys::MouseY, IE_Axis, 20.0f);
+            SendKey(Controller, EKeys::MouseX, IE_Axis, 20.0f);
+            State->Stage = 6;
+            State->StageAt = Now;
+            return false;
+        }
+        if (State->Stage == 6 && Now - State->StageAt >= 0.15)
+        {
+            TestTrue(TEXT("Mouse pitch stays level while standing on stairs"),
+                FMath::Abs(Controller->GetControlRotation().Pitch) < 1.0f);
+            const float StairYawDelta = FMath::FindDeltaAngleDegrees(State->StartYaw, Controller->GetControlRotation().Yaw);
+            TestTrue(TEXT("Mouse yaw remains responsive while standing on stairs"),
+                StairYawDelta > 0.1f && StairYawDelta < 10.0f);
             return true;
         }
         return false;

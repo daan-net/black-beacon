@@ -43,11 +43,11 @@ prompt/HUD polish, save/load seam, audio placeholders, performance sanity check.
 
 **Acceptance (M0.2)**
 - [x] Authored map replaces procedural builder as default (builder kept as dev tool)
-- [ ] Storm rain reads as continuous rainfall from normal gameplay viewpoints; roof culling works
+- [x] Storm rain reads as rainfall from normal gameplay viewpoints; user confirms the lighthouse interior stays dry
 - [x] Save/load restores generator, lighthouse/beam, objective, reveal, weather, and player state (GameplayFlow automation)
 - [ ] Stable 60+ fps on target PC config at reasonable settings (latest 1080p Vulkan automation warm-up: 43.37 FPS; gameplay benchmark still needed)
 
-M0.2 remains open. Rain now uses a world-anchored instanced field of 10,000 tapered translucent streaks in place of the old point-source emitter grid. Exterior rendered captures show precipitation across the view, but direct play review is still needed; the intended indoor capture shows rain, so roof culling is not verified. The latest 1080p Vulkan automation warm-up reached 45.69 FPS, below the 60 FPS gate and not a representative gameplay benchmark. Do not begin M1 until rain presentation, roof behavior, and performance gates are reviewed and pass.
+M0.2 remains open. The world-anchored instanced rain field is accepted after direct user review; the lighthouse interior stays dry. Stair look now locks vertical camera movement on stair treads while leaving horizontal steering unrestricted; the Vulkan PlayerControls test passed, pending direct feel review. The latest 1080p Vulkan automation warm-up reached 45.69 FPS, below the 60 FPS gate and not a representative gameplay benchmark. Large coast rocks and wreckage still lack collision. Do not begin M1 until performance and remaining traversal gates are reviewed.
 
 ## M0.3 — Visual/audio pass
 

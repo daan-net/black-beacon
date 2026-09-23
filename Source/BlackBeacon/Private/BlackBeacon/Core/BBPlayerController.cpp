@@ -177,8 +177,20 @@ void ABBlackBeaconPlayerController::HandleLook(const FInputActionValue& Value)
 		return;
 	}
 
-	AddYawInput(Axis.X * MouseYawDegreesPerCount);
-	AddPitchInput(Axis.Y * MousePitchDegreesPerCount);
+	if (PossessedCharacter && PossessedCharacter->IsStandingOnStairTread())
+	{
+		// Keep the narrow spiral readable while preserving yaw for steering and turning around.
+		FRotator Rotation = GetControlRotation();
+		Rotation.Yaw += Axis.X * MouseYawDegreesPerCount;
+		Rotation.Pitch = StairPitchLockDegrees;
+		Rotation.Roll = 0.0f;
+		SetControlRotation(Rotation);
+	}
+	else
+	{
+		AddYawInput(Axis.X * MouseYawDegreesPerCount);
+		AddPitchInput(Axis.Y * MousePitchDegreesPerCount);
+	}
 }
 
 void ABBlackBeaconPlayerController::HandleSprintStarted()

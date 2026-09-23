@@ -38,6 +38,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Player")
 	bool IsCrouchedByPlayer() const { return bWantsCrouch; }
 
+	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Player")
+	bool IsStandingOnStairTread() const;
+
 	// --- access (interaction component resolves its trace from the camera) ---
 	UCameraComponent* GetFirstPersonCamera() const { return CameraComponent; }
 	UBBInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }

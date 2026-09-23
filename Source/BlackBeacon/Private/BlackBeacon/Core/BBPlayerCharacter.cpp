@@ -3,6 +3,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -99,4 +100,14 @@ void ABBlackBeaconPlayerCharacter::SetCrouched(bool bNewCrouched)
 	{
 		UnCrouch();
 	}
+}
+
+bool ABBlackBeaconPlayerCharacter::IsStandingOnStairTread() const
+{
+	const UCharacterMovementComponent* const Movement = GetCharacterMovement();
+	const UPrimitiveComponent* const Base = Movement
+		? Cast<UPrimitiveComponent>(Movement->GetMovementBaseObject())
+		: nullptr;
+	const AActor* const BaseActor = Base ? Base->GetOwner() : nullptr;
+	return BaseActor && BaseActor->ActorHasTag(TEXT("BB_StairStep"));
 }
