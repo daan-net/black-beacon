@@ -16,6 +16,7 @@
 #include "BBGeneratorComponent.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FBBGeneratorStateChanged, bool /*bRunning*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FBBGeneratorRunningChanged, bool /*bRunning*/);
 
 UCLASS(ClassGroup = (BlackBeacon), config = Game, meta = (BlueprintSpawnableComponent))
 class UBBGeneratorComponent : public UActorComponent,
@@ -40,9 +41,11 @@ public:
 	bool HasProducedOnce() const { return bHasProducedOnce; }
 	void RestoreState(bool bInRunning, float InSpinUpProgress, bool bInHasProducedOnce);
 
-	// Fired on every running-state change (bRunning true when it starts
-	// producing, false when it stops).
+	// Fired when the generator begins producing power or stops producing.
 	FBBGeneratorStateChanged OnGeneratorStateChanged;
+
+	// Fired immediately when the motor starts or stops, including spin-up.
+	FBBGeneratorRunningChanged OnGeneratorRunningChanged;
 
 	// --- power source ---
 	virtual bool IsSourceActive() const override { return IsProducing(); }

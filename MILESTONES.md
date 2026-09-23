@@ -47,7 +47,7 @@ prompt/HUD polish, save/load seam, audio placeholders, performance sanity check.
 - [x] Save/load restores generator, lighthouse/beam, objective, reveal, weather, and player state (GameplayFlow automation)
 - [ ] Stable 60+ fps on target PC config at reasonable settings (latest 1080p Vulkan automation warm-up: 43.37 FPS; gameplay benchmark still needed)
 
-M0.2 remains open. The world-anchored instanced rain field is accepted after direct user review; the lighthouse interior stays dry. Stair look now clamps vertical camera movement to a moderate range, allowing the player to inspect steps while descending and keeping horizontal steering unrestricted; the revised Vulkan PlayerControls test passed, with direct feel review still pending. The latest 1080p Vulkan automation warm-up reached 45.69 FPS, below the 60 FPS gate and not a representative gameplay benchmark. Large coast rocks and wreckage still lack collision. Do not begin M1 until performance and remaining traversal gates are reviewed.
+M0.2 remains open. The world-anchored instanced rain field is accepted after direct user review; the lighthouse interior stays dry. Stair look now clamps vertical camera movement to a moderate range, allowing the player to inspect steps while descending and keeping horizontal steering unrestricted; the revised Vulkan PlayerControls test passed, with direct feel review still pending. The latest 1080p Vulkan automation warm-up reached 43.98 FPS, below the 60 FPS gate and not a representative gameplay benchmark. Large coast rocks and wreckage still lack collision. Do not begin M1 until performance and remaining traversal gates are reviewed.
 
 ## M0.3 — Visual/audio pass
 

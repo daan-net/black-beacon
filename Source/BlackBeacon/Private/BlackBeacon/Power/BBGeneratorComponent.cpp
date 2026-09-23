@@ -58,6 +58,7 @@ void UBBGeneratorComponent::Stop()
 
 void UBBGeneratorComponent::RestoreState(bool bInRunning, float InSpinUpProgress, bool bInHasProducedOnce)
 {
+	const bool bWasRunning = bRunning;
 	const bool bWasProducing = IsProducing();
 	if (AActor* const Owner = GetOwner())
 	{
@@ -82,12 +83,17 @@ void UBBGeneratorComponent::RestoreState(bool bInRunning, float InSpinUpProgress
 	{
 		OnGeneratorStateChanged.Broadcast(IsProducing());
 	}
+	if (bWasRunning != bRunning)
+	{
+		OnGeneratorRunningChanged.Broadcast(bRunning);
+	}
 	NotifyPowerNetworkChanged();
 }
 
 void UBBGeneratorComponent::SetRunning(bool bNowRunning)
 {
 	bRunning = bNowRunning;
+	OnGeneratorRunningChanged.Broadcast(bRunning);
 
 	AActor* const Owner = GetOwner();
 	if (!Owner || !Owner->GetWorld())

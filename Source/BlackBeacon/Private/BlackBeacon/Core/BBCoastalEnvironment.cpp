@@ -4,10 +4,14 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/World.h"
 #include "Engine/StaticMesh.h"
+#include "TimerManager.h"
 #include "EngineUtils.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
+
+#include "BlackBeacon/Power/BBGeneratorComponent.h"
 
 namespace
 {
@@ -301,6 +305,7 @@ void ABBCoastalEnvironment::BuildGeneratorMachinery()
 	{
 		return;
 	}
+	GeneratorComponent = Generator->FindComponentByClass<UBBGeneratorComponent>();
 
 	UStaticMesh* const Cube = LoadObject<UStaticMesh>(nullptr, CUBE_MESH);
 	UStaticMesh* const Cylinder = LoadObject<UStaticMesh>(nullptr, CYLINDER_MESH);
@@ -395,20 +400,32 @@ void ABBCoastalEnvironment::BuildGeneratorMachinery()
 	}
 	SkidAndRibs->RegisterComponent();
 
+	GeneratorFlywheelPivot = NewObject<USceneComponent>(Generator, TEXT("GeneratorFlywheelPivot"));
+	Generator->AddInstanceComponent(GeneratorFlywheelPivot);
+	GeneratorFlywheelPivot->SetupAttachment(Generator->GetRootComponent());
+	GeneratorFlywheelPivot->SetRelativeLocation(FVector(-116.0f, 0.0f, -4.0f));
+	GeneratorFlywheelPivot->SetCanEverAffectNavigation(false);
+	GeneratorFlywheelPivot->RegisterComponent();
+
 	UStaticMeshComponent* const Flywheel = MakeFitting(
 		TEXT("GeneratorFlywheel"), Cylinder, FVector(-116.0f, 0.0f, -4.0f),
 		FRotator(90.0f, 0.0f, 0.0f), FVector(0.72f, 0.72f, 0.10f), IronTint, 0.52f);
-	(void)Flywheel;
+	Flywheel->AttachToComponent(GeneratorFlywheelPivot, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	Flywheel->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
 	UInstancedStaticMeshComponent* const FlywheelSpokes = MakeInstanceField(
 		TEXT("GeneratorFlywheelSpokes"), Cube, CopperTint, 0.50f);
+	FlywheelSpokes->AttachToComponent(GeneratorFlywheelPivot, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	for (int32 Spoke = 0; Spoke < 4; ++Spoke)
 	{
 		FlywheelSpokes->AddInstance(FTransform(FRotator(0.0f, 0.0f, Spoke * 45.0f),
-			FVector(-129.0f, 0.0f, -4.0f), FVector(0.055f, 0.57f, 0.045f)));
+			FVector(-13.0f, 0.0f, 0.0f), FVector(0.055f, 0.57f, 0.045f)));
 	}
 	FlywheelSpokes->RegisterComponent();
-	MakeFitting(TEXT("GeneratorFlywheelHub"), Cylinder, FVector(-135.0f, 0.0f, -4.0f),
+	UStaticMeshComponent* const FlywheelHub = MakeFitting(TEXT("GeneratorFlywheelHub"), Cylinder, FVector(-135.0f, 0.0f, -4.0f),
 		FRotator(90.0f, 0.0f, 0.0f), FVector(0.23f, 0.23f, 0.08f), CopperTint, 0.44f);
+	FlywheelHub->AttachToComponent(GeneratorFlywheelPivot, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	FlywheelHub->SetRelativeLocation(FVector(-19.0f, 0.0f, 0.0f));
+	FlywheelHub->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
 	MakeFitting(TEXT("GeneratorGauge"), Cylinder, FVector(-116.0f, 45.0f, 42.0f),
 		FRotator(90.0f, 0.0f, 0.0f), FVector(0.19f, 0.19f, 0.10f), DialTint, 0.66f);
 	MakeFitting(TEXT("GeneratorRegulatorA"), Cylinder, FVector(34.0f, -43.0f, 4.0f),
@@ -427,6 +444,56 @@ void ABBCoastalEnvironment::BuildGeneratorMachinery()
 	ShedLight->SetAttenuationRadius(620.0f);
 	ShedLight->SetCastShadows(false);
 	ShedLight->RegisterComponent();
+
+	if (GeneratorComponent)
+	{
+		GeneratorComponent->OnGeneratorRunningChanged.AddUObject(this, &ABBCoastalEnvironment::HandleGeneratorRunningChanged);
+		if (GeneratorComponent->IsRunning())
+		{
+			HandleGeneratorRunningChanged(true);
+		}
+	}
+}
+
+void ABBCoastalEnvironment::HandleGeneratorRunningChanged(bool bRunning)
+{
+	if (!GeneratorFlywheelPivot || !GetWorld())
+	{
+		return;
+	}
+	if (bRunning)
+	{
+		GetWorldTimerManager().SetTimer(GeneratorFlywheelTimer, this,
+			&ABBCoastalEnvironment::AdvanceGeneratorFlywheel, 0.05f, true, 0.0f);
+	}
+	else if (GeneratorFlywheelSpeedDegrees > 1.0f)
+	{
+		// Keep the visual motor alive briefly so the heavy wheel can coast down.
+		GetWorldTimerManager().SetTimer(GeneratorFlywheelTimer, this,
+			&ABBCoastalEnvironment::AdvanceGeneratorFlywheel, 0.05f, true, 0.0f);
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(GeneratorFlywheelTimer);
+	}
+}
+
+void ABBCoastalEnvironment::AdvanceGeneratorFlywheel()
+{
+	if (!GeneratorFlywheelPivot || !GeneratorComponent)
+	{
+		return;
+	}
+	const float DeltaSeconds = 0.05f;
+	const float TargetSpeed = GeneratorComponent->IsRunning()
+		? 300.0f * GeneratorComponent->GetSpinUpProgress() : 0.0f;
+	GeneratorFlywheelSpeedDegrees = FMath::FInterpTo(GeneratorFlywheelSpeedDegrees, TargetSpeed, DeltaSeconds, 2.5f);
+	GeneratorFlywheelPivot->AddLocalRotation(FRotator(0.0f, 0.0f, GeneratorFlywheelSpeedDegrees * DeltaSeconds));
+	if (!GeneratorComponent->IsRunning() && GeneratorFlywheelSpeedDegrees <= 1.0f)
+	{
+		GeneratorFlywheelSpeedDegrees = 0.0f;
+		GetWorldTimerManager().ClearTimer(GeneratorFlywheelTimer);
+	}
 }
 
 void ABBCoastalEnvironment::BuildRevealedRuin()

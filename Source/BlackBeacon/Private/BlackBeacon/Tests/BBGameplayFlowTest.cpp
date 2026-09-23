@@ -73,6 +73,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<UWorld> World;
         TWeakObjectPtr<UBBObjectiveSystem> Objectives;
         TWeakObjectPtr<UBBGeneratorComponent> Generator;
+        TWeakObjectPtr<USceneComponent> GeneratorFlywheelPivot;
         TWeakObjectPtr<ABBLighthouseController> Lighthouse;
         TWeakObjectPtr<UInstancedStaticMeshComponent> LanternFresnelBands;
         TArray<TWeakObjectPtr<UStaticMeshComponent>> LanternGlazingPanels;
@@ -89,6 +90,10 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         bool bOpeningCaptured = false;
         bool bGeneratorCameraReady = false;
         bool bGeneratorCaptured = false;
+        bool bFlywheelMotionChecked = false;
+        bool bFlywheelCoastChecked = false;
+        float GeneratorFlywheelStartRoll = 0.0f;
+        float GeneratorFlywheelStopRoll = 0.0f;
         FString SaveSlot = TEXT("BB_M02_Automation_Restore");
     };
     TSharedRef<FFlowState> State = MakeShared<FFlowState>();
@@ -225,6 +230,15 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 }
             }
             TestTrue(TEXT("Generator has a visible flywheel assembly"), bHasFlywheel);
+            for (USceneComponent* Component : TInlineComponentArray<USceneComponent*>(GeneratorActor))
+            {
+                if (Component && Component->GetName() == TEXT("GeneratorFlywheelPivot"))
+                {
+                    State->GeneratorFlywheelPivot = Component;
+                    break;
+                }
+            }
+            TestNotNull(TEXT("Generator flywheel has a motorized pivot"), State->GeneratorFlywheelPivot.Get());
             TestTrue(TEXT("Generator retains its invisible interaction collider"), bKeepsHiddenInteractionCollider);
             TestTrue(TEXT("Generator machinery details stay nonblocking"), NonBlockingGeneratorDetails >= 7);
             AActor* Shed = FindTaggedActor(World, TEXT("BB_GeneratorShed"));
@@ -340,6 +354,8 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             }
             TestTrue(TEXT("Player trace interacts with generator"), State->Interaction->TryInteract());
             TestTrue(TEXT("Generator is spinning up"), Generator->IsRunning());
+            State->GeneratorFlywheelStartRoll = State->GeneratorFlywheelPivot.IsValid()
+                ? State->GeneratorFlywheelPivot->GetRelativeRotation().Roll : 0.0f;
             if (PlayerController && PlayerController->PromptWidget)
             {
                 TestEqual(TEXT("Generator prompt refreshes after interaction"), PlayerController->PromptWidget->GetCurrentPrompt().ToString(), FString(TEXT("Stop Generator")));
@@ -350,6 +366,14 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         }
         if (State->Stage == 2)
         {
+            if (!State->bFlywheelMotionChecked && Now - State->StageAt >= 0.4)
+            {
+                TestTrue(TEXT("Flywheel visibly turns during generator spin-up"),
+                    State->GeneratorFlywheelPivot.IsValid()
+                    && !FMath::IsNearlyEqual(State->GeneratorFlywheelStartRoll,
+                        State->GeneratorFlywheelPivot->GetRelativeRotation().Roll, 0.1f));
+                State->bFlywheelMotionChecked = true;
+            }
             if (!Generator->IsProducing())
             {
                 TestFalse(TEXT("Power stays off during spin-up"), Lighthouse->IsPowered());
@@ -576,8 +600,27 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 State->Stage = State->CaptureIndex < 8 ? 5 : 7;
             }
         }
+        if (State->Stage == 11 && Now - State->StageAt >= 0.25)
+        {
+            TestTrue(TEXT("Flywheel coasts after generator shutdown"),
+                State->GeneratorFlywheelPivot.IsValid()
+                && !FMath::IsNearlyEqual(State->GeneratorFlywheelStopRoll,
+                    State->GeneratorFlywheelPivot->GetRelativeRotation().Roll, 0.1f));
+            State->bFlywheelCoastChecked = true;
+            State->Stage = 7;
+            return false;
+        }
         if (State->Stage == 7)
         {
+            if (!State->bFlywheelCoastChecked)
+            {
+                Generator->Stop();
+                State->GeneratorFlywheelStopRoll = State->GeneratorFlywheelPivot.IsValid()
+                    ? State->GeneratorFlywheelPivot->GetRelativeRotation().Roll : 0.0f;
+                State->Stage = 11;
+                State->StageAt = Now;
+                return false;
+            }
             USpotLightComponent* BeamLight = Lighthouse->FindComponentByClass<USpotLightComponent>();
             Generator->Stop();
             TestFalse(TEXT("Stopping generator removes lighthouse power"), Lighthouse->IsPowered());

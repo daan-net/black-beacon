@@ -10,6 +10,7 @@
 class USceneComponent;
 class UStaticMeshComponent;
 class UInstancedStaticMeshComponent;
+class UBBGeneratorComponent;
 
 UCLASS()
 class ABBCoastalEnvironment : public AActor
@@ -25,6 +26,8 @@ protected:
 private:
 	void BuildRevealedRuin();
 	void BuildGeneratorMachinery();
+	void HandleGeneratorRunningChanged(bool bRunning);
+	void AdvanceGeneratorFlywheel();
 	UStaticMeshComponent* AddShape(
 		const TCHAR* Name,
 		const TCHAR* MeshPath,
@@ -41,6 +44,15 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Coast")
 	TObjectPtr<UStaticMeshComponent> OceanSurface = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<USceneComponent> GeneratorFlywheelPivot = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UBBGeneratorComponent> GeneratorComponent = nullptr;
+
+	FTimerHandle GeneratorFlywheelTimer;
+	float GeneratorFlywheelSpeedDegrees = 0.0f;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UStaticMeshComponent>> RockSurfaces;
