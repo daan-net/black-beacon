@@ -17,6 +17,10 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 - **User-visible:** Added a generated weathered whitewash texture to the existing lighthouse tower skin and raised moon sky fill from 0.1 to 0.22 so the tower silhouette reads in the opening view. The material binding is asserted by GameplayFlow. UE 5.8.2 build succeeded; rendered Vulkan M01 automation passed 3/3 with zero test warnings/errors, and `./Tools/validate.sh` passed all 45 logic tests. The 1080p automation warm-up reached 44.77 FPS, below target and not a representative gameplay benchmark. The exterior remains blockout geometry; the close opening camera crops the lantern and the surrounding coast is still very dark.
 
+## 2026-09-24 — M1 — first-reveal lighting review
+
+- **User-visible:** Warmed the reveal tint for its rusted wreck surfaces. The rendered GameplayFlow still shows the revealed fragment as a dark silhouette beneath a broad, pale fog wedge. A temporary opacity/scattering adjustment had no material visual effect and was reverted. The final UE 5.8.2 build succeeded; the full Vulkan M01 report passed 3/3 with zero warnings/errors; `./Tools/validate.sh` passed 45/45. The automation process returned 1 during trace-server shutdown after all tests had completed successfully. Its five-second warm-up measured 46.15 FPS, below target and not a representative gameplay benchmark. The reveal remains mechanically `TESTED`; its visual quality remains `PLACEHOLDER` and does not pass the M1 gate.
+
 ---
 
 ## 2026-09-23 — M0.2 — shipwreck coast silhouette and atmosphere
