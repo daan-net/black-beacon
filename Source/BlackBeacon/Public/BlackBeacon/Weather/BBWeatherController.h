@@ -94,6 +94,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
 	TObjectPtr<UNiagaraComponent> RainComponent = nullptr;
 
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
+	TObjectPtr<USceneComponent> RainRoot = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
+	TArray<TObjectPtr<UNiagaraComponent>> RainGrid;
+
 	// --- config ---
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
 	EBBWeatherPhase InitialPhase = EBBWeatherPhase::Rain;

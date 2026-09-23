@@ -35,15 +35,33 @@ ABBWeatherController::ABBWeatherController()
 	SkyLight->SetIntensity(0.1f);
 
 	
-	RainComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("RainComponent"));
-	RainComponent->SetupAttachment(RootComponent);
-	RainComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 3500.0f));
-	RainComponent->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f)); // Point downwards
-	RainComponent->SetRelativeScale3D(FVector(50.0f, 50.0f, 1.0f));
+	RainRoot = CreateDefaultSubobject<USceneComponent>(TEXT("RainRoot"));
+	RainRoot->SetupAttachment(RootComponent);
+
+	RainComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("RainComponent")); // Keep for legacy
+	RainComponent->SetupAttachment(RainRoot);
+	RainComponent->SetVisibility(false);
+	RainComponent->bAutoActivate = false;
+
 	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> RainAsset(TEXT("/Game/BlackBeacon/Effects/NS_Rain.FountainLightweight"));
-	if (RainAsset.Succeeded())
+	
+	// Create a 3x3 grid of emitters to cover a wide area without a visible single origin
+	for (int32 X = -1; X <= 1; ++X)
 	{
-		RainComponent->SetAsset(RainAsset.Object);
+		for (int32 Y = -1; Y <= 1; ++Y)
+		{
+			FString CompName = FString::Printf(TEXT("RainGrid_%d_%d"), X, Y);
+			UNiagaraComponent* GridComp = CreateDefaultSubobject<UNiagaraComponent>(*CompName);
+			GridComp->SetupAttachment(RainRoot);
+			GridComp->SetRelativeLocation(FVector(X * 1200.0f, Y * 1200.0f, 0.0f));
+			GridComp->SetRelativeRotation(FRotator(180.0f, 0.0f, 0.0f)); // Upside down so fountain shoots down
+			GridComp->SetRelativeScale3D(FVector(4.0f, 4.0f, 1.0f));
+			if (RainAsset.Succeeded())
+			{
+				GridComp->SetAsset(RainAsset.Object);
+			}
+			RainGrid.Add(GridComp);
+		}
 	}
 MoonLight->bAtmosphereSunLight = true;
 }
@@ -112,6 +130,11 @@ float ABBWeatherController::GetFogDensityMultiplier() const
 	return GetFogDensity() / 0.0008f;
 }
 
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/Pawn.h"
+#include "Engine/World.h"
+#include "Engine/HitResult.h"
+
 void ABBWeatherController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -137,25 +160,52 @@ void ABBWeatherController::ApplyToFog()
 
 void ABBWeatherController::ApplyOutputs()
 {
-	if (RainComponent)
-	{
-		float RainIntensity = static_cast<float>(Interpolator.GetRainIntensity());
-		// Bind the requested parameters
-		RainComponent->SetFloatParameter(TEXT("RainIntensity"), RainIntensity);
-		
-		float WindStrength = static_cast<float>(Interpolator.GetWindStrength());
-		RainComponent->SetFloatParameter(TEXT("WindStrength"), WindStrength);
+	float RainIntensity = static_cast<float>(Interpolator.GetRainIntensity());
+	float WindStrength = static_cast<float>(Interpolator.GetWindStrength());
 
-		// For the copied fountain asset to simulate rain visibility
+	bool bIsIndoors = false;
+	if (RainRoot && GetWorld())
+	{
+		APlayerController* PC = GetWorld()->GetFirstPlayerController();
+		if (PC && PC->GetPawn())
+		{
+			FVector PlayerLoc = PC->GetPawn()->GetActorLocation();
+			RainRoot->SetWorldLocation(FVector(PlayerLoc.X, PlayerLoc.Y, PlayerLoc.Z + 2500.0f));
+
+			// Raycast up to see if under a roof
+			FHitResult Hit;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(PC->GetPawn());
+			Params.AddIgnoredActor(this);
+			
+			if (GetWorld()->LineTraceSingleByChannel(Hit, PlayerLoc, PlayerLoc + FVector(0, 0, 10000.0f), ECC_Visibility, Params))
+			{
+				bIsIndoors = true;
+			}
+		}
+	}
+
+	if (bIsIndoors)
+	{
+		RainIntensity = 0.0f;
+	}
+
+	for (UNiagaraComponent* GridComp : RainGrid)
+	{
+		if (!GridComp) continue;
+
+		GridComp->SetFloatParameter(TEXT("RainIntensity"), RainIntensity);
+		GridComp->SetFloatParameter(TEXT("WindStrength"), WindStrength);
+
 		if (RainIntensity > 0.01f)
 		{
-			if (!RainComponent->IsActive()) RainComponent->Activate(true);
-			// Optional: hack to make fountain look somewhat like rain area and intensity
-			RainComponent->SetFloatParameter(TEXT("SpawnRate"), RainIntensity * 5000.0f); 
+			if (!GridComp->IsActive()) GridComp->Activate(true);
+			// Fountain specific logic to spread and scale
+			GridComp->SetFloatParameter(TEXT("SpawnRate"), RainIntensity * 2000.0f); 
 		}
 		else
 		{
-			if (RainComponent->IsActive()) RainComponent->Deactivate();
+			if (GridComp->IsActive()) GridComp->Deactivate();
 		}
 	}
 }

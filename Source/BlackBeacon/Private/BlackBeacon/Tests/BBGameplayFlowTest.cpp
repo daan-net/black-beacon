@@ -84,7 +84,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
     ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this, State]()
     {
         const double Now = FPlatformTime::Seconds();
-        if (Now - State->StartedAt > 25.0)
+        if (Now - State->StartedAt > 60.0)
         {
             AddError(TEXT("Gameplay flow timed out"));
             return true;
@@ -300,7 +300,9 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 FVector(-1200.0f, 1000.0f, 1700.0f),
                 FVector(-4000.0f, 3300.0f, 900.0f),
                 FVector(-5600.0f, 3900.0f, 500.0f),
-                FVector(-1200.0f, 1000.0f, 1700.0f), // Storm uses same position as B_Air
+                FVector(-1200.0f, 1000.0f, 1700.0f), // Storm Dir 1
+                FVector(-1200.0f, 1000.0f, 1700.0f), // Storm Dir 2
+                FVector(-5600.0f, 3900.0f, 500.0f),  // Storm Indoors (Reveal pos)
                 FVector(-1200.0f, 1000.0f, 1700.0f)  // Clear uses same position as B_Air
             };
             const FVector Targets[] = {
@@ -308,10 +310,12 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 FVector(-700.0f, 600.0f, 1700.0f),
                 State->Anomaly->GetActorLocation(),
                 State->Anomaly->GetActorLocation(),
-                FVector(-700.0f, 600.0f, 1700.0f), // Storm uses same target as B_Air
-                FVector(-700.0f, 600.0f, 1700.0f)  // Clear uses same target as B_Air
+                FVector(-700.0f, 600.0f, 1700.0f), // Storm Dir 1
+                FVector(-1700.0f, 1400.0f, 1700.0f), // Storm Dir 2 (looking different way)
+                State->Anomaly->GetActorLocation(), // Storm Indoors (looking at anomaly inside)
+                FVector(-700.0f, 600.0f, 1700.0f)  // Clear
             };
-            if (State->CaptureIndex == 1 || State->CaptureIndex == 4 || State->CaptureIndex == 5)
+            if (State->CaptureIndex == 1 || State->CaptureIndex == 4 || State->CaptureIndex == 5 || State->CaptureIndex == 7)
             {
                 const auto Query = Lighthouse->BeamComponent->GetBeamQuery();
                 const FVector Origin(Query.Origin.X, Query.Origin.Y, Query.Origin.Z);
@@ -321,8 +325,8 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                     + FVector(-Direction.Y, Direction.X, 0.0f).GetSafeNormal() * 1500.0f
                     + FVector(0.0f, 0.0f, 150.0f);
             }
-            const FVector Position = (State->CaptureIndex == 1 || State->CaptureIndex == 4 || State->CaptureIndex == 5) ? State->AirCameraPosition : Positions[State->CaptureIndex];
-            const FVector Target = (State->CaptureIndex == 1 || State->CaptureIndex == 4 || State->CaptureIndex == 5) ? State->AirCameraTarget : Targets[State->CaptureIndex];
+            const FVector Position = (State->CaptureIndex == 1 || State->CaptureIndex == 4 || State->CaptureIndex == 5 || State->CaptureIndex == 7) ? State->AirCameraPosition : Positions[State->CaptureIndex];
+            const FVector Target = (State->CaptureIndex == 1 || State->CaptureIndex == 4 || State->CaptureIndex == 5 || State->CaptureIndex == 7) ? State->AirCameraTarget : Targets[State->CaptureIndex];
             State->CaptureCamera->SetActorLocation(Position);
             State->CaptureCamera->SetActorRotation((Target - Position).Rotation());
             State->Stage = 6;
@@ -336,7 +340,9 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 TEXT("BlackBeacon_M01_B_Air.png"),
                 TEXT("BlackBeacon_M01_C_Impact.png"),
                 TEXT("BlackBeacon_M01_D_Reveal.png"),
-                TEXT("BlackBeacon_M02_Storm.png"),
+                TEXT("BlackBeacon_M02_Storm_Dir1.png"),
+                TEXT("BlackBeacon_M02_Storm_Dir2.png"),
+                TEXT("BlackBeacon_M02_Storm_Indoors.png"),
                 TEXT("BlackBeacon_M02_Clear.png")
             };
             FScreenshotRequest::RequestScreenshot(Names[State->CaptureIndex], false, false);
@@ -347,18 +353,20 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         }
         if (State->Stage == 8 && Now - State->StageAt >= 0.3)
         {
-            if (State->CaptureIndex == 4 || State->CaptureIndex == 5)
+            if (State->CaptureIndex >= 4 && State->CaptureIndex <= 7)
             {
                 TActorIterator<ABBWeatherController> WeatherIt(World);
                 if (WeatherIt)
                 {
-                    WeatherIt->SetWeather(State->CaptureIndex == 4 ? EBBWeatherPhase::Storm : EBBWeatherPhase::Clear, 0.0f); // Instant
+                    EBBWeatherPhase Phase = EBBWeatherPhase::Storm;
+                    if (State->CaptureIndex == 7) Phase = EBBWeatherPhase::Clear;
+                    WeatherIt->SetWeather(Phase, 0.0f); // Instant
                 }
                 State->Stage = 5;
             }
             else
             {
-                State->Stage = State->CaptureIndex < 6 ? 5 : 7;
+                State->Stage = State->CaptureIndex < 8 ? 5 : 7;
             }
         }
         if (State->Stage == 7)
