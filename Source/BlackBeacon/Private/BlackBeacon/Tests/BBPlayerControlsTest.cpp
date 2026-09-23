@@ -153,6 +153,8 @@ bool FBBPlayerControlsTest::RunTest(const FString& Parameters)
         if (State->Stage == 5 && Now - State->StageAt >= 0.3)
         {
             TestTrue(TEXT("Character recognizes the stair tread as its movement base"), Character->IsStandingOnStairTread());
+            TestTrue(TEXT("Stair look levels automatically without mouse input"),
+                FMath::Abs(Controller->GetControlRotation().Pitch) < 1.0f);
             State->StartYaw = Controller->GetControlRotation().Yaw;
             SendKey(Controller, EKeys::MouseY, IE_Axis, 20.0f);
             SendKey(Controller, EKeys::MouseX, IE_Axis, 20.0f);
