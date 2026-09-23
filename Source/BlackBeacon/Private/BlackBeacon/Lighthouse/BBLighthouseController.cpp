@@ -41,6 +41,14 @@ ABBLighthouseController::ABBLighthouseController()
 	LanternFrame->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	LanternFrame->SetCastShadow(false);
 	LanternFrame->SetCanEverAffectNavigation(false);
+	LanternFresnelBands = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("LanternFresnelBands"));
+	LanternFresnelBands->SetupAttachment(RootComponent);
+	LanternFresnelBands->SetStaticMesh(CubeMesh);
+	LanternFresnelBands->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	LanternFresnelBands->SetCastShadow(false);
+	LanternFresnelBands->SetCanEverAffectNavigation(false);
+	LanternFresnelBands->SetVisibility(false);
+	LanternFresnelBands->SetMaterial(0, LanternLitMaterial);
 	UStaticMeshComponent* const LanternRoof = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LanternRoof"));
 	LanternRoof->SetupAttachment(RootComponent);
 	LanternRoof->SetStaticMesh(ConeMesh);
@@ -74,6 +82,13 @@ ABBLighthouseController::ABBLighthouseController()
 		GlassPanel->SetMaterial(0, LanternDarkMaterial);
 		LanternGlazingPanels.Add(GlassPanel);
 
+		for (const float BandHeight : {-64.0f, -32.0f, 0.0f, 32.0f, 64.0f})
+		{
+			LanternFresnelBands->AddInstance(FTransform(FRotator(0.0f, SideYaw, 0.0f),
+				SideRadial * 148.4f + FVector(0.0f, 0.0f, BandHeight - 2.0f),
+				FVector(1.02f, 0.045f, 0.035f)));
+		}
+
 		for (const float RailHeight : {-102.0f, 102.0f})
 		{
 			LanternFrame->AddInstance(FTransform(FRotator(0.0f, SideYaw, 0.0f),
@@ -105,6 +120,15 @@ void ABBLighthouseController::BeginPlay()
 		{
 			Material->SetVectorParameterValue(TEXT("BaseColor"), FLinearColor(0.11f, 0.14f, 0.17f));
 			Material->SetScalarParameterValue(TEXT("Roughness"), 0.84f);
+		}
+	}
+	if (LanternFresnelBands)
+	{
+		FresnelBandsMaterial = LanternFresnelBands->CreateAndSetMaterialInstanceDynamic(0);
+		if (FresnelBandsMaterial)
+		{
+			FresnelBandsMaterial->SetVectorParameterValue(TEXT("LensTint"), FLinearColor(1.0f, 0.46f, 0.16f));
+			FresnelBandsMaterial->SetScalarParameterValue(TEXT("LensIntensity"), 1.1f);
 		}
 	}
 	RegisterWithPowerSystem();
@@ -328,6 +352,10 @@ void ABBLighthouseController::UpdateLanternHousingState()
 		return;
 	}
 	const bool bLanternLit = bPowered && bBeamStarted;
+	if (LanternFresnelBands)
+	{
+		LanternFresnelBands->SetVisibility(bLanternLit);
+	}
 	const auto SetSurface = [this](UStaticMeshComponent* Mesh, UMaterialInterface* Base,
 		const FLinearColor& Color, float Roughness)
 	{

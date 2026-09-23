@@ -73,6 +73,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<UBBObjectiveSystem> Objectives;
         TWeakObjectPtr<UBBGeneratorComponent> Generator;
         TWeakObjectPtr<ABBLighthouseController> Lighthouse;
+        TWeakObjectPtr<UInstancedStaticMeshComponent> LanternFresnelBands;
         TArray<TWeakObjectPtr<UStaticMeshComponent>> LanternGlazingPanels;
         TWeakObjectPtr<AActor> Anomaly;
         TWeakObjectPtr<APawn> Pawn;
@@ -209,6 +210,22 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 }
             }
             TestEqual(TEXT("Lantern housing has eight glazing panels"), State->LanternGlazingPanels.Num(), 8);
+            UInstancedStaticMeshComponent* FresnelBands = nullptr;
+            for (UInstancedStaticMeshComponent* Mesh : TInlineComponentArray<UInstancedStaticMeshComponent*>(State->Lighthouse.Get()))
+            {
+                if (Mesh && Mesh->GetName() == TEXT("LanternFresnelBands"))
+                {
+                    FresnelBands = Mesh;
+                    break;
+                }
+            }
+            TestNotNull(TEXT("Lantern has instanced Fresnel bands"), FresnelBands);
+            if (FresnelBands)
+            {
+                TestEqual(TEXT("Fresnel bands detail all eight glass faces"), FresnelBands->GetInstanceCount(), 40);
+                TestFalse(TEXT("Fresnel emission stays off before beam startup"), FresnelBands->IsVisible());
+                State->LanternFresnelBands = FresnelBands;
+            }
             int32 VisibleGlazingPanels = 0;
             for (const TWeakObjectPtr<UStaticMeshComponent>& Panel : State->LanternGlazingPanels)
             {
@@ -341,6 +358,9 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 VisibleGlazingPanels += Panel.IsValid() && Panel->IsVisible() ? 1 : 0;
             }
             TestEqual(TEXT("Lantern glazing remains visible when lit"), VisibleGlazingPanels, 8);
+            UInstancedStaticMeshComponent* FresnelBands = State->LanternFresnelBands.Get();
+            TestNotNull(TEXT("Powered lighthouse Fresnel assembly"), FresnelBands);
+            TestTrue(TEXT("Fresnel bands illuminate with the beam"), FresnelBands && FresnelBands->IsVisible());
             ABBlackBeaconPlayerController* PlayerController = Cast<ABBlackBeaconPlayerController>(World->GetFirstPlayerController());
             if (PlayerController && PlayerController->PromptWidget)
             {

@@ -17,6 +17,7 @@
 #include "BBLighthouseController.generated.h"
 
 class UInstancedStaticMeshComponent;
+class UMaterialInstanceDynamic;
 class UMaterialInterface;
 class UStaticMeshComponent;
 
@@ -97,6 +98,12 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UInstancedStaticMeshComponent> LanternFrame = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UInstancedStaticMeshComponent> LanternFresnelBands = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> FresnelBandsMaterial = nullptr;
 
 	UPROPERTY()
     TArray<TObjectPtr<UStaticMeshComponent>> LanternGlazingPanels;

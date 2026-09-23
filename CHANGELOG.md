@@ -13,6 +13,8 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
 ## 2026-09-23 — M0.2 — shipwreck coast silhouette and atmosphere
 
+- **User-visible:** Added 40 instanced Fresnel ridges across the eight lantern glass faces. The ridges share one non-colliding, no-shadow mesh component, use the warm `LensTint`/`LensIntensity` parameters, and switch off with beam power. The Vulkan exterior capture now reads as segmented lighthouse glass. UE 5.8.2 build succeeded; the full rendered suite passed 3/3 with zero warnings/errors; `./Tools/validate.sh` remains green at 45/45.
+
 - **User-visible:** Corrected the lantern-pane and beam-lens material bindings. The authored `M_LanternLens` exposes `LensTint` and `LensIntensity`; the controller had been writing unrelated parameter names, leaving the panes clipped white. It now sets the real warm tint and a restrained runtime emission. Vulkan GameplayFlow passed and regenerated the exterior/beam captures; full PlayerControls and StairTraversal coverage remains from the immediately preceding 3/3 suite.
 
 - **User-visible:** Added a continuous wet-basalt tower shell as a non-colliding child of the lighthouse controller. It covers the visual gaps between the serialized floor sections while preserving the interior stair route. The rendered opening capture confirms the tower silhouette; a gameplay test was updated to target the named lantern control after the new mesh changed component order.
