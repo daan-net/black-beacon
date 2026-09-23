@@ -47,6 +47,7 @@ namespace BlackBeacon::Logics
 
 		size_t NumNodes() const { return Nodes.size(); }
 		void Reset();
+		void RestoreCompleted(const std::vector<std::string>& CompletedIds);
 
 	private:
 		bool HasPrereqs(const FBBObjectiveNode& Node) const;

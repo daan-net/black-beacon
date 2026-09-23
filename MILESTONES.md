@@ -36,16 +36,18 @@ accepted its moving fog appearance and the corrected stair entrance and transiti
 The flow automation reaches the lantern volume by teleporting the pawn; the separate
 stair traversal test moves the character across all 84 steps.
 
-## M0.2 — Vertical slice 0.1 polish (complete)
+## M0.2 — Vertical slice 0.1 polish (in progress)
 
 Authored greybox level (first real `.umap`), weather storm state, rain Niagara,
 prompt/HUD polish, save/load seam, audio placeholders, performance sanity check.
 
 **Acceptance (M0.2)**
 - [x] Authored map replaces procedural builder as default (builder kept as dev tool)
-- [x] Storm + fog + rain active; beam readable in all weather states
-- [x] Save/load restores generator/beam/objective state
-- [x] Stable 60+ fps on target PC config at reasonable settings
+- [ ] Storm rain reads as continuous rainfall from normal gameplay viewpoints; roof culling works
+- [x] Save/load restores generator, lighthouse/beam, objective, reveal, weather, and player state (GameplayFlow automation)
+- [ ] Stable 60+ fps on target PC config at reasonable settings (latest 1080p Vulkan automation warm-up: 43.37 FPS; gameplay benchmark still needed)
+
+M0.2 remains open. The current Niagara-based storm is functionally visible and roof-culled, but screenshots still show chunky streak clusters. Do not begin M1 until rain presentation and performance gates are reviewed and pass.
 
 ## M0.3 — Visual/audio pass
 

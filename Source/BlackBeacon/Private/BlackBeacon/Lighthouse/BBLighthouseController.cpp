@@ -189,6 +189,30 @@ bool ABBLighthouseController::IsBeamInManualMode() const
 		&& BeamComponent->GetRotationMode() == EBBBeamRotationMode::Manual;
 }
 
+void ABBLighthouseController::RestoreBeamState(
+	bool bInBeamStarted, bool bInAimObjectiveCompleted,
+	EBBBeamRotationMode InMode, float InYawDegrees, float InPitchDegrees)
+{
+	bBeamStarted = bInBeamStarted;
+	bAimObjectiveCompleted = bInAimObjectiveCompleted;
+	if (!BeamComponent)
+	{
+		return;
+	}
+
+	BeamComponent->SetPowered(bPowered && bBeamStarted);
+	if (bBeamStarted && bPowered)
+	{
+		BeamComponent->SetManualYawTarget(InYawDegrees);
+		BeamComponent->SetManualPitchDegrees(InPitchDegrees);
+		BeamComponent->SetRotationMode(InMode == EBBBeamRotationMode::Off ? EBBBeamRotationMode::Auto : InMode);
+	}
+	else
+	{
+		BeamComponent->SetRotationMode(EBBBeamRotationMode::Off);
+	}
+}
+
 void ABBLighthouseController::RequestBeamStart()
 {
 	if (!BeamComponent || !bPowered || bBeamStarted)

@@ -125,4 +125,6 @@ private:
 
 	BlackBeacon::Logics::FBBWeatherInterpolator Interpolator;
 	float FogDensityBase = 1.0f; // reserved: authored-map fog scaling
+	float RainOutputUpdateCountdown = 0.0f;
+	bool bRainGridActive = false;
 };

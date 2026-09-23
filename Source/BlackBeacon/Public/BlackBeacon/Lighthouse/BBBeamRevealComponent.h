@@ -36,6 +36,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Reveal")
 	void ForceReveal();
+	void ResetForRestore();
+	void SetRevealedForRestore(bool bRevealed);
 
 	// --- state ---
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Reveal")

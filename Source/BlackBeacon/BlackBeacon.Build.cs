@@ -19,9 +19,6 @@ public class BlackBeacon : ModuleRules
 			"Niagara"
 		});
 
-		// No PrivateDependencyModuleNames yet: keeping the dependency
-		// surface minimal (rule: no unnecessary dependencies). Niagara is
-		// intentionally NOT referenced until real effects assets exist (0.2+);
-		// the weather/beam systems expose scalar hooks instead.
+		// Niagara drives the current lightweight storm-rain presentation.
 	}
 }

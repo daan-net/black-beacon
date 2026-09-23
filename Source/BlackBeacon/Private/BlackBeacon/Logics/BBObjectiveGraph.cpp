@@ -122,4 +122,20 @@ namespace BlackBeacon::Logics
 		Active.assign(Nodes.size(), 0);
 		ActivateEligibleSuccessors();
 	}
+
+	void FBBObjectiveGraph::RestoreCompleted(const std::vector<std::string>& CompletedIds)
+	{
+		Reset();
+		for (const FBBObjectiveNode& Node : Nodes)
+		{
+			for (const std::string& CompletedId : CompletedIds)
+			{
+				if (Node.Id == CompletedId)
+				{
+					CompleteObjective(Node.Id);
+					break;
+				}
+			}
+		}
+	}
 }

@@ -56,6 +56,35 @@ void UBBGeneratorComponent::Stop()
 	SetRunning(false);
 }
 
+void UBBGeneratorComponent::RestoreState(bool bInRunning, float InSpinUpProgress, bool bInHasProducedOnce)
+{
+	const bool bWasProducing = IsProducing();
+	if (AActor* const Owner = GetOwner())
+	{
+		Owner->GetWorldTimerManager().ClearTimer(SpinUpTimerHandle);
+	}
+
+	bRunning = bInRunning;
+	SpinUpProgress = bRunning ? FMath::Clamp(InSpinUpProgress, 0.0f, 1.0f) : 0.0f;
+	bHasProducedOnce = bInHasProducedOnce;
+
+	if (bRunning && SpinUpProgress < 1.0f)
+	{
+		if (AActor* const Owner = GetOwner())
+		{
+			Owner->GetWorldTimerManager().SetTimer(
+				SpinUpTimerHandle, this, &UBBGeneratorComponent::AdvanceSpinUp,
+				0.05f, true, 0.0f);
+		}
+	}
+
+	if (bWasProducing != IsProducing())
+	{
+		OnGeneratorStateChanged.Broadcast(IsProducing());
+	}
+	NotifyPowerNetworkChanged();
+}
+
 void UBBGeneratorComponent::SetRunning(bool bNowRunning)
 {
 	bRunning = bNowRunning;

@@ -29,6 +29,10 @@ Thumbs.db
 # --- Local-only files that must never be committed ---
 *.log
 LocalState/
+*.orig
+/Debug_Manual/
+/Manual_Visuals/
+/Content/BlackBeacon/Materials/M_BeamVolume.uasset
 
 # --- Standalone test/tool build output ---
 Tests/build/

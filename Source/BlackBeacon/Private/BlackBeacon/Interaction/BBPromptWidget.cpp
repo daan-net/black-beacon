@@ -1,6 +1,8 @@
 #include "BlackBeacon/Interaction/BBPromptWidget.h"
 
 #include "Styling/CoreStyle.h"
+#include "Widgets/SOverlay.h"
+#include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
 
 void UBBPromptWidget::NativeConstruct()
@@ -12,10 +14,6 @@ void UBBPromptWidget::NativeConstruct()
 
 TSharedRef<SWidget> UBBPromptWidget::RebuildWidget()
 {
-#include "Widgets/SOverlay.h"
-#include "Widgets/Layout/SBox.h"
-#include "Widgets/Text/STextBlock.h"
-	
 	return SNew(SOverlay)
 		+ SOverlay::Slot()
 		.HAlign(HAlign_Right)
@@ -63,6 +61,9 @@ void UBBPromptWidget::SetPromptText(const FText& InText)
 	if (PromptTextBlock.IsValid())
 	{
 		PromptTextBlock->SetText(CurrentPrompt);
+		PromptTextBlock->SetVisibility(InText.IsEmpty()
+			? EVisibility::Hidden
+			: EVisibility::HitTestInvisible);
 	}
 }
 
@@ -81,4 +82,3 @@ void UBBPromptWidget::SetNotificationText(const FText& InText)
 		NotificationTextBlock->SetText(InText);
 	}
 }
-

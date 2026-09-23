@@ -67,6 +67,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Beam")
 	float GetCurrentYawDegrees() const { return CurrentYawDeg; }
+	float GetCurrentPitchDegrees() const { return CurrentPitchDeg; }
 
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Beam")
 	EBBBeamRotationMode GetRotationMode() const { return RotationMode; }

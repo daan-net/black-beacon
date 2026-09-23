@@ -194,3 +194,11 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
 - Applied Z-scaling to particles to simulate long, fast-moving rain streaks while maintaining RTX 2060 performance (using unscalable C++ attachments).
 - Rotated particle emitters to point straight down, overcoming the fountain burst limits for sustained atmospheric downpours.
 - Implemented per-emitter vertical raycasting to cull rain components explicitly over rooftops, stopping indoor rain natively without relying on a global toggle.
+
+## 2026-09-23 — M0.2 — save/load restoration and rain review
+
+- Completed exact runtime restoration for generator spin-up/production state, lighthouse startup and beam mode/aim, objective progress, persistent reveals, weather phase, and player transform. GameplayFlow now saves the shore checkpoint to disk, exercises the full objective/reveal path, reloads it, and checks restored state; the temporary automation slot is removed at test end.
+- Added the objective readout and temporary save/load notifications to the HUD, and moved interaction prompts below the crosshair. Save/load are bound to F5/F9.
+- Reduced rain sprite scale, emitter spacing, and camera-relative layer offset after user review found that the effect looked localized and was only apparent while looking upward. The regenerated Vulkan capture is still visibly clustered/chunky, so rain remains a `PLACEHOLDER` and its natural appearance is not accepted.
+- UE 5.8.2 `BlackBeaconEditor` build succeeded. The rendered Vulkan M0.1 regression suite passed 3/3: GameplayFlow, PlayerControls, and StairTraversal. `./Tools/validate.sh` passed with 45/45 engine-independent tests. The five-second automation warm-up measured 43.37 FPS at 1920x1080, below the 60 FPS target and not a representative gameplay benchmark; M0.2 remains open.
+- Repository hygiene: manual reference images/video and `.orig` backups were accidentally tracked in an earlier checkpoint. They remain present on disk and are now excluded from version control.

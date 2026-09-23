@@ -146,8 +146,21 @@ TArray<FString> UBBObjectiveSystem::GetCompletedObjectives() const
 
 void UBBObjectiveSystem::RestoreCompletedObjectives(const TArray<FString>& Objectives)
 {
+	std::vector<std::string> Ids;
+	Ids.reserve(Objectives.Num());
 	for (const FString& Id : Objectives)
 	{
-		CompleteObjective(Id);
+		const FTCHARToUTF8 Converter(*Id);
+		Ids.emplace_back(Converter.Get(), Converter.Length());
 	}
+	Graph.RestoreCompleted(Ids);
+	bLastFinished = Graph.IsFinished();
+	PublishCurrent();
+}
+
+void UBBObjectiveSystem::ResetProgress()
+{
+	Graph.Reset();
+	bLastFinished = false;
+	PublishCurrent();
 }

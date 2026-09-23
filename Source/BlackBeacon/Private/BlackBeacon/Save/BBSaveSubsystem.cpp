@@ -3,12 +3,14 @@
 #include "Kismet/GameplayStatics.h"
 #include "Misc/Paths.h"
 #include "EngineUtils.h"
+#include "GameFramework/PlayerController.h"
 #include "BlackBeacon/Power/BBGeneratorComponent.h"
 #include "BlackBeacon/Lighthouse/BBLighthouseController.h"
 #include "BlackBeacon/Lighthouse/BBLighthouseBeamComponent.h"
 #include "BlackBeacon/Lighthouse/BBBeamRevealComponent.h"
 #include "BlackBeacon/Objectives/BBObjectiveSystem.h"
 #include "BlackBeacon/Weather/BBWeatherController.h"
+#include "GameFramework/Pawn.h"
 
 
 namespace
@@ -66,6 +68,8 @@ FBBWorldSaveData UBBSaveSubsystem::BuildSnapshot(UWorld* World)
 		if (UBBGeneratorComponent* Gen = It->FindComponentByClass<UBBGeneratorComponent>())
 		{
 			Data.bGeneratorRunning = Gen->IsRunning();
+			Data.GeneratorSpinUpProgress = Gen->GetSpinUpProgress();
+			Data.bGeneratorHasProducedOnce = Gen->HasProducedOnce();
 		}
 	}
 
@@ -75,13 +79,33 @@ FBBWorldSaveData UBBSaveSubsystem::BuildSnapshot(UWorld* World)
 		if (It->BeamComponent)
 		{
 			Data.bBeamRunning = It->BeamComponent->GetRotationMode() != EBBBeamRotationMode::Off;
+			Data.bBeamStarted = It->HasStartedBeam();
+			if (World->GetGameInstance())
+			{
+				if (UBBObjectiveSystem* Objectives = World->GetGameInstance()->GetSubsystem<UBBObjectiveSystem>())
+				{
+					Data.bAimObjectiveCompleted = Objectives->IsCompleted(TEXT("BB_OBJ_AIM_BEAM"));
+				}
+			}
 			Data.BeamRotationMode = static_cast<int32>(It->BeamComponent->GetRotationMode());
+			Data.BeamYawDegrees = It->BeamComponent->GetCurrentYawDegrees();
+			Data.BeamPitchDegrees = It->BeamComponent->GetCurrentPitchDegrees();
 		}
 	}
 
 	for (TActorIterator<ABBWeatherController> It(World); It; ++It)
 	{
-		Data.WeatherPhase = static_cast<float>(It->GetTargetPhase());
+		Data.WeatherPhase = static_cast<int32>(It->GetTargetPhase());
+	}
+
+	if (APlayerController* const PlayerController = World->GetFirstPlayerController())
+	{
+		if (APawn* const Pawn = PlayerController->GetPawn())
+		{
+			Data.bHasPlayerTransform = true;
+			Data.PlayerLocation = Pawn->GetActorLocation();
+			Data.PlayerRotation = Pawn->GetActorRotation();
+		}
 	}
 
 	if (World->GetGameInstance())
@@ -114,31 +138,38 @@ void UBBSaveSubsystem::RestoreSnapshot(UWorld* World, const FBBWorldSaveData& Da
 	{
 		if (UBBGeneratorComponent* Gen = It->FindComponentByClass<UBBGeneratorComponent>())
 		{
-			if (Data.bGeneratorRunning)
-			{
-				Gen->Start();
-			}
-			else
-			{
-				Gen->Stop();
-			}
+			Gen->RestoreState(
+				Data.bGeneratorRunning,
+				Data.GeneratorSpinUpProgress,
+				Data.bGeneratorHasProducedOnce);
 		}
 	}
 
 	for (TActorIterator<ABBLighthouseController> It(World); It; ++It)
 	{
-		if (It->BeamComponent)
-		{
-			// The lighthouse controller itself might need to update its power state? 
-			// Wait, the generator powers it automatically via the PowerNetwork.
-			// But we should forcefully restore the beam rotation mode.
-			It->BeamComponent->SetRotationMode(static_cast<EBBBeamRotationMode>(Data.BeamRotationMode));
-		}
+		It->RestoreBeamState(
+			Data.bBeamStarted,
+			Data.bAimObjectiveCompleted,
+			static_cast<EBBBeamRotationMode>(Data.BeamRotationMode),
+			Data.BeamYawDegrees,
+			Data.BeamPitchDegrees);
 	}
 
 	for (TActorIterator<ABBWeatherController> It(World); It; ++It)
 	{
-		It->SetWeather(static_cast<EBBWeatherPhase>(Data.WeatherPhase), 0.0f);
+		const int32 PhaseIndex = FMath::Clamp(Data.WeatherPhase, 0, static_cast<int32>(EBBWeatherPhase::Storm));
+		It->SetWeather(static_cast<EBBWeatherPhase>(PhaseIndex), 0.0f);
+	}
+
+	for (TActorIterator<AActor> It(World); It; ++It)
+	{
+		if (UBBBeamRevealComponent* Reveal = It->FindComponentByClass<UBBBeamRevealComponent>())
+		{
+			if (Reveal->bPersistent)
+			{
+				Reveal->SetRevealedForRestore(Data.PersistentlyRevealedActors.Contains(It->GetName()));
+			}
+		}
 	}
 
 	if (World->GetGameInstance())
@@ -149,13 +180,13 @@ void UBBSaveSubsystem::RestoreSnapshot(UWorld* World, const FBBWorldSaveData& Da
 		}
 	}
 
-	for (TActorIterator<AActor> It(World); It; ++It)
+	if (Data.bHasPlayerTransform)
 	{
-		if (UBBBeamRevealComponent* Reveal = It->FindComponentByClass<UBBBeamRevealComponent>())
+		if (APlayerController* const PlayerController = World->GetFirstPlayerController())
 		{
-			if (Data.PersistentlyRevealedActors.Contains(It->GetName()))
+			if (APawn* const Pawn = PlayerController->GetPawn())
 			{
-				Reveal->ForceReveal();
+				Pawn->SetActorLocationAndRotation(Data.PlayerLocation, Data.PlayerRotation, false, nullptr, ETeleportType::TeleportPhysics);
 			}
 		}
 	}

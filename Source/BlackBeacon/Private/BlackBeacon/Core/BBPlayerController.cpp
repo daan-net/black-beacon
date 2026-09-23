@@ -65,7 +65,7 @@ void ABBlackBeaconPlayerController::SetupInputComponent()
 		Subsystem->AddMappingContext(MappingContext, /*Priority=*/0);
 	}
 
-		if (UEnhancedInputComponent* const Enhanced = Cast<UEnhancedInputComponent>(InputComponent))
+	if (UEnhancedInputComponent* const Enhanced = Cast<UEnhancedInputComponent>(InputComponent))
 	{
 		Enhanced->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABBlackBeaconPlayerController::HandleMove);
 		Enhanced->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABBlackBeaconPlayerController::HandleLook);
@@ -96,7 +96,7 @@ void ABBlackBeaconPlayerController::CreateInputAssets()
 	CrouchAction = NewObject<UInputAction>(this, TEXT("IA_Crouch"));
 	CrouchAction->ValueType = EInputActionValueType::Boolean;
 
-		InteractAction = NewObject<UInputAction>(this, TEXT("IA_Interact"));
+	InteractAction = NewObject<UInputAction>(this, TEXT("IA_Interact"));
 	InteractAction->ValueType = EInputActionValueType::Boolean;
 
 	SaveAction = NewObject<UInputAction>(this, TEXT("IA_Save"));
@@ -135,7 +135,7 @@ void ABBlackBeaconPlayerController::CreateInputAssets()
 
 	MappingContext->MapKey(CrouchAction, EKeys::C);
 
-		MappingContext->MapKey(InteractAction, EKeys::E);
+	MappingContext->MapKey(InteractAction, EKeys::E);
 	MappingContext->MapKey(SaveAction, EKeys::F5);
 	MappingContext->MapKey(LoadAction, EKeys::F9);
 }

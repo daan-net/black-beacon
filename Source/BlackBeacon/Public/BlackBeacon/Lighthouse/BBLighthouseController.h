@@ -11,11 +11,10 @@
 #include "GameFramework/Actor.h"
 
 #include "BlackBeacon/Interaction/BBInteractableInterface.h"
+#include "BlackBeacon/Lighthouse/BBLighthouseBeamComponent.h"
 #include "BlackBeacon/Power/BBPowerConsumerInterface.h"
 
 #include "BBLighthouseController.generated.h"
-
-class UBBLighthouseBeamComponent;
 
 UCLASS()
 class ABBLighthouseController : public AActor,
@@ -50,6 +49,9 @@ public:
 	// True while the player is manning the beam (manual aim mode).
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Lighthouse")
 	bool IsBeamInManualMode() const;
+	bool HasStartedBeam() const { return bBeamStarted; }
+	void RestoreBeamState(bool bInBeamStarted, bool bInAimObjectiveCompleted,
+		EBBBeamRotationMode InMode, float InYawDegrees, float InPitchDegrees);
 
 	// --- config ---
 	// Beam only spins up when the player requests it (objective pacing).

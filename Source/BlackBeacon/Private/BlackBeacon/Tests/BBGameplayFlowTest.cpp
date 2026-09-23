@@ -9,6 +9,7 @@
 #include "HAL/PlatformTime.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
+#include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/CameraActor.h"
 #include "Components/StaticMeshComponent.h"
@@ -26,6 +27,7 @@
 #include "BlackBeacon/Lighthouse/BBLighthouseController.h"
 #include "BlackBeacon/Objectives/BBObjectiveSystem.h"
 #include "BlackBeacon/Power/BBGeneratorComponent.h"
+#include "BlackBeacon/Save/BBSaveSubsystem.h"
 #include "BlackBeacon/Weather/BBWeatherController.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBBGameplayFlowTest, "BlackBeacon.M01.GameplayFlow",
@@ -78,6 +80,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         FVector AirCameraPosition = FVector::ZeroVector;
         FVector AirCameraTarget = FVector::ZeroVector;
         bool bOpeningCaptured = false;
+        FString SaveSlot = TEXT("BB_M02_Automation_Restore");
     };
     TSharedRef<FFlowState> State = MakeShared<FFlowState>();
 
@@ -148,6 +151,14 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestNotNull(TEXT("Reveal anomaly"), State->Anomaly.Get());
             if (!State->Generator.IsValid() || !State->Lighthouse.IsValid() || !State->Anomaly.IsValid() || !State->Pawn.IsValid() || !State->Interaction.IsValid())
             {
+                return true;
+            }
+            UBBSaveSubsystem* SaveSubsystem = GameInstance->GetSubsystem<UBBSaveSubsystem>();
+            TestNotNull(TEXT("Save subsystem"), SaveSubsystem);
+            if (!SaveSubsystem || !SaveSubsystem->SaveWorldData(
+                UBBSaveSubsystem::BuildSnapshot(World), State->SaveSlot))
+            {
+                AddError(TEXT("Could not write initial save snapshot"));
                 return true;
             }
             TestNotNull(TEXT("Reveal component"), State->Anomaly->FindComponentByClass<UBBBeamRevealComponent>());
@@ -376,6 +387,26 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestFalse(TEXT("Stopping generator removes lighthouse power"), Lighthouse->IsPowered());
             TestFalse(TEXT("Beam turns off when power is lost"), Lighthouse->BeamComponent->IsPowered());
             TestTrue(TEXT("Beam light hides after power loss"), BeamLight && !BeamLight->IsVisible());
+
+            UBBSaveSubsystem* SaveSubsystem = World->GetGameInstance()
+                ? World->GetGameInstance()->GetSubsystem<UBBSaveSubsystem>() : nullptr;
+            FBBWorldSaveData InitialSnapshot;
+            TestNotNull(TEXT("Save subsystem survives the flow"), SaveSubsystem);
+            TestTrue(TEXT("Initial checkpoint loads"),
+                SaveSubsystem && SaveSubsystem->LoadWorldData(InitialSnapshot, State->SaveSlot));
+            if (SaveSubsystem)
+            {
+                SaveSubsystem->RestoreSnapshot(World, InitialSnapshot);
+                TestFalse(TEXT("Load restores the stopped generator"), Generator->IsRunning());
+                TestFalse(TEXT("Load restores the unpowered lighthouse"), Lighthouse->IsPowered());
+                TestFalse(TEXT("Load restores the stopped beam"), Lighthouse->BeamComponent->IsPowered());
+                TestTrue(TEXT("Load restores the earlier objective"),
+                    Objectives->GetCurrentObjectiveId() == TEXT("BB_OBJ_ENTER_LIGHTHOUSE"));
+                TestTrue(TEXT("Load hides the not-yet-revealed anomaly"), State->Anomaly->IsHidden());
+                TestTrue(TEXT("Load restores the player to the shore"),
+                    FVector2D(State->Pawn->GetActorLocation()).Equals(FVector2D(-4500.0f, -600.0f), 10.0f));
+            }
+            UGameplayStatics::DeleteGameInSlot(State->SaveSlot, 0);
             if (State->CaptureCamera.IsValid())
             {
                 State->CaptureCamera->SetActorLocation(State->AirCameraPosition);

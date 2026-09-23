@@ -36,6 +36,9 @@ public:
 
 	bool IsRunning() const { return bRunning; }
 	bool IsProducing() const { return bRunning && SpinUpProgress >= 1.0f; }
+	float GetSpinUpProgress() const { return SpinUpProgress; }
+	bool HasProducedOnce() const { return bHasProducedOnce; }
+	void RestoreState(bool bInRunning, float InSpinUpProgress, bool bInHasProducedOnce);
 
 	// Fired on every running-state change (bRunning true when it starts
 	// producing, false when it stops).

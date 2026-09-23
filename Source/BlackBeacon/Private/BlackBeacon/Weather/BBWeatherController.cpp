@@ -54,10 +54,11 @@ ABBWeatherController::ABBWeatherController()
 			UNiagaraComponent* GridComp = CreateDefaultSubobject<UNiagaraComponent>(*CompName);
 			GridComp->SetupAttachment(RainRoot);
 			float ZOffset = FMath::RandRange(-200.0f, 200.0f);
-			GridComp->SetRelativeLocation(FVector(X * 300.0f, Y * 300.0f, ZOffset));
+			GridComp->SetRelativeLocation(FVector(X * 200.0f, Y * 200.0f, ZOffset));
 			GridComp->SetRelativeRotation(FRotator(180.0f, 0.0f, 0.0f)); // Point straight down
-			// Stretch Z slightly for visual streaks
-			GridComp->SetRelativeScale3D(FVector(1.0f, 1.0f, 8.0f));
+			// The source Niagara sprite is broad; narrow it before stretching it
+			// into a short rain streak so each emitter does not read as a plume.
+			GridComp->SetRelativeScale3D(FVector(0.25f, 0.25f, 3.0f));
 			GridComp->bAutoActivate = false;
 			GridComp->SetCastShadow(false);
 			
@@ -135,10 +136,10 @@ float ABBWeatherController::GetFogDensityMultiplier() const
 	return GetFogDensity() / 0.0008f;
 }
 
-#include "GameFramework/PlayerController.h"
-#include "GameFramework/Pawn.h"
 #include "Engine/World.h"
 #include "Engine/HitResult.h"
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/Pawn.h"
 
 void ABBWeatherController::Tick(float DeltaSeconds)
 {
@@ -173,47 +174,52 @@ void ABBWeatherController::ApplyOutputs()
 		APlayerController* PC = GetWorld()->GetFirstPlayerController();
 		if (PC)
 		{
-			// Track CAMERA! But spawn it CLOSE to the camera so particles enter the frame in 1.0 second
+			// Keep the local rain area near the player's view so the finite Niagara
+			// emitters do not leave the camera as the player moves.
 			FVector CamLoc = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetCameraLocation() : (PC->GetPawn() ? PC->GetPawn()->GetActorLocation() : FVector::ZeroVector);
-			
-			// Offset the root Z by only +1000, and shift it forward so rain is in front of camera
 			FVector ForwardDir = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetActorForwardVector() : FVector(1,0,0);
 			ForwardDir.Z = 0; ForwardDir.Normalize();
-			
-			RainRoot->SetWorldLocation(CamLoc + ForwardDir * 800.0f + FVector(0.0f, 0.0f, 1000.0f));
+			RainRoot->SetWorldLocation(
+				CamLoc + ForwardDir * (100.0f + WindStrength * 250.0f) + FVector(0.0f, 0.0f, 200.0f));
 
-			FCollisionQueryParams Params(SCENE_QUERY_STAT(WeatherIndoorTrace), false, GetOwner());
+			// Roof visibility changes slowly compared with camera motion. One
+			// query at 4 Hz replaces a line trace per emitter per rendered frame.
+			RainOutputUpdateCountdown -= GetWorld()->GetDeltaSeconds();
+			if (RainOutputUpdateCountdown > 0.0f)
+			{
+				return;
+			}
+			RainOutputUpdateCountdown = 0.25f;
+
+			FCollisionQueryParams Params(SCENE_QUERY_STAT(WeatherIndoorTrace), false);
 			if (PC->GetPawn()) Params.AddIgnoredActor(PC->GetPawn());
 			if (PC->GetViewTarget()) Params.AddIgnoredActor(PC->GetViewTarget());
 
-			for (UNiagaraComponent* GridComp : RainGrid)
+			FHitResult Hit;
+			const FVector RoofProbeEnd = CamLoc + FVector(0.0f, 0.0f, 6000.0f);
+			const bool bUnderRoof = GetWorld()->LineTraceSingleByChannel(
+				Hit, CamLoc, RoofProbeEnd, ECC_WorldStatic, Params);
+			const bool bShouldRain = RainIntensity > 0.05f && !bUnderRoof;
+			if (bShouldRain != bRainGridActive)
 			{
-				if (!GridComp) continue;
-
-				if (RainIntensity <= 0.05f)
+				for (UNiagaraComponent* GridComp : RainGrid)
 				{
-					if (GridComp->IsActive()) GridComp->Deactivate();
-					continue;
+					if (!GridComp) continue;
+					if (bShouldRain) GridComp->Activate(true);
+					else GridComp->Deactivate();
 				}
+				bRainGridActive = bShouldRain;
+			}
 
-				// Check if this individual emitter is above a roof
-				FVector EmitterLoc = GridComp->GetComponentLocation();
-				FHitResult Hit;
-				bool bHitRoof = GetWorld()->LineTraceSingleByChannel(Hit, EmitterLoc, EmitterLoc - FVector(0, 0, 10000.0f), ECC_WorldStatic, Params);
-				
-				// Deactivate if the hit point is higher than the camera, meaning the roof is between the rain and the ground
-				if (bHitRoof && Hit.ImpactPoint.Z > CamLoc.Z - 200.0f) 
+			if (bRainGridActive)
+			{
+				for (UNiagaraComponent* GridComp : RainGrid)
 				{
-					if (GridComp->IsActive()) GridComp->Deactivate();
-				}
-				else
-				{
-					if (!GridComp->IsActive()) 
+					if (GridComp)
 					{
-						GridComp->Activate(true);
+						GridComp->SetFloatParameter(TEXT("RainIntensity"), RainIntensity);
+						GridComp->SetFloatParameter(TEXT("WindStrength"), WindStrength);
 					}
-					// Just in case it accepts it
-					GridComp->SetFloatParameter(TEXT("SpawnRate"), RainIntensity * 500.0f);
 				}
 			}
 		}

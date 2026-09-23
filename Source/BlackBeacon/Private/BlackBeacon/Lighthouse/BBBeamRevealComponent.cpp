@@ -162,3 +162,24 @@ void UBBBeamRevealComponent::ForceReveal()
 	ApplyVisibility(1.0f);
 	HandleFirstFullReveal();
 }
+
+void UBBBeamRevealComponent::ResetForRestore()
+{
+	Machine.Reset();
+	bCompletedCallbackFired = false;
+	ApplyVisibility(0.0f);
+}
+
+void UBBBeamRevealComponent::SetRevealedForRestore(bool bRevealed)
+{
+	if (bRevealed)
+	{
+		Machine.ForceReveal();
+		bCompletedCallbackFired = true;
+		ApplyVisibility(1.0f);
+	}
+	else
+	{
+		ResetForRestore();
+	}
+}
