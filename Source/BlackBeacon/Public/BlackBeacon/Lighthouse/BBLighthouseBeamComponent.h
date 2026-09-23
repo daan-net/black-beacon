@@ -95,7 +95,7 @@ public:
 	float BeamHalfAngleDeg = 6.0f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
-	float BeamMaxIntensityLumens = 1500.0f;
+	float BeamMaxIntensityLumens = 1200.0f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
 	float BeamVolumetricScatteringIntensity = 4.0f;
@@ -110,7 +110,7 @@ public:
 	float BeamOriginGlowLumens = 300.0f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
-	FLinearColor BeamColor = FLinearColor(1.0f, 0.92f, 0.78f, 1.0f);
+	FLinearColor BeamColor = FLinearColor(1.0f, 0.72f, 0.42f, 1.0f);
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
 	bool bStartInAutoRotation = true;
