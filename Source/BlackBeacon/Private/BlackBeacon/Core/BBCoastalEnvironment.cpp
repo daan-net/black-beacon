@@ -2,6 +2,7 @@
 
 #include "Components/SceneComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
+#include "Components/PointLightComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "EngineUtils.h"
@@ -17,6 +18,7 @@ namespace
 	constexpr const TCHAR* COAST_MATERIAL = TEXT("/Game/BlackBeacon/Materials/M_CoastSurface.M_CoastSurface");
 	constexpr const TCHAR* BASALT_MATERIAL = TEXT("/Game/BlackBeacon/Materials/M_WetBasaltRock.M_WetBasaltRock");
 	constexpr const TCHAR* OCEAN_MATERIAL = TEXT("/Engine/EngineMaterials/WaterMaterial.DefaultWaterMaterial");
+	constexpr float GENERATOR_SHED_LIGHT_LUMENS = 850.0f;
 
 	struct FCoastShape
 	{
@@ -235,8 +237,8 @@ ABBCoastalEnvironment::ABBCoastalEnvironment()
 		AnnexSurfaces.Add(AddShape(Name, CUBE_MESH, Location, Rotation, Scale, true));
 	};
 	AddAnnexPart(TEXT("AnnexFloor"), FVector(1560.0f, 1120.0f, -8.0f), FRotator::ZeroRotator, FVector(3.15f, 4.15f, 0.16f));
-	AddAnnexPart(TEXT("AnnexWestLeft"), FVector(1400.0f, 970.0f, 140.0f), FRotator::ZeroRotator, FVector(0.18f, 1.2f, 2.8f));
-	AddAnnexPart(TEXT("AnnexWestRight"), FVector(1400.0f, 1270.0f, 140.0f), FRotator::ZeroRotator, FVector(0.18f, 1.2f, 2.8f));
+	AddAnnexPart(TEXT("AnnexWestLeft"), FVector(1400.0f, 940.0f, 140.0f), FRotator::ZeroRotator, FVector(0.18f, 1.2f, 2.8f));
+	AddAnnexPart(TEXT("AnnexWestRight"), FVector(1400.0f, 1300.0f, 140.0f), FRotator::ZeroRotator, FVector(0.18f, 1.2f, 2.8f));
 	AddAnnexPart(TEXT("AnnexEastWall"), FVector(1720.0f, 1120.0f, 140.0f), FRotator::ZeroRotator, FVector(0.18f, 4.2f, 2.8f));
 	AddAnnexPart(TEXT("AnnexNorthWall"), FVector(1560.0f, 1330.0f, 140.0f), FRotator::ZeroRotator, FVector(3.2f, 0.18f, 2.8f));
 	AddAnnexPart(TEXT("AnnexSouthWall"), FVector(1560.0f, 910.0f, 140.0f), FRotator::ZeroRotator, FVector(3.2f, 0.18f, 2.8f));
@@ -273,7 +275,157 @@ void ABBCoastalEnvironment::BeginPlay()
 	ApplyWetMaterial(PathSurfaces, CoastMaterial, FLinearColor(0.050f, 0.065f, 0.075f), 0.52f);
 	ApplyWetMaterial(WreckSurfaces, CoastMaterial, FLinearColor(0.075f, 0.042f, 0.022f), 0.48f);
 	ApplyWetMaterial(AnnexSurfaces, CoastMaterial, FLinearColor(0.075f, 0.055f, 0.040f), 0.72f);
+	BuildGeneratorMachinery();
 	BuildRevealedRuin();
+}
+
+void ABBCoastalEnvironment::BuildGeneratorMachinery()
+{
+	UWorld* const World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	AActor* Generator = nullptr;
+	for (TActorIterator<AActor> It(World); It; ++It)
+	{
+		if (It->ActorHasTag(TEXT("BB_Generator")))
+		{
+			Generator = *It;
+			break;
+		}
+	}
+	if (!Generator || !Generator->GetRootComponent())
+	{
+		return;
+	}
+
+	UStaticMesh* const Cube = LoadObject<UStaticMesh>(nullptr, CUBE_MESH);
+	UStaticMesh* const Cylinder = LoadObject<UStaticMesh>(nullptr, CYLINDER_MESH);
+	UMaterialInterface* const MaterialBase = LoadObject<UMaterialInterface>(nullptr, COAST_MATERIAL);
+	if (!Cube || !Cylinder || !MaterialBase)
+	{
+		return;
+	}
+
+	for (TActorIterator<AActor> It(World); It; ++It)
+	{
+		if (!It->ActorHasTag(TEXT("BB_GeneratorShed")))
+		{
+			continue;
+		}
+
+		for (UStaticMeshComponent* const Mesh : TInlineComponentArray<UStaticMeshComponent*>(*It))
+		{
+			if (Mesh && Mesh->GetName() == TEXT("Mesh"))
+			{
+				// The procedural box is replaced by the traversable annex shell built above.
+				Mesh->SetVisibility(false, false);
+			}
+		}
+		break;
+	}
+
+	const auto MakeInstanceField = [Generator, MaterialBase](
+		const TCHAR* Name, UStaticMesh* Mesh, const FLinearColor& Tint, float Roughness)
+	{
+		UInstancedStaticMeshComponent* const Field = NewObject<UInstancedStaticMeshComponent>(Generator, Name);
+		Generator->AddInstanceComponent(Field);
+		Field->SetupAttachment(Generator->GetRootComponent());
+		Field->SetStaticMesh(Mesh);
+		Field->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Field->SetCastShadow(false);
+		Field->SetCanEverAffectNavigation(false);
+		UMaterialInstanceDynamic* const Material = UMaterialInstanceDynamic::Create(MaterialBase, Field);
+		Material->SetVectorParameterValue(TEXT("BaseColor"), Tint);
+		Material->SetScalarParameterValue(TEXT("Roughness"), Roughness);
+		Field->SetMaterial(0, Material);
+		return Field;
+	};
+	const auto MakeFitting = [Generator, MaterialBase](
+		const TCHAR* Name, UStaticMesh* Mesh, const FVector& Location,
+		const FRotator& Rotation, const FVector& Scale,
+		const FLinearColor& Tint, float Roughness)
+	{
+		UStaticMeshComponent* const Fitting = NewObject<UStaticMeshComponent>(Generator, Name);
+		Generator->AddInstanceComponent(Fitting);
+		Fitting->SetupAttachment(Generator->GetRootComponent());
+		Fitting->SetStaticMesh(Mesh);
+		Fitting->SetRelativeTransform(FTransform(Rotation, Location, Scale));
+		Fitting->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Fitting->SetCastShadow(false);
+		Fitting->SetCanEverAffectNavigation(false);
+		UMaterialInstanceDynamic* const Material = UMaterialInstanceDynamic::Create(MaterialBase, Fitting);
+		Material->SetVectorParameterValue(TEXT("BaseColor"), Tint);
+		Material->SetScalarParameterValue(TEXT("Roughness"), Roughness);
+		Fitting->SetMaterial(0, Material);
+		Fitting->RegisterComponent();
+		return Fitting;
+	};
+
+	TArray<UStaticMeshComponent*> ExistingMeshes;
+	Generator->GetComponents<UStaticMeshComponent>(ExistingMeshes);
+	for (UStaticMeshComponent* const Mesh : ExistingMeshes)
+	{
+		if (Mesh && Mesh->GetName() == TEXT("Mesh"))
+		{
+			// Keep the original interaction collider, but replace its cube silhouette with visible machine parts.
+			Mesh->SetVisibility(false, false);
+			break;
+		}
+	}
+
+	const FLinearColor IronTint(0.12f, 0.14f, 0.15f);
+	const FLinearColor CopperTint(0.24f, 0.105f, 0.035f);
+	const FLinearColor DialTint(0.38f, 0.32f, 0.22f);
+	MakeFitting(TEXT("GeneratorBody"), Cube, FVector(0.0f, 0.0f, -4.0f),
+		FRotator::ZeroRotator, FVector(1.08f, 0.78f, 0.62f), IronTint, 0.72f);
+	MakeFitting(TEXT("GeneratorCylinderHead"), Cube, FVector(12.0f, 0.0f, 58.0f),
+		FRotator::ZeroRotator, FVector(0.72f, 0.58f, 0.20f), CopperTint, 0.64f);
+	UInstancedStaticMeshComponent* const SkidAndRibs = MakeInstanceField(
+		TEXT("GeneratorSkidAndRibs"), Cube, IronTint, 0.76f);
+	SkidAndRibs->AddInstance(FTransform(FRotator::ZeroRotator,
+		FVector(0.0f, 0.0f, -74.0f), FVector(1.82f, 1.52f, 0.16f)));
+	for (const float SideY : {-52.0f, 52.0f})
+	{
+		SkidAndRibs->AddInstance(FTransform(FRotator::ZeroRotator,
+			FVector(-18.0f, SideY, 0.0f), FVector(1.22f, 0.12f, 0.92f)));
+	}
+	SkidAndRibs->RegisterComponent();
+
+	UStaticMeshComponent* const Flywheel = MakeFitting(
+		TEXT("GeneratorFlywheel"), Cylinder, FVector(-116.0f, 0.0f, -4.0f),
+		FRotator(90.0f, 0.0f, 0.0f), FVector(0.72f, 0.72f, 0.10f), IronTint, 0.52f);
+	(void)Flywheel;
+	UInstancedStaticMeshComponent* const FlywheelSpokes = MakeInstanceField(
+		TEXT("GeneratorFlywheelSpokes"), Cube, CopperTint, 0.50f);
+	for (int32 Spoke = 0; Spoke < 4; ++Spoke)
+	{
+		FlywheelSpokes->AddInstance(FTransform(FRotator(0.0f, 0.0f, Spoke * 45.0f),
+			FVector(-129.0f, 0.0f, -4.0f), FVector(0.055f, 0.57f, 0.045f)));
+	}
+	FlywheelSpokes->RegisterComponent();
+	MakeFitting(TEXT("GeneratorFlywheelHub"), Cylinder, FVector(-135.0f, 0.0f, -4.0f),
+		FRotator(90.0f, 0.0f, 0.0f), FVector(0.23f, 0.23f, 0.08f), CopperTint, 0.44f);
+	MakeFitting(TEXT("GeneratorGauge"), Cylinder, FVector(-116.0f, 45.0f, 42.0f),
+		FRotator(90.0f, 0.0f, 0.0f), FVector(0.19f, 0.19f, 0.10f), DialTint, 0.66f);
+	MakeFitting(TEXT("GeneratorRegulatorA"), Cylinder, FVector(34.0f, -43.0f, 4.0f),
+		FRotator::ZeroRotator, FVector(0.16f, 0.16f, 0.68f), CopperTint, 0.48f);
+	MakeFitting(TEXT("GeneratorRegulatorB"), Cylinder, FVector(34.0f, 43.0f, 4.0f),
+		FRotator::ZeroRotator, FVector(0.16f, 0.16f, 0.68f), CopperTint, 0.48f);
+
+	UPointLightComponent* const ShedLight = NewObject<UPointLightComponent>(this, TEXT("GeneratorShedLight"));
+	AddInstanceComponent(ShedLight);
+	ShedLight->SetupAttachment(SceneRoot);
+	ShedLight->SetMobility(EComponentMobility::Movable);
+	ShedLight->SetRelativeLocation(FVector(1560.0f, 1120.0f, 238.0f));
+	ShedLight->IntensityUnits = ELightUnits::Lumens;
+	ShedLight->SetIntensity(GENERATOR_SHED_LIGHT_LUMENS);
+	ShedLight->SetLightColor(FLinearColor(1.0f, 0.66f, 0.38f));
+	ShedLight->SetAttenuationRadius(620.0f);
+	ShedLight->SetCastShadows(false);
+	ShedLight->RegisterComponent();
 }
 
 void ABBCoastalEnvironment::BuildRevealedRuin()

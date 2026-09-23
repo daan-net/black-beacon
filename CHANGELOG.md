@@ -234,3 +234,10 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
 - On tagged stair treads, vertical mouse look initially held the camera at the configurable forward pitch while horizontal mouse look remained active. This was replaced by bounded vertical look in the follow-up entry above.
 - `BlackBeacon.M01.PlayerControls` passed in UE 5.8.2 Vulkan with checks for stair-base detection, pitch lock, horizontal response, and unchanged ground look. The editor target builds and `./Tools/validate.sh` passes all 45 logic tests.
 - Direct stair feel remains for user review. The user has accepted the revised rain appearance and confirmed that the lighthouse interior stays dry; the rain gate is now accepted. Coast rocks and wreckage still have no collision and remain a traversal follow-up. M0.2 remains open because the 60 FPS gate is not met by the latest non-representative 45.69 FPS warm-up.
+
+## 2026-09-23 — M0.2 — generator annex readability
+
+- Hid the old solid shed cube that obscured the traversable annex, widened its west doorway by 60 cm, and retained the blocking shell. The original generator mesh remains as an invisible blocking interaction collider; the real generator interaction and power flow are unchanged.
+- Dressed the existing generator with a compact engine casing, cylinder head, skids, ribs, flywheel, hub, gauge, and regulators. Added a warm, unshadowed 850 lumen point light in the annex. These pieces use existing engine primitives and materials, so they remain a low-cost blockout rather than authored final art.
+- Added in-engine assertions for the shell, hidden source cube, collider, machine details, and annex light, plus the rendered `BlackBeacon_M02_Generator.png` capture.
+- UE 5.8.2 Linux Development build succeeded. The complete Vulkan `BlackBeacon.M01` suite passed 3/3 (GameplayFlow, PlayerControls, StairTraversal) with zero test warnings/errors; `./Tools/validate.sh` passed with 45/45 logic tests. M0.2 and visual art remain in progress.

@@ -15,6 +15,7 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SpotLightComponent.h"
+#include "Components/PointLightComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 
 #include "BlackBeacon/Core/BBGameMode.h"
@@ -79,12 +80,15 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<APawn> Pawn;
         TWeakObjectPtr<UBBInteractionComponent> Interaction;
         TWeakObjectPtr<ABBWeatherController> Weather;
+        TWeakObjectPtr<ACameraActor> GeneratorCaptureCamera;
         FVector RainFieldAnchor = FVector::ZeroVector;
         TWeakObjectPtr<ACameraActor> CaptureCamera;
         int32 CaptureIndex = 0;
         FVector AirCameraPosition = FVector::ZeroVector;
         FVector AirCameraTarget = FVector::ZeroVector;
         bool bOpeningCaptured = false;
+        bool bGeneratorCameraReady = false;
+        bool bGeneratorCaptured = false;
         FString SaveSlot = TEXT("BB_M02_Automation_Restore");
     };
     TSharedRef<FFlowState> State = MakeShared<FFlowState>();
@@ -202,6 +206,39 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             {
                 return true;
             }
+            TArray<UStaticMeshComponent*> GeneratorMeshes;
+            GeneratorActor->GetComponents<UStaticMeshComponent>(GeneratorMeshes);
+            int32 NonBlockingGeneratorDetails = 0;
+            bool bHasFlywheel = false;
+            bool bKeepsHiddenInteractionCollider = false;
+            for (const UStaticMeshComponent* Mesh : GeneratorMeshes)
+            {
+                if (Mesh && Mesh->GetName() == TEXT("Mesh"))
+                {
+                    bKeepsHiddenInteractionCollider = !Mesh->IsVisible()
+                        && Mesh->GetCollisionEnabled() != ECollisionEnabled::NoCollision;
+                }
+                if (Mesh && Mesh->GetName().StartsWith(TEXT("Generator")))
+                {
+                    bHasFlywheel |= Mesh->GetName() == TEXT("GeneratorFlywheel");
+                    NonBlockingGeneratorDetails += Mesh->GetCollisionEnabled() == ECollisionEnabled::NoCollision ? 1 : 0;
+                }
+            }
+            TestTrue(TEXT("Generator has a visible flywheel assembly"), bHasFlywheel);
+            TestTrue(TEXT("Generator retains its invisible interaction collider"), bKeepsHiddenInteractionCollider);
+            TestTrue(TEXT("Generator machinery details stay nonblocking"), NonBlockingGeneratorDetails >= 7);
+            AActor* Shed = FindTaggedActor(World, TEXT("BB_GeneratorShed"));
+            UStaticMeshComponent* ShedBlockout = Shed ? Shed->FindComponentByClass<UStaticMeshComponent>() : nullptr;
+            TestNotNull(TEXT("Generator annex shell source"), ShedBlockout);
+            TestTrue(TEXT("Solid shed blockout is hidden behind the traversable shell"),
+                ShedBlockout && !ShedBlockout->IsVisible());
+            UPointLightComponent* ShedLight = nullptr;
+            TActorIterator<ABBCoastalEnvironment> EnvironmentIt(World);
+            if (EnvironmentIt)
+            {
+                ShedLight = EnvironmentIt->FindComponentByClass<UPointLightComponent>();
+            }
+            TestTrue(TEXT("Generator annex has a warm working light"), ShedLight && ShedLight->Intensity > 0.0f);
             for (UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(State->Lighthouse.Get()))
             {
                 if (Mesh && Mesh->GetName().StartsWith(TEXT("LanternGlass_")))
@@ -322,6 +359,45 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("Restore power objective completed"), Objectives->IsCompleted(TEXT("BB_OBJ_RESTORE_POWER")));
             TestTrue(TEXT("Lighthouse has power"), Lighthouse->IsPowered());
             TestFalse(TEXT("Beam remains off before control interaction"), Lighthouse->BeamComponent->IsPowered());
+            if (FApp::CanEverRender() && !State->GeneratorCaptureCamera.IsValid())
+            {
+                ACameraActor* Camera = World->SpawnActor<ACameraActor>();
+                if (!Camera)
+                {
+                    AddError(TEXT("Could not create a generator visual probe camera"));
+                    return true;
+                }
+                const FVector CameraLocation(1230.0f, 1120.0f, 155.0f);
+                const FVector GeneratorTarget(1560.0f, 1120.0f, 105.0f);
+                Camera->SetActorLocation(CameraLocation);
+                Camera->SetActorRotation((GeneratorTarget - CameraLocation).Rotation());
+                State->GeneratorCaptureCamera = Camera;
+                World->GetFirstPlayerController()->SetViewTarget(Camera);
+                State->bGeneratorCameraReady = true;
+                State->StageAt = Now;
+                return false;
+            }
+            if (State->bGeneratorCameraReady && !State->bGeneratorCaptured)
+            {
+                if (Now - State->StageAt < 0.8)
+                {
+                    return false;
+                }
+                FScreenshotRequest::RequestScreenshot(TEXT("BlackBeacon_M02_Generator.png"), false, false);
+                State->bGeneratorCaptured = true;
+                State->StageAt = Now;
+                return false;
+            }
+            if (State->bGeneratorCaptured && Now - State->StageAt < 0.3)
+            {
+                return false;
+            }
+            if (State->GeneratorCaptureCamera.IsValid())
+            {
+                World->GetFirstPlayerController()->SetViewTarget(State->Pawn.Get());
+                State->GeneratorCaptureCamera->Destroy();
+                State->GeneratorCaptureCamera.Reset();
+            }
             State->Pawn->SetActorLocation(FVector(-100.0f, 0.0f, 1650.0f));
             TestTrue(TEXT("Lantern volume completes climb objective"), Objectives->IsCompleted(TEXT("BB_OBJ_CLIMB")));
             ABBlackBeaconPlayerCharacter* Character = Cast<ABBlackBeaconPlayerCharacter>(State->Pawn.Get());

@@ -24,6 +24,7 @@ protected:
 
 private:
 	void BuildRevealedRuin();
+	void BuildGeneratorMachinery();
 	UStaticMeshComponent* AddShape(
 		const TCHAR* Name,
 		const TCHAR* MeshPath,
