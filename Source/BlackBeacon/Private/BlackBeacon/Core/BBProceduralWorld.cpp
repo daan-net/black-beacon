@@ -195,7 +195,8 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 	constexpr int32 kStepsPerFloor = 28;
 	constexpr float kStepHeight = kTowerFloorHeightCm / static_cast<float>(kStepsPerFloor);
 	constexpr float kTurnPerStepDeg = 360.0f / static_cast<float>(kStepsPerFloor);
-	constexpr float kStairRadius = 200.0f;
+	constexpr float kStairRadius = 220.0f;
+	constexpr float kStairDepth = 180.0f;
 	constexpr float kOuterRailRadius = 315.0f;
 
 	// The central column closes the inner drop. The previous stairs had no
@@ -203,8 +204,17 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 	SpawnMeshActor(
 		World, kMeshCylinder,
 		FTransform(FRotator::ZeroRotator, FVector(0.0f, 0.0f, kTowerFloorHeightCm * 1.5f)),
-		FVector(1.8f, 1.8f, kTowerFloorHeightCm * 1.5f / 100.0f),
+		FVector(1.4f, 1.4f, kTowerFloorHeightCm * 1.5f / 100.0f),
 		TEXT("BB_StairCore"));
+
+	// Bridge the doorway to the first tread at the same finished height. The
+	// earlier stair ended at the tower wall, so the capsule had to turn onto a
+	// narrow tread while stepping over its outside edge.
+	SpawnMeshActor(
+		World, kMeshCube,
+		FTransform(FRotator::ZeroRotator, FVector(365.0f, 0.0f, kStepHeight * 0.5f)),
+		FVector(1.1f, 1.0f, kStepHeight / 100.0f),
+		TEXT("BB_StairEntryLanding"));
 
 	// Three stacked cylindrical wall sections + floor discs (greybox).
 	for (int32 Floor = 0; Floor < 3; ++Floor)
@@ -259,12 +269,13 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 
 			FRotator StepRot(0.0f, StepYawDeg, 0.0f);
 
-			// Radial depth is 240 cm and the walking run is 80 cm. These axes
-			// were reversed in the original greybox, leaving only a 90 cm strip.
+			// Keep the inner edge clear of the central column. Besides preventing
+			// visible intersections, this gives the player capsule room to steer
+			// through the curve without being pinched against hidden collision.
 			SpawnMeshActor(
 				World, kMeshCube,
 				FTransform(StepRot, StepPos),
-				FVector(2.4f, 0.8f, kStepHeight / 100.0f),
+				FVector(kStairDepth / 100.0f, 0.8f, kStepHeight / 100.0f),
 				TEXT("BB_StairStep"));
 
 			// Leave the first tread of each revolution open at the outside edge.
@@ -289,8 +300,8 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 	// tread put its underside in the capsule's head space during the approach.
 	SpawnMeshActor(
 		World, kMeshCube,
-		FTransform(FRotator::ZeroRotator, FVector(200.0f, -120.0f, kTowerFloorHeightCm * 3.0f)),
-		FVector(2.4f, 2.4f, 0.2f),
+		FTransform(FRotator::ZeroRotator, FVector(220.0f, -120.0f, kTowerFloorHeightCm * 3.0f)),
+		FVector(1.8f, 2.4f, 0.2f),
 		TEXT("BB_LanternFloor"));
 }
 

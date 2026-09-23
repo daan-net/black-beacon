@@ -20,6 +20,7 @@ bool FBBStairTraversalTest::RunTest(const FString& Parameters)
         double StartedAt = FPlatformTime::Seconds();
         TWeakObjectPtr<ABBlackBeaconPlayerCharacter> Character;
         TArray<FVector> Steps;
+        bool bFoundEntryLanding = false;
         int32 NextStep = 1;
     };
     TSharedRef<FTraversalState> State = MakeShared<FTraversalState>();
@@ -62,14 +63,20 @@ bool FBBStairTraversalTest::RunTest(const FString& Parameters)
                 {
                     State->Steps.Add(It->GetActorLocation());
                 }
+                else if (It->ActorHasTag(TEXT("BB_StairEntryLanding")))
+                {
+                    State->bFoundEntryLanding = true;
+                }
             }
             State->Steps.Sort([](const FVector& A, const FVector& B) { return A.Z < B.Z; });
             TestEqual(TEXT("Greybox stair count"), State->Steps.Num(), 84);
+            TestTrue(TEXT("Doorway has a landing onto the first tread"), State->bFoundEntryLanding);
             if (State->Steps.Num() != 84)
             {
                 return true;
             }
             const FVector First = State->Steps[0];
+            TestTrue(TEXT("Stair treads clear the central core"), FVector2D(First).Size() >= 219.0f);
             State->Character->SetActorLocation(FVector(First.X, First.Y, First.Z + 100.0f));
             return false;
         }
