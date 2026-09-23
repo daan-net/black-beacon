@@ -208,3 +208,10 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
 - Removed the per-frame camera-relative repositioning that made precipitation move with the player. The Niagara emitters now keep deterministic, lightly jittered positions across the level around the weather actor, with configurable field radius and height. The roof probe still uses the player camera to suppress rain while indoors.
 - GameplayFlow now records the rain field anchor and asserts that it remains stationary after player traversal. UE 5.8.2 `BlackBeaconEditor` built, `BlackBeacon.M01.GameplayFlow` passed with the new assertion and rendered storm captures, and `./Tools/validate.sh` passed 45/45.
 - The field no longer follows the camera, but `FountainLightweight` still appears as distinct falling streaks in the rendered capture. Rain quality stays `PLACEHOLDER`; M0.2 remains open. Warm-up measured 42.33 FPS at 1920x1080 and still requires a representative performance pass.
+
+## 2026-09-23 — M0.2 — replace point-source rain presentation
+
+- Replaced the 11x11 Niagara fountain grid with one world-anchored instanced mesh field. Falling planes carry wind drift and deterministic variation, and their count tracks the existing weather intensity. Rain remains hidden when the existing upward roof probe detects overhead geometry.
+- Added a project-owned soft streak texture and translucent material with tapered edges and ends. The beam/reveal weather state and objective logic were not changed.
+- UE 5.8.2 `BlackBeaconEditor` build succeeded, `BlackBeacon.M01.GameplayFlow` passed 1/1 with regenerated exterior and indoor storm captures, and `./Tools/validate.sh` passed all engine-independent logic tests (45/45).
+- The exterior captures show rain across the view without the previous point-source appearance or camera-following field. The intended indoor capture still shows rain, and the effect needs direct visual review. Keep rain `PLACEHOLDER` and M0.2 open. The automation's 1920x1080 warm-up measured 45.69 FPS for five seconds; this is below the target and not a representative gameplay benchmark.

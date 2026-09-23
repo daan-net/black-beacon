@@ -38,7 +38,7 @@ stair traversal test moves the character across all 84 steps.
 
 ## M0.2 — Vertical slice 0.1 polish (in progress)
 
-Authored greybox level (first real `.umap`), weather storm state, rain Niagara,
+Authored greybox level (first real `.umap`), weather storm state, rain presentation,
 prompt/HUD polish, save/load seam, audio placeholders, performance sanity check.
 
 **Acceptance (M0.2)**
@@ -47,7 +47,7 @@ prompt/HUD polish, save/load seam, audio placeholders, performance sanity check.
 - [x] Save/load restores generator, lighthouse/beam, objective, reveal, weather, and player state (GameplayFlow automation)
 - [ ] Stable 60+ fps on target PC config at reasonable settings (latest 1080p Vulkan automation warm-up: 43.37 FPS; gameplay benchmark still needed)
 
-M0.2 remains open. The Niagara field is anchored to the level and roof-culled, but the current fountain emitter still renders as separate streaks rather than natural rainfall. The latest 1080p Vulkan automation warm-up reached 42.33 FPS, so the 60 FPS gate also remains open. Do not begin M1 until rain presentation and performance gates are reviewed and pass.
+M0.2 remains open. Rain now uses a world-anchored instanced field of 10,000 tapered translucent streaks in place of the old point-source emitter grid. Exterior rendered captures show precipitation across the view, but direct play review is still needed; the intended indoor capture shows rain, so roof culling is not verified. The latest 1080p Vulkan automation warm-up reached 45.69 FPS, below the 60 FPS gate and not a representative gameplay benchmark. Do not begin M1 until rain presentation, roof behavior, and performance gates are reviewed and pass.
 
 ## M0.3 — Visual/audio pass
 

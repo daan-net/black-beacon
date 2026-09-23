@@ -2,8 +2,8 @@
 //
 // Owns the slice's atmosphere: a state machine (Clear/Fog/Rain/Storm) with
 // timed interpolation driven by the engine-free FBBWeatherInterpolator.
-// Gadgets: exponential height fog (density/colour) and scalar outputs wind,
-// rain, cloudiness for later particle/vegetation systems.
+// Drives exponential height fog, sky lighting, and a bounded world-space rain
+// field from the engine-independent weather interpolation state.
 //
 // Only one of these should exist in a level. The greybox bootstrap spawns
 // it; authored maps replace it with a placed instance.
@@ -21,7 +21,7 @@ class UExponentialHeightFogComponent;
 class UDirectionalLightComponent;
 class USkyAtmosphereComponent;
 class USkyLightComponent;
-class UNiagaraComponent;
+class UInstancedStaticMeshComponent;
 
 // UE-facing mirror of the logic-layer phase enum (config-friendly).
 UENUM(BlueprintType)
@@ -92,13 +92,10 @@ public:
 	TObjectPtr<USkyLightComponent> SkyLight = nullptr;
 
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
-	TObjectPtr<UNiagaraComponent> RainComponent = nullptr;
-
-	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
 	TObjectPtr<USceneComponent> RainRoot = nullptr;
 
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
-	TArray<TObjectPtr<UNiagaraComponent>> RainGrid;
+	TObjectPtr<UInstancedStaticMeshComponent> RainField = nullptr;
 
 	// --- config ---
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
@@ -114,7 +111,25 @@ public:
 	float RainFieldRadiusCm = 5500.0f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather|Rain")
-	float RainLayerHeightCm = 1200.0f;
+	int32 RainParticleCount = 7000;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather|Rain")
+	float RainVolumeHeightCm = 6000.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather|Rain")
+	float RainFallSpeedCmPerSecond = 2800.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather|Rain")
+	float RainWindDriftCmPerSecond = 650.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather|Rain")
+	float RainStreakWidthCm = 1.8f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather|Rain")
+	float RainStreakMinLengthCm = 50.0f;
+
+	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather|Rain")
+	float RainStreakMaxLengthCm = 100.0f;
 
 	// Palette overrides; leave phases out to keep the struct defaults.
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
@@ -128,9 +143,27 @@ private:
 	void BuildInterpolatorPalette();
 	void ApplyToFog();
 	void ApplyOutputs();
+	void InitializeRainField();
+	void UpdateRainField(float DeltaSeconds);
+	void RespawnRainParticle(int32 ParticleIndex);
+	FTransform BuildRainTransform(int32 ParticleIndex, bool bVisible) const;
+
+	struct FRainParticleState
+	{
+		FVector Position = FVector::ZeroVector;
+		FVector LateralDrift = FVector::ZeroVector;
+		float FallSpeed = 0.0f;
+		float LengthCm = 0.0f;
+		float WidthCm = 0.0f;
+		float PlaneRollRadians = 0.0f;
+	};
 
 	BlackBeacon::Logics::FBBWeatherInterpolator Interpolator;
+	TArray<FRainParticleState> RainParticles;
+	TArray<FTransform> RainInstanceTransforms;
+	FRandomStream RainRandomStream;
 	float FogDensityBase = 1.0f; // reserved: authored-map fog scaling
 	float RainOutputUpdateCountdown = 0.0f;
-	bool bRainGridActive = false;
+	bool bRainFieldActive = false;
+	int32 ActiveRainParticleCount = INDEX_NONE;
 };

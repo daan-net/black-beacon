@@ -1,12 +1,13 @@
 #include "BlackBeacon/Weather/BBWeatherController.h"
-#include "NiagaraComponent.h"
-#include "NiagaraSystem.h"
 #include "UObject/ConstructorHelpers.h"
 
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/DirectionalLightComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
 #include "Components/SkyLightComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Materials/MaterialInterface.h"
 
 ABBWeatherController::ABBWeatherController()
 {
@@ -37,41 +38,26 @@ ABBWeatherController::ABBWeatherController()
 	
 	RainRoot = CreateDefaultSubobject<USceneComponent>(TEXT("RainRoot"));
 	RainRoot->SetupAttachment(RootComponent);
+	RainField = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("RainField"));
+	RainField->SetupAttachment(RainRoot);
+	RainField->SetMobility(EComponentMobility::Movable);
+	RainField->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	RainField->SetGenerateOverlapEvents(false);
+	RainField->SetCastShadow(false);
+	RainField->SetReceivesDecals(false);
+	RainField->SetVisibility(false);
 
-	RainComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("RainComponent")); // Keep for legacy
-	RainComponent->SetupAttachment(RainRoot);
-	RainComponent->SetVisibility(false);
-	RainComponent->bAutoActivate = false;
-
-	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> RainAsset(TEXT("/Game/BlackBeacon/Effects/NS_Rain.FountainLightweight"));
-	
-	// A fixed world-space field prevents the rain from following the player.
-	const float EmitterSpacing = RainFieldRadiusCm / 5.0f;
-	FRandomStream RainLayoutRandom(0xBB2026);
-	for (int32 X = -5; X <= 5; ++X)
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> RainDropMesh(TEXT("/Engine/BasicShapes/Plane.Plane"));
+	if (RainDropMesh.Succeeded())
 	{
-		for (int32 Y = -5; Y <= 5; ++Y)
-		{
-			FString CompName = FString::Printf(TEXT("RainGrid_%d_%d"), X, Y);
-			UNiagaraComponent* GridComp = CreateDefaultSubobject<UNiagaraComponent>(*CompName);
-			GridComp->SetupAttachment(RainRoot);
-			const FVector EmitterOffset(
-				X * EmitterSpacing + RainLayoutRandom.FRandRange(-EmitterSpacing * 0.3f, EmitterSpacing * 0.3f),
-				Y * EmitterSpacing + RainLayoutRandom.FRandRange(-EmitterSpacing * 0.3f, EmitterSpacing * 0.3f),
-				RainLayoutRandom.FRandRange(-150.0f, 150.0f));
-			GridComp->SetRelativeLocation(EmitterOffset);
-			GridComp->SetRelativeRotation(FRotator(180.0f, 0.0f, 0.0f)); // Point straight down
-			// FountainLightweight uses broad sprites, so keep the streaks narrow.
-			GridComp->SetRelativeScale3D(FVector(0.08f, 0.08f, 4.0f));
-			GridComp->bAutoActivate = false;
-			GridComp->SetCastShadow(false);
-			
-			if (RainAsset.Succeeded())
-			{
-				GridComp->SetAsset(RainAsset.Object);
-			}
-			RainGrid.Add(GridComp);
-		}
+		RainField->SetStaticMesh(RainDropMesh.Object);
+	}
+
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> RainDropMaterial(
+		TEXT("/Game/BlackBeacon/Materials/M_RainStreak.M_RainStreak"));
+	if (RainDropMaterial.Succeeded())
+	{
+		RainField->SetMaterial(0, RainDropMaterial.Object);
 	}
 MoonLight->bAtmosphereSunLight = true;
 }
@@ -83,9 +69,10 @@ void ABBWeatherController::BeginPlay()
 	BuildInterpolatorPalette();
 	if (RainRoot)
 	{
-		RainRoot->SetWorldLocation(GetActorLocation() + FVector(0.0f, 0.0f, RainLayerHeightCm));
+		RainRoot->SetWorldLocation(GetActorLocation());
 	}
 	SetWeather(InitialPhase, /*InTransitionSeconds=*/0.0f);
+	InitializeRainField();
 	ApplyToFog();
 }
 
@@ -156,6 +143,7 @@ void ABBWeatherController::Tick(float DeltaSeconds)
 	Interpolator.Tick(DeltaSeconds);
 	ApplyToFog();
 	ApplyOutputs();
+	UpdateRainField(DeltaSeconds);
 }
 
 void ABBWeatherController::ApplyToFog()
@@ -174,8 +162,7 @@ void ABBWeatherController::ApplyToFog()
 
 void ABBWeatherController::ApplyOutputs()
 {
-	float RainIntensity = static_cast<float>(Interpolator.GetRainIntensity());
-	float WindStrength = static_cast<float>(Interpolator.GetWindStrength());
+	const float RainIntensity = static_cast<float>(Interpolator.GetRainIntensity());
 
 	if (RainRoot && GetWorld())
 	{
@@ -185,8 +172,7 @@ void ABBWeatherController::ApplyOutputs()
 			// The precipitation field is anchored to the level, independent of view movement.
 			FVector CamLoc = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetCameraLocation() : (PC->GetPawn() ? PC->GetPawn()->GetActorLocation() : FVector::ZeroVector);
 
-			// Roof visibility changes slowly compared with camera motion. One
-			// query at 4 Hz replaces a line trace per emitter per rendered frame.
+			// A single roof probe is enough to cull the local rain field indoors.
 			RainOutputUpdateCountdown -= GetWorld()->GetDeltaSeconds();
 			if (RainOutputUpdateCountdown > 0.0f)
 			{
@@ -203,28 +189,105 @@ void ABBWeatherController::ApplyOutputs()
 			const bool bUnderRoof = GetWorld()->LineTraceSingleByChannel(
 				Hit, CamLoc, RoofProbeEnd, ECC_WorldStatic, Params);
 			const bool bShouldRain = RainIntensity > 0.05f && !bUnderRoof;
-			if (bShouldRain != bRainGridActive)
+			if (bShouldRain != bRainFieldActive)
 			{
-				for (UNiagaraComponent* GridComp : RainGrid)
-				{
-					if (!GridComp) continue;
-					if (bShouldRain) GridComp->Activate(true);
-					else GridComp->Deactivate();
-				}
-				bRainGridActive = bShouldRain;
-			}
-
-			if (bRainGridActive)
-			{
-				for (UNiagaraComponent* GridComp : RainGrid)
-				{
-					if (GridComp)
-					{
-						GridComp->SetFloatParameter(TEXT("RainIntensity"), RainIntensity);
-						GridComp->SetFloatParameter(TEXT("WindStrength"), WindStrength);
-					}
-				}
+				RainField->SetVisibility(bShouldRain, true);
+				bRainFieldActive = bShouldRain;
 			}
 		}
 	}
+}
+
+void ABBWeatherController::InitializeRainField()
+{
+	if (!RainField || RainParticleCount <= 0)
+	{
+		return;
+	}
+
+	RainRandomStream.Initialize(0xBB2026);
+	RainParticles.SetNum(RainParticleCount);
+	RainInstanceTransforms.SetNum(RainParticleCount);
+	RainField->ClearInstances();
+
+	for (int32 ParticleIndex = 0; ParticleIndex < RainParticleCount; ++ParticleIndex)
+	{
+		RespawnRainParticle(ParticleIndex);
+		const FTransform Transform = BuildRainTransform(ParticleIndex, true);
+		RainInstanceTransforms[ParticleIndex] = Transform;
+		RainField->AddInstance(Transform, false);
+	}
+	ActiveRainParticleCount = RainParticleCount;
+}
+
+void ABBWeatherController::RespawnRainParticle(int32 ParticleIndex)
+{
+	if (!RainParticles.IsValidIndex(ParticleIndex))
+	{
+		return;
+	}
+
+	FRainParticleState& Particle = RainParticles[ParticleIndex];
+	Particle.Position = FVector(
+		RainRandomStream.FRandRange(-RainFieldRadiusCm, RainFieldRadiusCm),
+		RainRandomStream.FRandRange(-RainFieldRadiusCm, RainFieldRadiusCm),
+		RainRandomStream.FRandRange(0.0f, RainVolumeHeightCm));
+	Particle.LateralDrift = FVector(
+		RainRandomStream.FRandRange(-120.0f, 120.0f),
+		RainRandomStream.FRandRange(-90.0f, 90.0f),
+		0.0f);
+	Particle.FallSpeed = RainFallSpeedCmPerSecond * RainRandomStream.FRandRange(0.78f, 1.22f);
+	Particle.LengthCm = RainRandomStream.FRandRange(RainStreakMinLengthCm, RainStreakMaxLengthCm);
+	Particle.WidthCm = RainStreakWidthCm * RainRandomStream.FRandRange(0.7f, 1.3f);
+	Particle.PlaneRollRadians = RainRandomStream.FRandRange(0.0f, UE_TWO_PI);
+}
+
+FTransform ABBWeatherController::BuildRainTransform(int32 ParticleIndex, bool bVisible) const
+{
+	const FRainParticleState& Particle = RainParticles[ParticleIndex];
+	const FVector Velocity = Particle.LateralDrift + FVector(0.0f, 0.0f, -Particle.FallSpeed);
+	const FVector FallDirection = Velocity.GetSafeNormal();
+	const FQuat AlignLengthWithFall = FQuat::FindBetweenNormals(FVector::YAxisVector, FallDirection);
+	const FQuat RollAroundFall = FQuat(FVector::YAxisVector, Particle.PlaneRollRadians);
+	const FQuat Orientation = AlignLengthWithFall * RollAroundFall;
+	const FVector Scale = bVisible
+		? FVector(Particle.WidthCm / 100.0f, Particle.LengthCm / 100.0f, 1.0f)
+		: FVector::ZeroVector;
+	return FTransform(Orientation, Particle.Position, Scale);
+}
+
+void ABBWeatherController::UpdateRainField(float DeltaSeconds)
+{
+	if (!RainField || RainParticles.IsEmpty() || RainInstanceTransforms.IsEmpty())
+	{
+		return;
+	}
+
+	const float RainIntensity = static_cast<float>(Interpolator.GetRainIntensity());
+	const float WindStrength = static_cast<float>(Interpolator.GetWindStrength());
+	const int32 NewActiveCount = FMath::Clamp(
+		FMath::RoundToInt(static_cast<float>(RainParticleCount) * RainIntensity), 0, RainParticles.Num());
+	ActiveRainParticleCount = NewActiveCount;
+
+	for (int32 ParticleIndex = 0; ParticleIndex < RainParticles.Num(); ++ParticleIndex)
+	{
+		FRainParticleState& Particle = RainParticles[ParticleIndex];
+		Particle.Position += FVector(
+			(Particle.LateralDrift.X + WindStrength * RainWindDriftCmPerSecond) * DeltaSeconds,
+			(Particle.LateralDrift.Y + WindStrength * RainWindDriftCmPerSecond * 0.12f) * DeltaSeconds,
+			-Particle.FallSpeed * DeltaSeconds);
+
+		if (Particle.Position.Z < 0.0f)
+		{
+			RespawnRainParticle(ParticleIndex);
+		}
+
+		RainInstanceTransforms[ParticleIndex] = BuildRainTransform(
+			ParticleIndex, ParticleIndex < ActiveRainParticleCount);
+	}
+
+	// One instanced mesh batches thousands of independent, world-space streaks
+	// into one draw component instead of a grid of point-source Niagara systems.
+	RainField->BatchUpdateInstancesTransforms(
+		0, RainInstanceTransforms, false, true, true);
 }

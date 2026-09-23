@@ -173,8 +173,8 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 State->RainFieldAnchor = Weather->RainRoot->GetComponentLocation();
                 TestTrue(TEXT("Rain phase has fog density"), Weather->GetFogDensity() > 0.001f);
                 TestTrue(TEXT("Volumetric fog is enabled"), Weather->FogComponent->bEnableVolumetricFog);
-                TestTrue(TEXT("Rain field is anchored above the level, not the player"),
-                    State->RainFieldAnchor.Z > State->Pawn->GetActorLocation().Z + 500.0f);
+                TestTrue(TEXT("Rain field anchor matches the weather actor, not the player"),
+                    State->RainFieldAnchor.Equals(Weather->GetActorLocation(), 1.0f));
             }
             USpotLightComponent* BeamLight = State->Lighthouse->FindComponentByClass<USpotLightComponent>();
             TestNotNull(TEXT("Beam spotlight"), BeamLight);

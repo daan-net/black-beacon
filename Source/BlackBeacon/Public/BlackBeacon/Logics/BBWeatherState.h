@@ -27,7 +27,7 @@ namespace BlackBeacon::Logics
 		EBBWeatherPhase Phase = EBBWeatherPhase::Clear;
 		double FogDensity = 0.0008;     // exponential height fog density
 		double WindStrength = 0.0;      // 0..1 (vegetation/particles later)
-		double RainIntensity = 0.0;     // 0..1 (Niagara rain intensity later)
+		double RainIntensity = 0.0;     // 0..1 output for the rendered rain field
 		double Cloudiness = 0.15;       // 0..1 (sky light/shadow softness later)
 		double FogR = 0.30;             // fog inscattering colour (linear)
 		double FogG = 0.32;

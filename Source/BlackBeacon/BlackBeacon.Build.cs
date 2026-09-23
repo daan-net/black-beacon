@@ -15,10 +15,7 @@ public class BlackBeacon : ModuleRules
 			"EnhancedInput",
 			"UMG",
 			"Slate",
-			"SlateCore",
-			"Niagara"
+			"SlateCore"
 		});
-
-		// Niagara drives the current lightweight storm-rain presentation.
 	}
 }
