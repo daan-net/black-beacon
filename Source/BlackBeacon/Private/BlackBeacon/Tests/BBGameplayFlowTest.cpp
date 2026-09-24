@@ -608,6 +608,14 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         }
         if (State->Stage == 13)
         {
+            if (State->Weather.IsValid() && State->Weather->FogComponent)
+            {
+                const FLinearColor StormFogTint = State->Weather->FogComponent->FogInscatteringLuminance;
+                TestTrue(TEXT("Storm fog keeps a dark blue-gray tint behind the warm beacon"),
+                    StormFogTint.R <= 0.03f && StormFogTint.G <= 0.05f && StormFogTint.B <= 0.07f);
+                TestTrue(TEXT("Storm fog retains its configured dense atmosphere"),
+                    FMath::IsNearlyEqual(State->Weather->GetFogDensity(), 0.04f, 0.001f));
+            }
             const auto Query = Lighthouse->BeamComponent->GetBeamQuery();
             const FVector BeamDirection(Query.Direction.X, Query.Direction.Y, Query.Direction.Z);
             const FVector ToRuin = (GetRevealPartCenter(State->Anomaly.Get())

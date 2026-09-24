@@ -65,6 +65,21 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
   passed 45/45. The five-second automation warm-up measured 42.69 FPS; it is
   below the 60 FPS target and is not a gameplay benchmark. M1 remains open.
 
+## 2026-09-24 — M1 — correct storm fog tone
+
+- **User-visible:** The Storm palette used dense fog with the default light-gray
+  tint, turning the rendered reveal background into a pale gray wash. Set Storm
+  to the existing dark blue-gray rain tint while preserving its fog density,
+  wind, rain, and cloud values. GameplayFlow now checks the live fog color and
+  verifies the density remains 0.04; BeamReveal geometry, timing, and query
+  behavior are unchanged.
+- The rendered reveal now has a dark blue background with a clearer warm/cold
+  contrast. Its shaft still reads too broad and pale, and the wreck remains a
+  low-poly placeholder. UE 5.8.2 built successfully; the full Vulkan M01 suite
+  passed 3/3 with zero warnings/errors; `./Tools/validate.sh` passed 45/45. The
+  five-second automation warm-up measured 42.97 FPS, not a gameplay benchmark.
+  M1 remains open.
+
 ## 2026-09-23 — M0.2 — animate generator startup
 
 - **User-visible:** The annex generator's flywheel now rotates in sync with its real running and spin-up state, accelerates as the four-second power ramp advances, and coasts down on shutdown. The environment binds to a new running-state event and updates the wheel on a 20 Hz timer only while it is turning. GameplayFlow asserts measurable wheel rotation during spin-up and coast-down. UE 5.8.2 built successfully; the full rendered Vulkan M01 suite passed 3/3 with zero test warnings/errors; `./Tools/validate.sh` passed with 45/45 logic checks. The five-second 1920x1080 automation warm-up measured 43.98 FPS, below the 60 FPS target and not a representative gameplay benchmark. The machine remains primitive greybox geometry.
