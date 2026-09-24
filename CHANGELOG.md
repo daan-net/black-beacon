@@ -9,6 +9,20 @@ intended context), `TESTED` (built + exercised with evidence), `PLACEHOLDER`
 (scaffolding to be replaced), `PLANNED` (paper only). Anything written-but-not-
 compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
+## 2026-09-24 — M1 — rendered beam source comparison
+
+- Added a controlled GameplayFlow capture sequence for the beam shaft at its
+  configured opacity, near-zero opacity, zero opacity, and with spotlight
+  volumetric scattering disabled. The test checks dynamic material values and
+  restores them after capture. Matched Vulkan renders show these controls have
+  only a small effect on the broad pale shaft, so opacity/scattering changes
+  alone are not accepted as a visual fix.
+- A trial 3-degree total cone failed to reveal the real target in GameplayFlow
+  and was reverted to the synchronized 5-degree total cone. The latest UE
+  5.8.2 Vulkan M01 suite passed 3/3 with zero test warnings/errors, and
+  `./Tools/validate.sh` passed all 45 logic tests. M1 remains open pending
+  human review of the rendered comparison and a more targeted material pass.
+
 ## 2026-09-24 — M1 — runtime sky fill correction
 
 - Made the weather controller's realtime-captured SkyLight movable so runtime

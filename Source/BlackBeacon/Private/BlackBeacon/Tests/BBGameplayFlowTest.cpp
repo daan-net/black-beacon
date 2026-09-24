@@ -104,18 +104,22 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<APawn> Pawn;
         TWeakObjectPtr<UBBInteractionComponent> Interaction;
         TWeakObjectPtr<ABBWeatherController> Weather;
+        TWeakObjectPtr<UMaterialInstanceDynamic> BeamShaftMaterial;
         TWeakObjectPtr<ACameraActor> GeneratorCaptureCamera;
         FVector RainFieldAnchor = FVector::ZeroVector;
         TWeakObjectPtr<ACameraActor> CaptureCamera;
         int32 CaptureIndex = 0;
         FVector AirCameraPosition = FVector::ZeroVector;
         FVector AirCameraTarget = FVector::ZeroVector;
+        float BeamScatteringBeforeDiagnostic = 0.0f;
+        float BeamOpacityBeforeDiagnostic = 0.0f;
         bool bOpeningCaptured = false;
         bool bGeneratorCameraReady = false;
         bool bGeneratorCaptured = false;
         bool bFlywheelMotionChecked = false;
         bool bFlywheelCoastChecked = false;
         bool bRevealFadeChecked = false;
+        bool bBeamScatteringDiagnosticCaptured = false;
         int32 RevealFadePhase = 0;
         double RevealCaptureStartedAt = 0.0;
         int32 TaggedRevealPartCount = 0;
@@ -622,9 +626,13 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             if (ShaftMaterial)
             {
                 const float ShaftOpacity = ShaftMaterial->K2_GetScalarParameterValue(TEXT("BeamOpacity"));
+                State->BeamShaftMaterial = ShaftMaterial;
+                State->BeamOpacityBeforeDiagnostic = ShaftOpacity;
+                const float ExpectedShaftOpacity = Lighthouse->BeamComponent->BeamVisualOpacity * Query.Intensity01;
                 const float ShaftAngleTangent = ShaftMaterial->K2_GetScalarParameterValue(TEXT("BeamTanHalfAngle"));
                 TestTrue(TEXT("Beam shaft material receives the live beam opacity"),
-                    FMath::IsNearlyEqual(ShaftOpacity, Lighthouse->BeamComponent->BeamVisualOpacity * Query.Intensity01, 0.005f));
+                    FMath::IsNearlyEqual(ShaftOpacity, ExpectedShaftOpacity,
+                        FMath::Max(0.00000001f, ExpectedShaftOpacity * 0.05f)));
                 TestTrue(TEXT("Beam shaft material width matches the gameplay cone"),
                     FMath::IsNearlyEqual(ShaftAngleTangent,
                         FMath::Tan(FMath::DegreesToRadians(Lighthouse->BeamComponent->BeamHalfAngleDeg)), 0.001f));
@@ -735,6 +743,22 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         }
         if (State->Stage == 8 && Now - State->StageAt >= 0.3)
         {
+            if (State->CaptureIndex == 4 && !State->bBeamScatteringDiagnosticCaptured)
+            {
+                USpotLightComponent* BeamLight = State->Lighthouse.IsValid()
+                    ? State->Lighthouse->FindComponentByClass<USpotLightComponent>() : nullptr;
+                TestNotNull(TEXT("Beam spotlight for scattering comparison"), BeamLight);
+                if (BeamLight)
+                {
+                    State->BeamScatteringBeforeDiagnostic = BeamLight->VolumetricScatteringIntensity;
+                    BeamLight->SetVolumetricScatteringIntensity(0.0f);
+                    FScreenshotRequest::RequestScreenshot(
+                        TEXT("BlackBeacon_M01_D_Reveal_NoSpotScatter.png"), false, false);
+                    State->Stage = 15;
+                    State->StageAt = Now;
+                    return false;
+                }
+            }
             if (State->CaptureIndex >= 4 && State->CaptureIndex <= 7)
             {
                 TActorIterator<ABBWeatherController> WeatherIt(World);
@@ -750,6 +774,88 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             {
                 State->Stage = State->CaptureIndex < 8 ? 5 : 7;
             }
+        }
+        if (State->Stage == 15 && Now - State->StageAt >= 0.8)
+        {
+            USpotLightComponent* BeamLight = State->Lighthouse.IsValid()
+                ? State->Lighthouse->FindComponentByClass<USpotLightComponent>() : nullptr;
+            TestNotNull(TEXT("Beam spotlight after scattering comparison"), BeamLight);
+            if (BeamLight)
+            {
+                BeamLight->SetVolumetricScatteringIntensity(State->BeamScatteringBeforeDiagnostic);
+                TestTrue(TEXT("Beam volumetric scattering is restored after comparison"),
+                    FMath::IsNearlyEqual(BeamLight->VolumetricScatteringIntensity,
+                        State->BeamScatteringBeforeDiagnostic, 0.001f));
+            }
+            State->bBeamScatteringDiagnosticCaptured = true;
+            TestTrue(TEXT("Beam shaft material remains available for the isolated mesh comparison"),
+                State->BeamShaftMaterial.IsValid());
+            if (State->BeamShaftMaterial.IsValid())
+            {
+                State->BeamShaftMaterial->SetScalarParameterValue(TEXT("BeamOpacity"), 0.0000001f);
+            }
+            State->Stage = 16;
+            State->StageAt = Now;
+            return false;
+        }
+        if (State->Stage == 16 && Now - State->StageAt >= 0.8)
+        {
+            TestTrue(TEXT("Beam shaft material remains available for the high-opacity comparison"),
+                State->BeamShaftMaterial.IsValid());
+            if (State->BeamShaftMaterial.IsValid())
+            {
+                TestTrue(TEXT("Beam shaft material accepts the low-opacity comparison value"),
+                    FMath::IsNearlyEqual(
+                        State->BeamShaftMaterial->K2_GetScalarParameterValue(TEXT("BeamOpacity")), 0.0000001f, 0.00000001f));
+                FScreenshotRequest::RequestScreenshot(
+                    TEXT("BlackBeacon_M01_D_Reveal_ShaftOpacity0000001.png"), false, false);
+            }
+            State->Stage = 17;
+            State->StageAt = Now;
+            return false;
+        }
+        if (State->Stage == 17 && Now - State->StageAt >= 0.8)
+        {
+            TestTrue(TEXT("Beam shaft material remains available for the zero-opacity comparison"),
+                State->BeamShaftMaterial.IsValid());
+            if (State->BeamShaftMaterial.IsValid())
+            {
+                State->BeamShaftMaterial->SetScalarParameterValue(TEXT("BeamOpacity"), 0.0f);
+            }
+            State->Stage = 18;
+            State->StageAt = Now;
+            return false;
+        }
+        if (State->Stage == 18 && Now - State->StageAt >= 0.8)
+        {
+            TestTrue(TEXT("Beam shaft material remains available for the no-mesh capture"),
+                State->BeamShaftMaterial.IsValid());
+            if (State->BeamShaftMaterial.IsValid())
+            {
+                FScreenshotRequest::RequestScreenshot(
+                    TEXT("BlackBeacon_M01_D_Reveal_NoShaftMesh.png"), false, false);
+            }
+            State->Stage = 19;
+            State->StageAt = Now;
+            return false;
+        }
+        if (State->Stage == 19 && Now - State->StageAt >= 0.8)
+        {
+            TestTrue(TEXT("Beam shaft material remains available to restore gameplay opacity"),
+                State->BeamShaftMaterial.IsValid());
+            if (State->BeamShaftMaterial.IsValid())
+            {
+                State->BeamShaftMaterial->SetScalarParameterValue(
+                    TEXT("BeamOpacity"), State->BeamOpacityBeforeDiagnostic);
+            }
+            TestTrue(TEXT("Beam visual opacity is restored after comparisons"),
+                State->BeamShaftMaterial.IsValid()
+                && FMath::IsNearlyEqual(State->BeamShaftMaterial->K2_GetScalarParameterValue(TEXT("BeamOpacity")),
+                    State->BeamOpacityBeforeDiagnostic, FMath::Max(0.00000001f,
+                        State->BeamOpacityBeforeDiagnostic * 0.05f)));
+            State->Stage = 8;
+            State->StageAt = Now;
+            return false;
         }
         if (State->Stage == 11 && State->RevealFadePhase == 0 && Now - State->StageAt >= 0.3)
         {
