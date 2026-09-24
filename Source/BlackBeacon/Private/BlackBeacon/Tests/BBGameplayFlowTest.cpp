@@ -612,8 +612,10 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 return true;
             }
             const FVector Side = FVector::CrossProduct(ToRuin, FVector::UpVector).GetSafeNormal();
+			// Review the reveal from the coast side so the camera sees the beam
+			// crossing the wreck instead of looking straight down the shaft.
 			const FVector CameraLocation = GetRevealPartCenter(State->Anomaly.Get())
-				- ToRuin * 6000.0f + Side * 800.0f + FVector(0.0f, 0.0f, 400.0f);
+				- ToRuin * 6000.0f + Side * 6000.0f + FVector(0.0f, 0.0f, 400.0f);
             State->CaptureCamera->SetActorLocation(CameraLocation);
             State->CaptureCamera->SetActorRotation((GetRevealPartCenter(State->Anomaly.Get()) - CameraLocation).Rotation());
             if (State->CaptureCamera->GetCameraComponent())

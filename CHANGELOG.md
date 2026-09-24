@@ -21,6 +21,21 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
   correction alone. The dark blockout coast and broad pale reveal wedge remain
   open M1 visual issues; no M1 completion is claimed.
 
+## 2026-09-24 — M1 — focused beam and reveal review
+
+- **User-visible:** Narrowed `BeamHalfAngleDeg` from 6 to 2.5 degrees. The
+  configured angle drives the lighthouse spotlight, visible shaft, and
+  `FBBBeamQuery`, so illumination detection remains synchronized with the
+  rendered beam.
+- Reframed the automated reveal capture to observe the wreck from the coast
+  side rather than directly down the beam axis. This changes only test-camera
+  placement. The rendered capture shows more of the wreck silhouette where the
+  beam crosses it, though the shaft remains too pale and the wreck remains
+  placeholder-quality.
+- UE 5.8.2 Linux Development build succeeded; the full Vulkan M01 suite passed
+  3/3 with zero warnings/errors, and `./Tools/validate.sh` passed all 45 logic
+  checks. M1 remains open.
+
 ## 2026-09-23 — M0.2 — animate generator startup
 
 - **User-visible:** The annex generator's flywheel now rotates in sync with its real running and spin-up state, accelerates as the four-second power ramp advances, and coasts down on shutdown. The environment binds to a new running-state event and updates the wheel on a 20 Hz timer only while it is turning. GameplayFlow asserts measurable wheel rotation during spin-up and coast-down. UE 5.8.2 built successfully; the full rendered Vulkan M01 suite passed 3/3 with zero test warnings/errors; `./Tools/validate.sh` passed with 45/45 logic checks. The five-second 1920x1080 automation warm-up measured 43.98 FPS, below the 60 FPS target and not a representative gameplay benchmark. The machine remains primitive greybox geometry.
