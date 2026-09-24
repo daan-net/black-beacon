@@ -3,21 +3,34 @@
 Read me last. Everything else (vision, design, architecture, current state) is in
 the root docs; here is the operational picture and the exact next steps.
 
-> 2026-09-21 update: the engine-install blocker described below is resolved.
-> UE 5.8.2 is installed at `~/WORK/_TOOLS/UE_5.8.2`; the editor target builds
-> and the project opens. M0.1 is complete; see CURRENT_STATE.md for live status.
+## 0. Current handoff — 2026-09-24
 
-## 0. TL;DR
+UE 5.8.2 is installed at `/home/a1/WORK/_TOOLS/UE_5.8.2` (`~/UnrealEngine`).
+M0.1 is accepted. M0.2 and scoped M1 remain open. Do not restart the generator,
+stairs, controls, save/load, beam or reveal implementation: these already work.
+The latest authorized task is **Storm World Identity V0.1**; consult the current
+storm section of `CURRENT_STATE.md` for validation evidence and remaining gates.
 
-BLACK BEACON is a UE5 PC-first, C++-first, single-player mystery built around one
-reusable mechanic: the lighthouse beam reveals things invisible under normal
-light. M0 is complete. UE 5.8.2 is installed; the editor target builds and the
-actual project opens. The plain-C++ Logics layer passes 45/45 tests, and M0.1
-input, gameplay-flow, and stair traversal automation pass in the engine. Direct
-play review accepted the moving beam and corrected stair route.
+The storm adds native moving volumetric clouds, a displaced sea with crest foam,
+finite coastal ground, wind-aligned rain/spray, lightning and delayed thunder,
+and four ambient sound layers with interior muffling. Source and regeneration
+instructions are in `Art/Source/StormWorld/README.md`. Gameplay remains authoritative.
+There are now **53** plain-C++ checks and **four** Unreal automation tests.
 
-Continue with the scoped M0.2 work in `MILESTONES.md` without expanding the
-vertical slice (GAME_DESIGN §1, §7).
+Run `./Tools/review_storm.sh` for native-1080p Vulkan gameplay regressions and A–J
+captures. Evidence goes to `Saved/Screenshots/LinuxEditor/BlackBeacon_Storm_*`,
+`Saved/Automation/StormWorldV01`, and `Saved/StormReview/`. The latter includes an
+actual runtime audio recording. The previous visual implementation is preserved;
+pre-change recovery is `Saved/Checkpoints/Before_StormWorld_V01.tar.gz` at `ed707a5`.
+
+Renderer note: `r.Vulkan.Bindless.PreferredExtension=1` selects the supported
+`VK_EXT_descriptor_heap` backend. Two consecutive full rendered suites passed;
+the default descriptor-buffer path intermittently lost the GPU device on NVIDIA
+595.91.07. Keep this tested compatibility setting; see CURRENT_STATE.md for limits.
+
+Next gate is user visual/audio review plus representative performance testing,
+not new mechanics or a whole-island redesign. The coastline, interior and wreck
+still contain blockout art; do not claim final production quality or M1 completion.
 
 ---
 
@@ -41,7 +54,7 @@ vertical slice (GAME_DESIGN §1, §7).
 ./Tools/validate.sh
 
 # logic tests only
-cmake -S Tests -B Tests/build -G Ninja && cmake --build Tests/build && ./Tests/build/bb_logic_tests   # expect: ALL PASS - 45/45
+cmake -S Tests -B Tests/build -G Ninja && cmake --build Tests/build && ./Tests/build/bb_logic_tests   # expect: ALL PASS - 53/53
 
 # linux in-engine build (once an engine root exists)
 <UE_ROOT>/Engine/Build/BatchFiles/Linux/Build.sh BlackBeaconEditor Linux Development -project="$PWD/BlackBeacon.uproject" -waitmutex
@@ -49,7 +62,7 @@ cmake -S Tests -B Tests/build -G Ninja && cmake --build Tests/build && ./Tests/b
 ```
 
 `BlackBeacon.uproject` has `"EngineAssociation": ""` on purpose: a fresh engine
-associates on first open (or set it to the installed version, e.g. `5.4`).
+associates on first open (or set it to the installed version, e.g. `5.8.2`).
 
 ## 3. Unreal Engine setup
 
@@ -77,9 +90,9 @@ Source/BlackBeacon/           single runtime module
                               multiplier for beam/reveal readability)
     Objectives/               UBBObjectiveSystem (game-instance subsystem),
                               UBBObjectiveTriggerComponent
-    Save/                     UBBSaveGame + UBBSaveSubsystem (foundation only)
+    Save/                     UBBSaveGame + UBBSaveSubsystem (tested save/load)
   Private/BlackBeacon/        mirrors Public one-to-one
-Tests/                        CMake + standalone harness → bb_logic_tests (45 checks)
+Tests/                        CMake + standalone harness → bb_logic_tests (53 checks)
 Tools/validate.sh             local gate: JSON/ini sanity + logic tests
 Content/BlackBeacon/          persistent M0.2 map + small authored material set
 ```
@@ -116,14 +129,14 @@ Design notes you'll need:
 1. `./Tools/validate.sh` → green.
 2. Install/associate engine (§3); generate project files.
 3. Build `BlackBeaconEditor` (Linux `Development` or Windows `Win64
-   Development`) — fix compile errors; none are known, expect some anyway.
+   Development`) — verify the existing working target.
 4. Run and walk the greybox slice: movement, sprint, crouch.
 5. Interact generator → 4 s spin-up → power granted (watch objective tick).
 6. Climb to the lantern room, start the beam, sweep manually → anomaly reveals
-   (2.5 s delay, persistent) → objective chain finishes; HUD prompt live.
+   (transient first reveal; fade on beam departure) → objective chain finishes; HUD prompt live.
 7. Update `CURRENT_STATE.md` **and** `CHANGELOG.md` in the same commits, moving
    rows from *written* to `IMPLEMENTED`/`TESTED` only with evidence.
-8. Commit with scoped messages, e.g. `BlackBeacon: compile module against engine 5.4`.
+8. Commit with scoped messages, e.g. `BlackBeacon: validate storm world V0.1`.
 
 ## 7. Definition of done (M0.1 → hand off again)
 
@@ -133,6 +146,6 @@ Design notes you'll need:
 
 ## 8. Things deliberately out of scope
 
-Authored `.umap` content (M0.2+, the greybox builder stays as dev tool), rain
-Niagara, audio, save serialization (foundation structs only), multiplayer,
-services, monetization, enemy/combat, survival/inventory systems.
+Multiplayer, services, monetization, enemies/combat, survival/inventory systems,
+and expansion beyond the approved first-reveal slice. The persistent map, rain,
+save/load and storm audio are already implemented; they are no longer future scope.

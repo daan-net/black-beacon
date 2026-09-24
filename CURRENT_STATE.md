@@ -2,7 +2,82 @@
 
 **Last updated:** 2026-09-24 · **Milestone:** M0.2 open; scoped M1 first reveal in progress
 
-## Verified on this machine
+## Storm World Identity V0.1 — TESTED checkpoint; USER VISUAL / AUDIO REVIEW
+
+Authorized by the milestone owner on 2026-09-24. This pass is built and exercised
+in the actual saved map on UE 5.8.2 / RTX 2060 / Vulkan SM6. It adds:
+
+- Native SkyAtmosphere / moving VolumetricClouds / cloud shadows / sky fill and
+  height fog. The retained static panorama is hidden during play. Moonlight is
+  2.5 lux, sky fill 1.1; exposure and the existing beam/reveal fog contract stay intact.
+- A displaced, opaque sea with three irregular swells and crest foam; finite
+  coastal terrain retains the shore-to-lighthouse route at Z=0. Seven impact
+  sites supply staggered spray and drifting local mist; 96 ground splash cards.
+- Shared wind at 22 degrees, gust-modulated 1400 cm/s maximum base drift, used by
+  rain travel/orientation, spray, clouds and sea. The existing shelter test keeps
+  rain out of the lighthouse. Storm is now the initial weather preset.
+- Infrequent lightning, distance-delayed thunder, wind/rain/surf/thunder audio,
+  positional surf and thunder, and shelter-driven volume / low-pass changes.
+  Audio sources are original synthesized sounds; subjective quality needs listening.
+- Locally damp nonmetallic ground and the existing localized hero wetness materials.
+  Existing generator, traversal, power, controls, objectives, save/load and beam
+  detection remain authoritative; no new gameplay mechanic was introduced.
+
+### Validation and renderer compatibility
+
+- `Saved/StormReview/Build.txt`: BlackBeaconEditor Linux Development **Succeeded**.
+- `./Tools/validate.sh`: **VALIDATION OK**; standalone tests **53/53** (the existing
+  45 plus eight storm timing / gust checks).
+- Two consecutive native-1920×1080 rendered `BlackBeacon` suites passed **4/4**,
+  zero automation warnings/errors, exit 0. Logs/reports are
+  `Saved/StormReview/Passed_DescriptorHeap_Run{1,2}.{log,json}`. They exercise
+  GameplayFlow, PlayerControls, StairTraversal and StormWorld.Identity.
+- The storm test checks native assets, diagonal wind, original panorama hidden,
+  three route floor probes, real generator/beam activation, flash/thunder delay,
+  and interior audio shelter response. Existing GameplayFlow checks reveal/fade,
+  objective progression and save restore; StairTraversal walks the 84 steps.
+- During integration the default Vulkan `VK_EXT_descriptor_buffer` backend
+  intermittently lost the GPU device in cloud/fog/shadow passes. Alternative
+  cloud-shadow and async-compute experiments did not resolve it and were reverted.
+  `r.Vulkan.Bindless.PreferredExtension=1` selects the installed engine/driver's
+  supported `VK_EXT_descriptor_heap` backend; startup logs confirm that selection.
+  Both final runs passed with native clouds/shadows and normal async compute.
+  This is a tested compatibility workaround on NVIDIA 595.91.07, **not proof of
+  the underlying driver/engine cause or long-duration stability on other hardware**.
+  Routine engine startup warnings still exist; zero warnings refers to test results.
+
+### Real evidence and performance
+
+- Eleven actual Unreal screenshots: `Saved/Screenshots/LinuxEditor/BlackBeacon_Storm_*`:
+  A lighthouse/sky, B sea, C wet rocks, D rain, E coastal mist, F lightning,
+  G beacon/fog, H interior, I night, J wreck reveal, A2 repeated sky view.
+  `Saved/StormReview/ContactSheet.png` is only a montage of those rendered frames.
+- Actual runtime mix: `Saved/StormReview/BlackBeacon_Storm_RuntimeMix.wav`:
+  32.85 seconds, 48 kHz, six channels, peak 0.594, no PCM clipping. This verifies
+  audio output exists; it is not a human judgement of mix quality.
+- Latest CSV sample: `Saved/Profiling/CSV/Profile(20260924_190843).csv`, 1615 frames,
+  median 16.81 ms, p95 22.96 ms, aggregate 50.26 FPS including screenshot stalls.
+  Sampled total GPU memory peak 3363 MiB. Metrics: `Saved/StormReview/Metrics.json`.
+  This short automated sequence does **not** establish stable 60 FPS gameplay.
+
+### Remaining review gates
+
+Inspected renders show layered storm clouds, rough water/foam, angled rain, coastal
+spray, a readable lighthouse and a visible lightning event. The coast still has
+faceted blockout boulders; close interior materials remain pale/stretched with a
+checker-pattern ceiling. The beam remains too dense when viewed along its axis
+(J); G shows the beam-to-wreck relationship more clearly. These are recorded
+limitations, not final art acceptance. Test cloud/wave motion, rain, audio balance,
+and the full player route interactively before accepting the storm's visual identity.
+**M0.2 and M1 remain open. Stop here for USER VISUAL / AUDIO REVIEW.**
+
+Sources and regeneration: `Art/Source/StormWorld/README.md`. Review command:
+`./Tools/review_storm.sh`. Pre-change recovery archive:
+`Saved/Checkpoints/Before_StormWorld_V01.tar.gz`, source checkpoint `ed707a5`.
+The two pre-existing modified texture assets and eight supplied reference PNGs
+were preserved and excluded from this pass's commit.
+
+## Earlier verified implementation (historical evidence)
 
 | Item | Status | Evidence |
 |---|---|---|
@@ -28,14 +103,14 @@
 | Storm rain presentation | `TESTED` | Replaced 121 point-source Niagara emitters with a deterministic, world-anchored instanced field of 10,000 falling planes. A project material and alpha texture taper each streak at its edges and ends; fall direction, wind drift, weather intensity, and the roof probe remain connected to weather state. GameplayFlow passed and two exterior Vulkan captures show precipitation across the view without camera-following emitters. Direct user play confirmed that rain reads correctly and the lighthouse interior stays dry. |
 | Save/load restoration | `TESTED` | `BlackBeacon.M01.GameplayFlow` writes a real save slot at the shore, completes the generator/beam/objective/reveal flow, then reloads and verifies the stopped generator, unpowered lighthouse, beam off, restored current objective, hidden unrevealed anomaly, and shore player position. The automation slot is deleted at test end. |
 | Performance sanity | `PLACEHOLDER` | The latest 1920×1080 Vulkan automation warm-up measured 43.24 FPS for five seconds during the full regression run. This is not a representative gameplay benchmark and does not meet the 60 FPS target; profile and retest before closing M0.2. |
-| Plain C++ logic and project sanity | `TESTED` | `./Tools/validate.sh`: project checks green; 45/45 logic tests pass. |
+| Plain C++ logic and project sanity | `TESTED` | Current storm checkpoint: project checks green; 53/53 logic tests pass. |
 | Ref-inspired environmental visual pass | `PLACEHOLDER` | Wet basalt texture, storm panorama, octagonal lantern glazing, a continuous tower silhouette, dressed generator machine, faceted engine-sample coastal boulders, and a low-poly imported hull are built and exercised. Tower, generator annex, lantern machinery, wreck frame/mast, and stairwell still rely partly on engine basic shapes; the shoreline is not final art. The reference imagery is direction, not evidence of final art quality. |
 | Lighthouse exterior paint pass | `TESTED` | Added a project-generated weathered whitewash albedo to the existing tower skin and raised the sky fill from 0.1 to 0.22 so the tower remains readable against the storm night. The rendered first-person shore capture `Saved/Screenshots/LinuxEditor/BlackBeacon_M01_A_Exterior.png` confirms the texture is loaded and visible; GameplayFlow asserts its material binding. UE 5.8.2 build succeeded, full Vulkan M01 suite passed 3/3 with zero test warnings/errors, and `./Tools/validate.sh` passed 45/45. The render still shows a very dark, primitive coast and the lantern is cropped at this close view; this is a readability pass, not finished environment art. |
 | Hero lighthouse V0.1 integration | `TESTED` | Five imported visual-only modules (tapered tower shell, gallery, lantern room/Fresnel cage, annex facade details, and basalt contact ring) are attached to the existing lighthouse/coastal actors. Generator interaction and objective trigger are moved beside the tower; existing functional actors remain authoritative. Rendered Vulkan automation passed GameplayFlow, PlayerControls, and StairTraversal 3/3 with zero test warnings/errors; new frames are in `Saved/Screenshots/LinuxEditor/BlackBeacon_Hero_*.png`. This verifies mesh loading and gameplay integration, not production art quality: stair framing reads mostly as an exterior sightline and close powered lens exposure is blown out. Imported material families are fallbacks; the contact rocks and interior remain rough. User visual review is pending. |
 | Hero lighthouse material / UV correction | `TESTED` | Removed the Interchange-generated Phong parents (high Ks/Ns) from all six imported lighthouse material instances and reparented them to opaque project PBR masters. Tower paint is metallic 0 / roughness 0.84; aged iron is 0.12 / 0.72; brass is 0.82 / 0.43; wood is 0 / 0.76; rock is 0 / 0.62. Only the separate Fresnel lens effect is additive/unlit; tower windows and imported material families remain opaque. Albedo textures use sRGB, default color compression, and world mips. Audited assets contain no ORM/normal maps, so no packed channels were reversed or misconnected; surface relief currently comes from mesh normals and albedo only. Generated cylindrical tower UVs now tile at about 2 m, and box faces use dimensional face UVs. A world-normal / object-height mask localizes wet roughness and darkening without changing Metallic. Lowered practical stair-fill from 350 to 180 lm and its radius from 680 to 460 cm; increased night sky fill 0.22 to 0.28 and reduced lens/glazing highlights. Rendered captures are `BlackBeacon_Material_01_StairwellUp.png` through `..._05_LanternRoom.png`. The full Vulkan suite passed 3/3 with zero warnings/errors and `./Tools/validate.sh` passed 45/45. Exterior paint and rock now read rougher and their texture scale is improved, but close interior walls remain pale under practical lights and lantern-room capture is mostly dark; visual sign-off is still pending. |
-| Audio implementation | `PLANNED` | No authored sound assets or complete audio pass yet. |
+| Audio implementation | `TESTED` | Four synthesized storm layers, spatial surf/thunder and shelter muffling; actual mix recorded. See current storm evidence above. Bespoke machinery/reveal audio remains future work. |
 
-## M0.1 acceptance result
+## Earlier M0.1 acceptance and material checkpoint
 
 M0.1 remains accepted. M0.2 is **in progress** and remains open for performance, human traversal review, and substantial authored visual work. The user has authorized work toward the first M1 vertical-slice loop, including one reveal target and the small surrounding environment, while existing systems are audited to avoid duplicates. The UE 5.8.2 Linux Development build succeeded; `./Tools/validate.sh` passed with 45/45 logic checks; and the full rendered Vulkan M01 suite passed 3/3 with zero test warnings/errors. GameplayFlow verifies transient part reveal, fade on beam departure while powered, next-objective progression, and save/load reset. It also confirms runtime shaft opacity and cone width arrive at the assigned dynamic material. Matched storm renders show the authored low-poly hull and reveal-off state from one camera. Storm fog now keeps a dark blue-gray tint at its original dense setting, reducing the washed-out gray background. This is tested first-reveal functionality with placeholder/blockout surroundings; it is not M1 completion. The latest five-second Vulkan automation warm-up measured 43.24 FPS, below the 60 FPS target and not a representative gameplay benchmark.
 

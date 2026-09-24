@@ -29,3 +29,19 @@
 - `Content/BlackBeacon/Textures/T_LighthousePaintAlbedo.png` was generated for this project with OpenAI ImageGen on 2026-09-23 as a weathered, north Atlantic lighthouse whitewash surface.
 - Local SHA-256: `d2705625ed889f4992e9f318018c4650a14b40454b9be7aa6fff2c7f612fbe57`
 - Imported as `T_LighthousePaintAlbedo.uasset` and applied to the existing non-colliding lighthouse exterior skin.
+
+## Storm World Identity V0.1 (2026-09-24)
+
+- `Art/Source/StormWorld/generate_sources.py` creates the original ocean/coast meshes
+  and four original synthesized WAV layers using only the Python standard library.
+  Reproducible source outputs are retained in `Generated/`.
+- `build_assets.py` imports them into `/Game/BlackBeacon/Storm` and builds the native
+  cloud, ocean, spray, mist, splash and damp-ground materials. No external download,
+  paid service or third-party package was introduced.
+- The cloud preset derives from engine-bundled
+  `/Engine/EngineSky/VolumetricClouds/m_SimpleVolumetricCloud_Inst` and its volume,
+  weather and erosion textures; subject to the existing
+  Unreal Engine content licence, not a newly sourced CC0 texture.
+- Audio is synthesized wind/rain/surf/thunder, not recorded location audio. Final
+  sound-design quality requires listening review. `AudioMixer` is an existing engine
+  module used to capture the real runtime mix during automation; no new plugin.

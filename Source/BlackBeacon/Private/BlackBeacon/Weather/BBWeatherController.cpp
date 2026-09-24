@@ -1,5 +1,8 @@
 #include "BlackBeacon/Weather/BBWeatherController.h"
 #include "UObject/ConstructorHelpers.h"
+#include "BlackBeacon/Weather/BBStormPresentationComponent.h"
+#include "BlackBeacon/Logics/BBStormTiming.h"
+#include "Components/VolumetricCloudComponent.h"
 
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/DirectionalLightComponent.h"
@@ -27,6 +30,10 @@ ABBWeatherController::ABBWeatherController()
 	MoonLight->SetRelativeRotation(FRotator(-35.0f, 35.0f, 0.0f));
 	MoonLight->SetLightColor(FLinearColor(0.32f, 0.48f, 0.75f));
 	MoonLight->SetCastShadows(false);
+
+    StormClouds = CreateDefaultSubobject<UVolumetricCloudComponent>(TEXT("StormClouds"));
+    StormClouds->SetupAttachment(FogComponent);
+    StormPresentation = CreateDefaultSubobject<UBBStormPresentationComponent>(TEXT("StormPresentation"));
 
 	SkyAtmosphere = CreateDefaultSubobject<USkyAtmosphereComponent>(TEXT("SkyAtmosphere"));
 	SkyAtmosphere->SetupAttachment(FogComponent);
@@ -90,6 +97,7 @@ MoonLight->bAtmosphereSunLight = true;
 void ABBWeatherController::BeginPlay()
 {
 	Super::BeginPlay();
+    LoadConfig();
 	MoonLight->SetIntensity(MoonlightLux);
 	SkyLight->SetIntensity(MoonSkyFillIntensity);
 	BuildInterpolatorPalette();
@@ -167,6 +175,8 @@ void ABBWeatherController::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	Interpolator.Tick(DeltaSeconds);
+    const float Gust = static_cast<float>(BlackBeacon::Logics::StormGust(GetWorld()->GetTimeSeconds()));
+    CurrentWindVelocity = FRotator(0,StormWindYawDegrees,0).Vector() * RainWindDriftCmPerSecond * GetWindStrength() * Gust;
 	ApplyToFog();
 	ApplyOutputs();
 	UpdateRainField(DeltaSeconds);
@@ -190,7 +200,6 @@ void ABBWeatherController::ApplyOutputs()
 {
 	const float RainIntensity = static_cast<float>(Interpolator.GetRainIntensity());
 	const float Cloudiness = static_cast<float>(Interpolator.GetCloudiness());
-	const float WindStrength = static_cast<float>(Interpolator.GetWindStrength());
 	if (SkyCloudMaterial)
 	{
 		SkyCloudMaterial->SetScalarParameterValue(TEXT("CloudOpacity"), SkyCloudOpacity * Cloudiness);
@@ -224,7 +233,8 @@ void ABBWeatherController::ApplyOutputs()
 			const FVector RoofProbeEnd = CamLoc + FVector(0.0f, 0.0f, 6000.0f);
 			const bool bUnderRoof = GetWorld()->LineTraceSingleByChannel(
 				Hit, CamLoc, RoofProbeEnd, ECC_WorldStatic, Params);
-			const bool bShouldRain = RainIntensity > 0.05f && !bUnderRoof;
+			bListenerSheltered = bUnderRoof;
+            const bool bShouldRain = RainIntensity > 0.05f && !bUnderRoof;
 			if (bShouldRain != bRainFieldActive)
 			{
 				RainField->SetVisibility(bShouldRain, true);
@@ -281,7 +291,7 @@ void ABBWeatherController::RespawnRainParticle(int32 ParticleIndex)
 FTransform ABBWeatherController::BuildRainTransform(int32 ParticleIndex, bool bVisible) const
 {
 	const FRainParticleState& Particle = RainParticles[ParticleIndex];
-	const FVector Velocity = Particle.LateralDrift + FVector(0.0f, 0.0f, -Particle.FallSpeed);
+	const FVector Velocity = Particle.LateralDrift + GetWindVelocity() + FVector(0.0f, 0.0f, -Particle.FallSpeed);
 	const FVector FallDirection = Velocity.GetSafeNormal();
 	const FQuat AlignLengthWithFall = FQuat::FindBetweenNormals(FVector::YAxisVector, FallDirection);
 	const FQuat RollAroundFall = FQuat(FVector::YAxisVector, Particle.PlaneRollRadians);
@@ -300,7 +310,6 @@ void ABBWeatherController::UpdateRainField(float DeltaSeconds)
 	}
 
 	const float RainIntensity = static_cast<float>(Interpolator.GetRainIntensity());
-	const float WindStrength = static_cast<float>(Interpolator.GetWindStrength());
 	const int32 NewActiveCount = FMath::Clamp(
 		FMath::RoundToInt(static_cast<float>(RainParticleCount) * RainIntensity), 0, RainParticles.Num());
 	ActiveRainParticleCount = NewActiveCount;
@@ -308,12 +317,11 @@ void ABBWeatherController::UpdateRainField(float DeltaSeconds)
 	for (int32 ParticleIndex = 0; ParticleIndex < RainParticles.Num(); ++ParticleIndex)
 	{
 		FRainParticleState& Particle = RainParticles[ParticleIndex];
-		Particle.Position += FVector(
-			(Particle.LateralDrift.X + WindStrength * RainWindDriftCmPerSecond) * DeltaSeconds,
-			(Particle.LateralDrift.Y + WindStrength * RainWindDriftCmPerSecond * 0.12f) * DeltaSeconds,
-			-Particle.FallSpeed * DeltaSeconds);
+		Particle.Position += (Particle.LateralDrift + GetWindVelocity()
+            + FVector(0,0,-Particle.FallSpeed)) * DeltaSeconds;
 
-		if (Particle.Position.Z < 0.0f)
+		if (Particle.Position.Z < 0.0f || FMath::Abs(Particle.Position.X)>RainFieldRadiusCm
+            || FMath::Abs(Particle.Position.Y)>RainFieldRadiusCm)
 		{
 			RespawnRainParticle(ParticleIndex);
 		}
@@ -326,4 +334,9 @@ void ABBWeatherController::UpdateRainField(float DeltaSeconds)
 	// into one draw component instead of a grid of point-source Niagara systems.
 	RainField->BatchUpdateInstancesTransforms(
 		0, RainInstanceTransforms, false, true, true);
+}
+
+FVector ABBWeatherController::GetWindVelocity() const
+{
+    return CurrentWindVelocity;
 }

@@ -17,6 +17,8 @@
 
 #include "BBWeatherController.generated.h"
 
+class UVolumetricCloudComponent;
+class UBBStormPresentationComponent;
 class UExponentialHeightFogComponent;
 class UDirectionalLightComponent;
 class USkyAtmosphereComponent;
@@ -102,6 +104,20 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
 	TObjectPtr<UInstancedStaticMeshComponent> RainField = nullptr;
 
+    UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
+    TObjectPtr<UVolumetricCloudComponent> StormClouds = nullptr;
+
+    UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Weather")
+    TObjectPtr<UBBStormPresentationComponent> StormPresentation = nullptr;
+
+    FVector GetWindVelocity() const;
+    float GetWindStrength() const { return static_cast<float>(Interpolator.GetWindStrength()); }
+    float GetRainIntensity() const { return static_cast<float>(Interpolator.GetRainIntensity()); }
+    bool IsListenerSheltered() const { return bListenerSheltered; }
+
+    UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
+    float StormWindYawDegrees = 22.0f;
+
 	// --- config ---
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Weather")
 	EBBWeatherPhase InitialPhase = EBBWeatherPhase::Rain;
@@ -178,5 +194,7 @@ private:
 	float FogDensityBase = 1.0f; // reserved: authored-map fog scaling
 	float RainOutputUpdateCountdown = 0.0f;
 	bool bRainFieldActive = false;
+    bool bListenerSheltered = false;
+    FVector CurrentWindVelocity = FVector::ZeroVector;
 	int32 ActiveRainParticleCount = INDEX_NONE;
 };

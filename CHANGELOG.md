@@ -9,6 +9,45 @@ intended context), `TESTED` (built + exercised with evidence), `PLACEHOLDER`
 (scaffolding to be replaced), `PLANNED` (paper only). Anything written-but-not-
 compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
+## 2026-09-24 — Storm World Identity V0.1 — TESTED review checkpoint
+
+- **Scope authorization:** the milestone owner requested dynamic storm sky,
+  coastal water/impacts, wind-driven rain, atmospheric lightning with delayed
+  thunder, and four ambient audio layers. No unrelated gameplay scope was added.
+- **User-visible:** replaced the runtime panorama with native moving volumetric
+  clouds and cloud shadows. Raised moonlight 1.5→2.5 lux and sky fill 0.28→1.1;
+  storm starts by default. Shared wind yaw is 22 degrees, base drift 650→1400 cm/s,
+  with bounded gusts; rain orientation now follows its actual world velocity.
+- Added finite collision-bearing coastal ground preserving the existing approach,
+  displaced sea/whitecaps, seven spray/mist sites and ground splashes. Water and FX
+  have no collision; the existing gameplay actors and beam query are retained.
+  Ground remains opaque, nonmetallic, and locally damp. Saved Nanite material
+  usage flags on the existing coast/basalt masters to avoid fallback rendering.
+- Added four original synthesized sound assets: wind, rain, surf and thunder.
+  Surf/thunder are positional; shelter attenuates and low-pass filters the mix.
+  Lightning intervals vary 24–52 seconds, with thunder delayed by distance/343 m/s.
+  New plain-C++ timing/gust logic has eight unit checks.
+- **Dependency note:** built-in `AudioMixer` module is used for runtime mix capture;
+  no external dependency, new plugin, paid service or asset pack was introduced.
+- Vulkan device loss recurred with the default descriptor-buffer backend during
+  cloud/fog/shadow rendering. Native cloud shadows are retained; unsuccessful
+  projected-shadow/async-compute workarounds were reverted. The supported
+  descriptor-heap backend (`r.Vulkan.Bindless.PreferredExtension=1`) passed two
+  consecutive full rendered suites on RTX 2060 / NVIDIA 595.91.07. Root cause is
+  not proven; long-session and other-driver testing remain outside this evidence.
+- **Validation:** UE 5.8.2 BlackBeaconEditor built; validate green; 53/53 logic
+  checks; all four Unreal tests passed twice with no test warnings/errors.
+  Captured A–J plus A2 at native 1080p and 32.85 seconds of actual runtime audio.
+  Latest 1615-frame capture sample: median 16.81 ms, p95 22.96 ms, 50.26 FPS
+  including capture stalls; sampled GPU memory peak 3363 MiB. No stable-60 claim.
+- **Review gate:** storm presentation is exercised, not final art sign-off.
+  Faceted coast rocks, pale/stretched interior and near-axis beam density remain
+  visible. M0.2/M1 stay open for user visual/audio review and performance acceptance.
+- Recovery at `Saved/Checkpoints/Before_StormWorld_V01.tar.gz` preserves the initial
+  working tree. Pre-existing texture edits and reference PNGs remain untouched.
+  Source regeneration and evidence paths are documented in CURRENT_STATE.md and
+  `Art/Source/StormWorld/README.md`.
+
 ## 2026-09-24 — M1 — Hero lighthouse material and UV correction
 
 - **User-visible:** Reparented the six imported lighthouse material instances

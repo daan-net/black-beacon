@@ -15,6 +15,7 @@
 #include "BlackBeacon/Logics/BBObjectiveGraph.h"
 #include "BlackBeacon/Logics/BBRevealStateMachine.h"
 #include "BlackBeacon/Logics/BBWeatherState.h"
+#include "BlackBeacon/Logics/BBStormTiming.h"
 
 using namespace BlackBeacon::Logics;
 
@@ -259,6 +260,25 @@ int main()
 	TestRevealMachine();
 	TestObjectiveGraph();
 	TestWeather();
+    Check(NearlyEqual(ThunderDelay(1029), 3), "storm: distant thunder waits for sound travel");
+    Check(NearlyEqual(ThunderDelay(-10), 0), "storm: negative distance cannot schedule past thunder");
+    FBBStormTiming Storm;
+    Storm.Trigger(1029);
+    Storm.Tick(0.1,true);
+    Check(Storm.Flash()>0 && !Storm.ThunderDue, "storm: flash precedes thunder");
+    Storm.Tick(2.8,true);
+    Check(!Storm.ThunderDue && Storm.Flash()==0, "storm: flash fades before distant thunder");
+    Storm.Tick(0.2,true);
+    Check(Storm.ThunderDue, "storm: thunder fires after propagation delay");
+    Storm.Tick(0.1,true);
+    Check(!Storm.ThunderDue, "storm: thunder dispatches only once");
+    Storm.Trigger(1029);
+    Storm.Tick(0.1,false);
+    Storm.Tick(5,true);
+    Check(!Storm.ThunderDue && Storm.Flash()==0, "storm: leaving storm cancels pending event");
+    bool GustBounded=true;
+    for (int I=0; I<1000; ++I) GustBounded &= StormGust(I*.1)>=.68 && StormGust(I*.1)<=1.16;
+    Check(GustBounded, "storm: gust strength remains bounded and direction does not reverse");
 
 	std::cout << (g_Failures == 0 ? "ALL PASS" : "FAILURES") << "  -  "
 		<< g_Checks - g_Failures << "/" << g_Checks << " checks passed\n";

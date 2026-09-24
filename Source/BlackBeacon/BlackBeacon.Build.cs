@@ -6,6 +6,8 @@ public class BlackBeacon : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+		PrivateDependencyModuleNames.Add("AudioMixer"); // Runtime storm review recording.
+
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
 			"Core",

@@ -4,6 +4,22 @@ Scope discipline: each milestone is small, complete, and shippable on its own.
 QUALITY > FEATURE COUNT. Do not start the next milestone until the current one is
 built, tested, and bumped in CURRENT_STATE.md.
 
+## Storm World Identity V0.1 — TESTED, user review pending (2026-09-24)
+
+Authorized environment pass within the existing first-reveal slice. Native moving
+storm clouds/shadows, rough sea/foam, wind-driven rain and coastal spray/mist,
+lightning/delayed thunder and four ambient layers are built and exercised.
+53/53 logic checks and two consecutive 4/4 rendered Unreal suites pass at native
+1080p with the tested descriptor-heap Vulkan compatibility setting.
+
+- [x] Preserve and exercise generator / power / stairs / beam / reveal / save flow
+- [x] Produce A–J actual renders plus a repeat cloud view and runtime audio recording
+- [ ] User visual/audio review of movement, storm identity, mix and remaining art limitations
+- [ ] Representative stable-60-FPS gameplay benchmark (capture sample: 50.26 FPS)
+
+See CURRENT_STATE.md for exact evidence and known limits. This checkpoint does not
+close M0.2 or M1. No expansion beyond the approved slice is authorized by this result.
+
 ## M0 — Foundation & Bootstrap (complete)
 
 Repository, documentation set, UE5 C++ project scaffold, plain-C++ logic layer with
@@ -47,7 +63,7 @@ prompt/HUD polish, save/load seam, audio placeholders, performance sanity check.
 - [x] Save/load restores generator, lighthouse/beam, objective, reveal, weather, and player state (GameplayFlow automation)
 - [ ] Stable 60+ fps on target PC config at reasonable settings (latest 1080p Vulkan automation warm-up: 43.43 FPS; gameplay benchmark still needed)
 
-M0.2 remains open. The world-anchored instanced rain field is accepted after direct user review; the lighthouse interior stays dry. Stair look now clamps vertical camera movement to a moderate range, allowing the player to inspect steps while descending and keeping horizontal steering unrestricted; the revised Vulkan PlayerControls test passed, with direct feel review still pending. The latest 1080p Vulkan automation warm-up reached 43.43 FPS, below the 60 FPS gate and not a representative gameplay benchmark. Large coast rocks and wreckage still lack collision. The milestone owner has authorized a scoped M1 first-reveal implementation while M0.2 remains open; do not expand into unrelated M1 work.
+M0.2 remains open. The world-anchored instanced rain field is accepted after direct user review; the lighthouse interior stays dry. Stair look now clamps vertical camera movement to a moderate range, allowing the player to inspect steps while descending and keeping horizontal steering unrestricted; the revised Vulkan PlayerControls test passed, with direct feel review still pending. The latest 1080p Vulkan automation warm-up reached 43.43 FPS, below the 60 FPS gate and not a representative gameplay benchmark. Coast boulders now retain blocking collision; decorative wreck pieces are not a traversal surface. The milestone owner has authorized a scoped M1 first-reveal implementation while M0.2 remains open; do not expand into unrelated M1 work.
 
 ## M1 — The First Reveal (in progress, scoped)
 
