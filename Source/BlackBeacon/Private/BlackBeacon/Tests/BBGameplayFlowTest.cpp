@@ -17,6 +17,7 @@
 #include "Components/SpotLightComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
+#include "Components/SkyLightComponent.h"
 #include "Engine/Texture2D.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
@@ -350,6 +351,12 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 State->RainFieldAnchor = Weather->RainRoot->GetComponentLocation();
                 TestTrue(TEXT("Rain phase has fog density"), Weather->GetFogDensity() > 0.001f);
                 TestTrue(TEXT("Volumetric fog is enabled"), Weather->FogComponent->bEnableVolumetricFog);
+                USkyLightComponent* SkyFill = Weather->FindComponentByClass<USkyLightComponent>();
+                TestNotNull(TEXT("Weather sky fill light"), SkyFill);
+                TestTrue(TEXT("Runtime storm sky fill is movable"),
+                    SkyFill && SkyFill->Mobility == EComponentMobility::Movable);
+                TestTrue(TEXT("Runtime storm sky fill has nonzero intensity"),
+                    SkyFill && SkyFill->Intensity > 0.0f);
                 TestTrue(TEXT("Rain field anchor matches the weather actor, not the player"),
                     State->RainFieldAnchor.Equals(Weather->GetActorLocation(), 1.0f));
             }

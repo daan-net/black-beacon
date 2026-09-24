@@ -33,6 +33,8 @@ ABBWeatherController::ABBWeatherController()
 	
 	SkyLight = CreateDefaultSubobject<USkyLightComponent>(TEXT("SkyLight"));
 	SkyLight->SetupAttachment(FogComponent);
+	// The sky fill is configured at runtime and captures the moving storm dome.
+	SkyLight->SetMobility(EComponentMobility::Movable);
 	SkyLight->bRealTimeCapture = true;
 	SkyLight->SetLightColor(FLinearColor(0.48f, 0.60f, 0.86f));
 

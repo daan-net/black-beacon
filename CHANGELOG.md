@@ -9,6 +9,18 @@ intended context), `TESTED` (built + exercised with evidence), `PLACEHOLDER`
 (scaffolding to be replaced), `PLANNED` (paper only). Anything written-but-not-
 compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
+## 2026-09-24 — M1 — runtime sky fill correction
+
+- Made the weather controller's realtime-captured SkyLight movable so runtime
+  intensity updates and storm-sky capture use a supported mobility mode.
+- Added GameplayFlow assertions for the SkyLight mobility and nonzero runtime
+  intensity. UE 5.8.2 Linux Development build succeeded; the full rendered
+  Vulkan M01 suite passed 3/3 (GameplayFlow, PlayerControls, StairTraversal)
+  with zero warnings/errors, and `./Tools/validate.sh` passed all 45 logic checks.
+- Render review did not show a material coast-lighting improvement from this
+  correction alone. The dark blockout coast and broad pale reveal wedge remain
+  open M1 visual issues; no M1 completion is claimed.
+
 ## 2026-09-23 — M0.2 — animate generator startup
 
 - **User-visible:** The annex generator's flywheel now rotates in sync with its real running and spin-up state, accelerates as the four-second power ramp advances, and coasts down on shutdown. The environment binds to a new running-state event and updates the wheel on a 20 Hz timer only while it is turning. GameplayFlow asserts measurable wheel rotation during spin-up and coast-down. UE 5.8.2 built successfully; the full rendered Vulkan M01 suite passed 3/3 with zero test warnings/errors; `./Tools/validate.sh` passed with 45/45 logic checks. The five-second 1920x1080 automation warm-up measured 43.98 FPS, below the 60 FPS target and not a representative gameplay benchmark. The machine remains primitive greybox geometry.
