@@ -608,6 +608,27 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         }
         if (State->Stage == 13)
         {
+            const auto Query = Lighthouse->BeamComponent->GetBeamQuery();
+            UMaterialInstanceDynamic* ShaftMaterial = nullptr;
+            for (UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(Lighthouse))
+            {
+                if (Mesh && Mesh->GetName() == TEXT("BeamVisualMesh"))
+                {
+                    ShaftMaterial = Cast<UMaterialInstanceDynamic>(Mesh->GetMaterial(0));
+                    break;
+                }
+            }
+            TestNotNull(TEXT("Visible beam shaft has a dynamic material"), ShaftMaterial);
+            if (ShaftMaterial)
+            {
+                const float ShaftOpacity = ShaftMaterial->K2_GetScalarParameterValue(TEXT("BeamOpacity"));
+                const float ShaftAngleTangent = ShaftMaterial->K2_GetScalarParameterValue(TEXT("BeamTanHalfAngle"));
+                TestTrue(TEXT("Beam shaft material receives the live beam opacity"),
+                    FMath::IsNearlyEqual(ShaftOpacity, Lighthouse->BeamComponent->BeamVisualOpacity * Query.Intensity01, 0.005f));
+                TestTrue(TEXT("Beam shaft material width matches the gameplay cone"),
+                    FMath::IsNearlyEqual(ShaftAngleTangent,
+                        FMath::Tan(FMath::DegreesToRadians(Lighthouse->BeamComponent->BeamHalfAngleDeg)), 0.001f));
+            }
             if (State->Weather.IsValid() && State->Weather->FogComponent)
             {
                 const FLinearColor StormFogTint = State->Weather->FogComponent->FogInscatteringLuminance;
@@ -616,7 +637,6 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 TestTrue(TEXT("Storm fog retains its configured dense atmosphere"),
                     FMath::IsNearlyEqual(State->Weather->GetFogDensity(), 0.04f, 0.001f));
             }
-            const auto Query = Lighthouse->BeamComponent->GetBeamQuery();
             const FVector BeamDirection(Query.Direction.X, Query.Direction.Y, Query.Direction.Z);
             const FVector ToRuin = (GetRevealPartCenter(State->Anomaly.Get())
                 - Lighthouse->BeamComponent->GetComponentLocation()).GetSafeNormal();
