@@ -18,7 +18,7 @@ step() { printf '\n== %s ==\n' "$*"; }
 fail() { printf 'FAIL: %s\n' "$*"; FAILED=1; }
 
 # ---------------------------------------------------------
-step "1/2  Project file sanity"
+step "1/3  Project file sanity"
 
 python3 - "$ROOT" <<'PY'
 import json, sys
@@ -52,7 +52,7 @@ for ini in pathlib.Path(f"{root}/Config").glob("Default*.ini"):
 PY
 
 # ---------------------------------------------------------
-step "2/2  Logic-layer unit tests"
+step "2/3  Logic-layer unit tests"
 
 if [ -d "$ROOT/Tests/build" ]; then
     cmake -S "$ROOT/Tests" -B "$ROOT/Tests/build" -G Ninja > /dev/null
@@ -64,6 +64,9 @@ cmake --build "$ROOT/Tests/build" > /dev/null
 echo "  bb_logic_tests : ALL PASS"
 
 # ---------------------------------------------------------
+step "3/3  Architectural source geometry"
+python3 Tests/test_visual_sources.py
+
 step "Summary"
 if [ "$FAILED" -eq 0 ]; then
     echo "VALIDATION OK - project files sane, logic tests pass."

@@ -1,0 +1,39 @@
+"""Geometric regression checks independent of Unreal and render quality."""
+import sys, unittest, math
+from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'Art/Source/VisualRebuildV04'))
+from generate import stairs,deck,tower,radius
+
+class Architecture(unittest.TestCase):
+    def test_stair_tops_preserve_all_gameplay_rises(self):
+        m=stairs()
+        # Main tread boxes have two top triangles per rise at exactly the saved height.
+        horizontal=[]
+        for mat,ids,smooth in m.faces:
+            ps=[m.vertices[i-1][0] for i in ids]
+            if mat=='DarkIron' and max(p[2] for p in ps)-min(p[2] for p in ps)<1e-6:
+                horizontal.append(ps[0][2])
+        for step in range(1,85):
+            self.assertTrue(any(abs(z-step*520/28)<1e-6 for z in horizontal),step)
+
+    def test_gallery_hatch_and_walkway(self):
+        m=deck()
+        # All floor vertices in the hatch's 0..112 degree sector stay outside r=210.
+        for p,uv in m.vertices:
+            a=math.degrees(math.atan2(p[1],p[0]))
+            if .01<a<111.99:self.assertGreaterEqual(math.hypot(p[0],p[1]),209.99)
+        self.assertTrue(all(1559.99<=p[2]<=1570.01 for p,uv in m.vertices))
+
+    def test_tower_taper_clears_stair_outer_edges(self):
+        for floor,outer in enumerate((255,210,175)):
+            self.assertGreater(radius((floor+1)*520)-26,outer)
+
+    def test_outer_tower_has_open_doorway(self):
+        m=tower()
+        for mat,ids,smooth in m.faces:
+            if mat!='TowerPaint' or not smooth:continue
+            ps=[m.vertices[i-1][0] for i in ids]
+            c=tuple(sum(p[j] for p in ps)/3 for j in range(3))
+            self.assertFalse(5<c[2]<235 and abs(math.atan2(c[1],c[0]))<.219)
+
+if __name__=='__main__':unittest.main()

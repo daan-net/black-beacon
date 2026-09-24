@@ -42,7 +42,7 @@ void UBBStormPresentationComponent::BeginPlay()
     weather->StormClouds->SetTracingMaxDistance(14.0f);
     weather->StormClouds->SetViewSampleCountScale(CloudSampleScale);
     weather->StormClouds->SetReflectionViewSampleCountScale(0.25f);
-    weather->StormClouds->SetShadowViewSampleCountScale(0.4f);
+    weather->StormClouds->SetShadowViewSampleCountScale(1.0f);
     weather->StormClouds->SetSkyLightCloudBottomOcclusion(0.45f);
     UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr,
         TEXT("/Game/BlackBeacon/Storm/Materials/MI_StormCloudNative.MI_StormCloudNative"));
@@ -56,22 +56,13 @@ void UBBStormPresentationComponent::BeginPlay()
     weather->SkyAtmosphere->SetRayleighScattering(RayleighColor);
     weather->MoonLight->bCastCloudShadows = true;
     weather->MoonLight->CloudShadowStrength = 0.7f;
-    weather->MoonLight->CloudShadowMapResolutionScale = 0.5f;
+    weather->MoonLight->CloudShadowMapResolutionScale = 1.0f;
     weather->MoonLight->CloudShadowExtent = 8.0f;
     weather->FogComponent->SetFogHeightFalloff(0.45f);
 
-    lightningLight = NewObject<UDirectionalLightComponent>(GetOwner(), TEXT("StormLightning"));
-    GetOwner()->AddInstanceComponent(lightningLight);
-    lightningLight->SetupAttachment(GetOwner()->GetRootComponent());
-    lightningLight->SetMobility(EComponentMobility::Movable);
-    lightningLight->SetLightColor(FLinearColor(0.65f,0.76f,1.0f));
-    lightningLight->SetCastShadows(false);
-    lightningLight->bCastCloudShadows = false;
-    lightningLight->SetAtmosphereSunLight(true);
-    lightningLight->SetAtmosphereSunLightIndex(1);
-    lightningLight->SetIntensity(0.0f);
-    lightningLight->RegisterComponent();
-    lightningLight->SetWorldRotation(FRotator(-25,135,0));
+    // One directional authority serves clouds, translucent water and fog.
+    // Lightning adds energy to it and restores the configured moon baseline.
+    weather->MoonLight->SetLightColor(FLinearColor(0.66f, 0.73f, 0.82f));
 
     stormAudio = NewObject<UBBStormAudioComponent>(GetOwner(), TEXT("StormAudio"));
     GetOwner()->AddInstanceComponent(stormAudio);
@@ -181,7 +172,7 @@ void UBBStormPresentationComponent::TickComponent(float DeltaTime,ELevelTick Tic
     timing.Tick(DeltaTime,weather->GetTargetPhase()==EBBWeatherPhase::Storm);
     if (timing.FlashStarted) thunderPosition = Listener+FVector(-0.8f,0.6f,0.15f).GetSafeNormal()*timing.DistanceMetres*100.0;
     if (timing.ThunderDue) stormAudio->PlayThunder(thunderPosition,0.87f+0.16f*FMath::Frac(elapsed*0.173f));
-    lightningLight->SetIntensity(LightningLux*GetLightningIntensity());
+    weather->MoonLight->SetIntensity(weather->MoonlightLux + LightningLux * GetLightningIntensity());
     if (cloudsMaterial)
     {
         const FVector Direction=Wind.GetSafeNormal();

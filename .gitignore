@@ -40,3 +40,7 @@ Tests/build/
 # --- Misc ---
 *.pdb
 *.ilk
+
+# Python source generators
+__pycache__/
+*.pyc

@@ -49,6 +49,7 @@ UBBLighthouseBeamComponent::UBBLighthouseBeamComponent()
 	BeamLensSupport->SetMobility(EComponentMobility::Movable);
 	BeamLensSupport->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	BeamLensSupport->SetCastShadow(false);
+    BeamLensSupport->SetVisibility(false);
 	BeamLensSupport->SetRelativeLocation(FVector(0.0f, 0.0f, -210.0f));
 	BeamLensSupport->SetRelativeScale3D(FVector(0.5f, 0.5f, 4.2f));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SupportCylinder(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
@@ -94,7 +95,7 @@ void UBBLighthouseBeamComponent::BeginPlay()
 		BeamOriginGlow->IntensityUnits = ELightUnits::Lumens;
 		BeamOriginGlow->SetIntensity(BeamOriginGlowLumens);
 		BeamOriginGlow->SetLightColor(BeamColor);
-		BeamOriginGlow->SetAttenuationRadius(1800.0f);
+		BeamOriginGlow->SetAttenuationRadius(420.0f);
 		BeamOriginGlow->SetVolumetricScatteringIntensity(0.5f);
 	}
 	if (BeamVisualMesh)

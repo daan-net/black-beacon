@@ -377,12 +377,10 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 GeneratorActor->GetActorLocation().Equals(FVector(0.0f, -620.0f, 90.0f), 1.0f));
             UTexture2D* const LighthousePaint = LoadObject<UTexture2D>(nullptr,
                 TEXT("/Game/BlackBeacon/Textures/T_LighthousePaintAlbedo.T_LighthousePaintAlbedo"));
-            UMaterialInstanceDynamic* const TowerMaterial = State->Lighthouse->TowerExteriorSkin
-                ? Cast<UMaterialInstanceDynamic>(State->Lighthouse->TowerExteriorSkin->GetMaterial(0)) : nullptr;
             TestNotNull(TEXT("Lighthouse weathered paint texture loads"), LighthousePaint);
-            TestTrue(TEXT("Lighthouse exterior uses the weathered paint texture"),
-                TowerMaterial && LighthousePaint
-                && TowerMaterial->K2_GetTextureParameterValue(TEXT("RockAlbedo")) == LighthousePaint);
+            UMaterialInterface* const TowerMaterial = State->Lighthouse->TowerExteriorSkin->GetMaterial(0);
+            TestTrue(TEXT("Tower uses imported architectural material slots"),
+                TowerMaterial && TowerMaterial->GetName().StartsWith(TEXT("M_LH_")));
             TestTrue(TEXT("Gameplay lighthouse tower shell uses the tapered hero mesh"),
                 State->Lighthouse->TowerExteriorSkin
                 && State->Lighthouse->TowerExteriorSkin->GetStaticMesh()

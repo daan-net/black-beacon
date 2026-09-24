@@ -9,6 +9,42 @@ intended context), `TESTED` (built + exercised with evidence), `PLACEHOLDER`
 (scaffolding to be replaced), `PLANNED` (paper only). Anything written-but-not-
 compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
+## 2026-09-25 — Major visual rebuild V0.4 — paused work checkpoint
+
+- **Scope authorization:** milestone owner requested a structural visual rebuild
+  against all eight approved lighthouse references. No new gameplay sequence,
+  external dependency, plugin or service is introduced.
+- Replaced tower/annex/lantern/gallery meshes with modeled openings, deep jambs,
+  battered foundation, cornices, corbels, open rails, full-height lantern framing,
+  a domed standing-seam roof and a mechanically connected Fresnel assembly.
+- Replaced stair rendering with 84 consistent thin treads, nosings, radial cast
+  supports, railings and floor-transition bridges. Existing movement/step/guard
+  collision remains; a supplemental gallery floor surrounds an open access hatch.
+- Rebuilt the annex to its actual 3.2 x 4.2 m gameplay shell, with window recesses,
+  a heavy open door, gable roof, trusses, gutters, chimney, pipes and switchgear.
+  Generator state and interaction remain on the original actor.
+- Added shaped coastal rock source over the existing boulder collision and a
+  bounded tower contact pass. Kept the ocean system; added crossing short waves,
+  broken whitecaps and foam at existing impact/spray sites.
+- Materials use world-space triplanar mapping and varied roughness/limited dampness.
+  Sheltered plaster, whitewash, cut stone, iron, brass, wood and basalt are distinct.
+- Removed the second directional light; lightning modifies the main moon light.
+  Cloud view sampling 0.8→2.0; shadow sampling/map resolution 0.4/0.5→1.0;
+  half-resolution cloud tracing; fog grid 8/64→6/128 with 8 history-miss samples.
+  Native TAA is explicit. Moon tint is less saturated; sky fill 1.1→0.65.
+- Replaced the dense beam surface with additive integrated soft density,
+  radial and distance falloff and mist modulation. Shaft opacity 0.04→0.012;
+  source glow 300→90 lumens with a local 420 cm radius. Gameplay beam cone,
+  range, power, rotation and reveal query are preserved.
+- Warm stair practicals are 75 lumens / 330 cm radius; generator practical
+  850→180 lumens / 380 cm radius with shadows. Lantern glazing stays transparent.
+- C++ editor build and standalone validation pass. User requested a pause for
+  the usage reset; Vulkan compilation was interrupted. No rendered V0.4 validation
+  or acceptance is claimed. See V04_RESUME.md before resuming.
+- Recovery tag `checkpoint/pre-v04-20260925` and the complete initial working-tree
+  archive under `Saved/Checkpoints/` preserve the functional prior state, including
+  the user's pre-existing texture edits and reference images.
+
 ## 2026-09-24 — Storm World Identity V0.1 — TESTED review checkpoint
 
 - **Scope authorization:** the milestone owner requested dynamic storm sky,

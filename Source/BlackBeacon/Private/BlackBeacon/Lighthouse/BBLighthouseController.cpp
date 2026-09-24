@@ -11,6 +11,7 @@
 #include "UObject/ConstructorHelpers.h"
 
 #include "BlackBeacon/Lighthouse/BBLighthouseBeamComponent.h"
+#include "BlackBeacon/Lighthouse/BBHeroArchitectureComponent.h"
 #include "BlackBeacon/Objectives/BBObjectiveSystem.h"
 #include "BlackBeacon/Power/BBPowerSystem.h"
 
@@ -105,7 +106,7 @@ ABBLighthouseController::ABBLighthouseController()
 		GlassPanel->SetupAttachment(RootComponent);
 		GlassPanel->SetStaticMesh(CubeMesh);
 		GlassPanel->SetRelativeTransform(FTransform(FRotator(0.0f, SideYaw, 0.0f),
-			SideRadial * 146.1f + FVector(0.0f, 0.0f, -2.0f), FVector(1.10f, 0.035f, 1.75f)));
+			SideRadial * 243.0f + FVector(0.0f, 0.0f, -64.0f), FVector(1.98f, 0.025f, 3.60f)));
 		GlassPanel->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		GlassPanel->SetCastShadow(false);
 		GlassPanel->SetCanEverAffectNavigation(false);
@@ -115,8 +116,8 @@ ABBLighthouseController::ABBLighthouseController()
 		for (const float BandHeight : {-64.0f, -32.0f, 0.0f, 32.0f, 64.0f})
 		{
 			LanternFresnelBands->AddInstance(FTransform(FRotator(0.0f, SideYaw, 0.0f),
-				SideRadial * 148.4f + FVector(0.0f, 0.0f, BandHeight - 2.0f),
-				FVector(1.02f, 0.045f, 0.035f)));
+				SideRadial * 70.0f + FVector(0.0f, 0.0f, BandHeight - 2.0f),
+				FVector(0.48f, 0.025f, 0.025f)));
 		}
 
 		for (const float RailHeight : {-102.0f, 102.0f})
@@ -145,6 +146,10 @@ ABBLighthouseController::ABBLighthouseController()
 void ABBLighthouseController::BeginPlay()
 {
 	Super::BeginPlay();
+    UBBHeroArchitectureComponent* Architecture = NewObject<UBBHeroArchitectureComponent>(this, TEXT("HeroArchitecture"));
+    AddInstanceComponent(Architecture);
+    Architecture->RegisterComponent();
+    LanternFrame->SetVisibility(false);
 	if (TowerExteriorSkin && LanternDarkMaterial)
 	{
 		UMaterialInterface* const TowerMaterial = LoadObject<UMaterialInterface>(nullptr,
@@ -425,7 +430,7 @@ void ABBLighthouseController::UpdateLanternHousingState()
 	SetSurface(LanternFrame, LanternDarkMaterial, FLinearColor(0.018f, 0.024f, 0.030f), 0.78f);
 	for (UStaticMeshComponent* const GlassPanel : LanternGlazingPanels)
 	{
-		SetSurface(GlassPanel, bLanternLit ? LanternLitMaterial : LanternDarkMaterial,
+		SetSurface(GlassPanel, LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/BlackBeacon/Art/Lighthouse/Materials/M_V04_Glazing.M_V04_Glazing")),
 			bLanternLit ? FLinearColor(0.72f, 0.30f, 0.065f) : FLinearColor(0.012f, 0.018f, 0.026f),
 			bLanternLit ? 0.48f : 0.82f);
 	}

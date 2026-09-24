@@ -1,4 +1,10 @@
-# Hero lighthouse V0.1 implementation record
+# Hero lighthouse implementation record
+
+V0.4 source and regeneration: `Art/Source/VisualRebuildV04/README.md`.
+The following V0.1 record is historical; its generator would overwrite the
+rebuilt architecture. Use the V0.4 pipeline for current assets.
+
+## Historical V0.1 record
 
 ## Reference set
 

@@ -2,6 +2,17 @@
 
 **Last updated:** 2026-09-24 · **Milestone:** M0.2 open; scoped M1 first reveal in progress
 
+## Major visual rebuild V0.4 — PAUSED at owner's request
+
+The user paused work to wait for the usage-limit reset. This branch is a saved
+work checkpoint, NOT an accepted playable milestone. C++ editor build succeeded;
+53 standalone logic checks and four geometry checks pass. The first null-RHI
+asset import succeeded. The subsequent Vulkan material compile was interrupted
+before completion; the integrated gameplay suite and A–O renders were NOT run.
+
+Resume instructions are in `V04_RESUME.md`. Return the active `main` worktree to
+the verified pre-V0.4 state before playing. Do not label V0.4 TESTED.
+
 ## Storm World Identity V0.1 — TESTED checkpoint; USER VISUAL / AUDIO REVIEW
 
 Authorized by the milestone owner on 2026-09-24. This pass is built and exercised

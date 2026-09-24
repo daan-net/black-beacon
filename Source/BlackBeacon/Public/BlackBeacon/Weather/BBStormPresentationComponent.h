@@ -24,7 +24,7 @@ public:
     UPROPERTY(config, EditAnywhere, Category="Storm") float LightningLux = 14.0f;
     UPROPERTY(config, EditAnywhere, Category="Storm") float CloudBottomKm = 0.45f;
     UPROPERTY(config, EditAnywhere, Category="Storm") float CloudHeightKm = 1.3f;
-    UPROPERTY(config, EditAnywhere, Category="Storm") float CloudSampleScale = 0.8f;
+    UPROPERTY(config, EditAnywhere, Category="Storm") float CloudSampleScale = 2.0f;
     UPROPERTY(config, EditAnywhere, Category="Storm") float CloudWindSpeed = 0.35f;
     UPROPERTY(config, EditAnywhere, Category="Storm") float ClearCloudCoverage = -0.3f;
     UPROPERTY(config, EditAnywhere, Category="Storm") float StormCloudCoverage = 0.15f;
@@ -42,7 +42,6 @@ private:
     UPROPERTY(Transient) TObjectPtr<UInstancedStaticMeshComponent> splashes;
     UPROPERTY(Transient) TObjectPtr<UMaterialInstanceDynamic> cloudsMaterial;
     UPROPERTY(Transient) TObjectPtr<UMaterialInstanceDynamic> oceanMaterial;
-    UPROPERTY(Transient) TObjectPtr<UDirectionalLightComponent> lightningLight;
     UPROPERTY(Transient) TObjectPtr<UBBStormAudioComponent> stormAudio;
     TArray<FTransform> sprayTransforms;
     FVector thunderPosition = FVector::ZeroVector;

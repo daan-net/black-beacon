@@ -1,0 +1,47 @@
+[
+  {
+    "name": "SM_BB_LH_TowerShell",
+    "vertices": 39640,
+    "triangles": 19820
+  },
+  {
+    "name": "SM_BB_LH_Gallery",
+    "vertices": 18840,
+    "triangles": 9976
+  },
+  {
+    "name": "SM_BB_LH_GalleryDeck",
+    "vertices": 2432,
+    "triangles": 1216
+  },
+  {
+    "name": "SM_BB_LH_LanternRoom",
+    "vertices": 21840,
+    "triangles": 11508
+  },
+  {
+    "name": "SM_BB_LH_FresnelRotor",
+    "vertices": 24984,
+    "triangles": 12516
+  },
+  {
+    "name": "SM_BB_LH_StairStructure",
+    "vertices": 34872,
+    "triangles": 19156
+  },
+  {
+    "name": "SM_BB_LH_AnnexDetails",
+    "vertices": 4774,
+    "triangles": 2578
+  },
+  {
+    "name": "SM_BB_LH_RockPlinth",
+    "vertices": 52992,
+    "triangles": 26496
+  },
+  {
+    "name": "SM_BB_CoastalRock",
+    "vertices": 2304,
+    "triangles": 1152
+  }
+]
