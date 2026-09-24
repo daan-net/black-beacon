@@ -13,6 +13,7 @@
 #include "Materials/MaterialInterface.h"
 
 #include "BlackBeacon/Power/BBGeneratorComponent.h"
+#include "BlackBeacon/Objectives/BBObjectiveTriggerComponent.h"
 #include "BlackBeacon/Lighthouse/BBBeamRevealComponent.h"
 #include "BlackBeacon/Lighthouse/BBLighthouseController.h"
 
@@ -28,6 +29,8 @@ namespace
 	constexpr const TCHAR* OCEAN_MATERIAL = TEXT("/Engine/EngineMaterials/WaterMaterial.DefaultWaterMaterial");
 	constexpr float GENERATOR_SHED_LIGHT_LUMENS = 850.0f;
 	constexpr float ROCK_SAMPLE_SCALE = 0.4f;
+	const FVector GENERATOR_ANNEX_OLD_CENTER(1560.0f, 1120.0f, 0.0f);
+	const FVector GENERATOR_ANNEX_HERO_CENTER(0.0f, -620.0f, 0.0f);
 
 	struct FCoastShape
 	{
@@ -184,6 +187,15 @@ ABBCoastalEnvironment::ABBCoastalEnvironment()
 		OceanSurface->SetCastShadow(false);
 	}
 
+	AnnexHeroDetails = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AnnexHeroDetails"));
+	AnnexHeroDetails->SetupAttachment(SceneRoot);
+	AnnexHeroDetails->SetStaticMesh(LoadObject<UStaticMesh>(nullptr,
+		TEXT("/Game/BlackBeacon/Art/Lighthouse/Meshes/SM_BB_LH_AnnexDetails.SM_BB_LH_AnnexDetails")));
+	AnnexHeroDetails->SetRelativeLocation(FVector(1560.0f, 1120.0f, 0.0f));
+	AnnexHeroDetails->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AnnexHeroDetails->SetCanEverAffectNavigation(false);
+	AnnexHeroDetails->SetCastShadow(true);
+
 	// The low shelf stays a broad shore form. A single engine-sample boulder
 	// mesh gives the instanced field a faceted coastal silhouette.
 	const FCoastShape& Shelf = ROCKS[0];
@@ -284,8 +296,129 @@ void ABBCoastalEnvironment::BeginPlay()
 	ApplyWetMaterial(PathSurfaces, CoastMaterial, FLinearColor(0.050f, 0.065f, 0.075f), 0.52f);
 	ApplyWetMaterial(WreckSurfaces, CoastMaterial, FLinearColor(0.075f, 0.042f, 0.022f), 0.48f);
 	ApplyWetMaterial(AnnexSurfaces, CoastMaterial, FLinearColor(0.075f, 0.055f, 0.040f), 0.72f);
+	DressLighthouseGreybox();
 	BuildGeneratorMachinery();
 	BuildRevealedRuin();
+}
+
+void ABBCoastalEnvironment::DressLighthouseGreybox()
+{
+	UMaterialInterface* const StairMetal = LoadObject<UMaterialInterface>(nullptr,
+		TEXT("/Game/BlackBeacon/Art/Lighthouse/Materials/M_LH_DarkIron.M_LH_DarkIron"));
+	constexpr float TowerFloorHeightCm = 520.0f;
+	constexpr float StairRadiusByFloor[] = {190.0f, 155.0f, 130.0f};
+	constexpr float StairDepthByFloor[] = {130.0f, 110.0f, 90.0f};
+	UWorld* const World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+	const FVector AnnexOffset = GENERATOR_ANNEX_HERO_CENTER - GENERATOR_ANNEX_OLD_CENTER;
+	for (UStaticMeshComponent* const Part : AnnexSurfaces)
+	{
+		if (Part)
+		{
+			Part->SetWorldLocation(Part->GetComponentLocation() + AnnexOffset);
+		}
+	}
+	if (AnnexHeroDetails)
+	{
+		AnnexHeroDetails->SetWorldLocation(AnnexHeroDetails->GetComponentLocation() + AnnexOffset);
+	}
+
+	for (TActorIterator<AActor> It(World); It; ++It)
+	{
+		AActor* const Actor = *It;
+		if (!Actor)
+		{
+			continue;
+		}
+		if (Actor->ActorHasTag(TEXT("BB_GeneratorShed")) || Actor->ActorHasTag(TEXT("BB_Generator")))
+		{
+			const FVector Location = Actor->GetActorLocation();
+			if (FVector2D(Location - GENERATOR_ANNEX_OLD_CENTER).SizeSquared() < 1.0f)
+			{
+				Actor->AddActorWorldOffset(AnnexOffset);
+			}
+		}
+		else if (TArray<UBBObjectiveTriggerComponent*> Triggers;
+			Actor->GetComponents<UBBObjectiveTriggerComponent>(Triggers), Triggers.Num() > 0)
+		{
+			for (UBBObjectiveTriggerComponent* const Trigger : Triggers)
+			{
+				if (Trigger && Trigger->ObjectiveId == TEXT("BB_OBJ_FIND_GENERATOR")
+					&& FVector2D(Actor->GetActorLocation() - GENERATOR_ANNEX_OLD_CENTER).SizeSquared() < 1.0f)
+				{
+					Actor->AddActorWorldOffset(AnnexOffset);
+				}
+			}
+		}
+		else if (Actor->ActorHasTag(TEXT("BB_TowerWall")) || Actor->ActorHasTag(TEXT("BB_TowerFloor")))
+		{
+			for (UStaticMeshComponent* const Mesh : TInlineComponentArray<UStaticMeshComponent*>(Actor))
+			{
+				Mesh->SetVisibility(false);
+			}
+		}
+		else if (Actor->ActorHasTag(TEXT("BB_StairCore")))
+		{
+			if (UStaticMeshComponent* const CoreMesh = Actor->FindComponentByClass<UStaticMeshComponent>())
+			{
+				CoreMesh->SetWorldScale3D(FVector(0.9f, 0.9f, CoreMesh->GetComponentScale().Z));
+			}
+		}
+		else if (Actor->ActorHasTag(TEXT("BB_StairEntryLanding")))
+		{
+			Actor->SetActorLocation(FVector(310.0f, 0.0f, Actor->GetActorLocation().Z));
+			if (UStaticMeshComponent* const EntryMesh = Actor->FindComponentByClass<UStaticMeshComponent>())
+			{
+				EntryMesh->SetWorldScale3D(FVector(1.7f, 1.0f, EntryMesh->GetComponentScale().Z));
+			}
+		}
+		else if (Actor->ActorHasTag(TEXT("BB_LanternFloor")))
+		{
+			Actor->SetActorLocation(FVector(120.0f, -35.0f, Actor->GetActorLocation().Z));
+			if (UStaticMeshComponent* const LanternFloorMesh = Actor->FindComponentByClass<UStaticMeshComponent>())
+			{
+				LanternFloorMesh->SetWorldScale3D(FVector(1.1f, 1.2f, LanternFloorMesh->GetComponentScale().Z));
+			}
+		}
+		else if (Actor->ActorHasTag(TEXT("BB_StairStep"))
+			|| Actor->ActorHasTag(TEXT("BB_StairGuard")))
+		{
+			if (UStaticMeshComponent* const Mesh = Actor->FindComponentByClass<UStaticMeshComponent>())
+			{
+				if (StairMetal)
+				{
+					Mesh->SetMaterial(0, StairMetal);
+				}
+
+				// The saved map contains the original constant-radius stair actors.
+				// Keep their rise, rotation, and collision while tucking each upper
+				// flight inside the tapered hero tower.
+				const FVector Location = Actor->GetActorLocation();
+				const bool bIsGuard = Actor->ActorHasTag(TEXT("BB_StairGuard"));
+				const float FlightZ = Location.Z - (bIsGuard ? 48.0f : 0.0f);
+				const int32 Floor = FMath::Clamp(
+					FMath::FloorToInt(FlightZ / TowerFloorHeightCm), 0, 2);
+				const float Radius = StairRadiusByFloor[Floor];
+				const float Depth = StairDepthByFloor[Floor];
+				const FRotator Rotation = Actor->GetActorRotation();
+				const float Angle = FMath::DegreesToRadians(Rotation.Yaw);
+				const float TargetRadius = bIsGuard ? Radius + Depth * 0.5f - 15.0f : Radius;
+				Actor->SetActorLocation(FVector(
+					FMath::Cos(Angle) * TargetRadius,
+					FMath::Sin(Angle) * TargetRadius,
+					Location.Z));
+				if (!bIsGuard)
+				{
+					FVector MeshScale = Mesh->GetComponentScale();
+					MeshScale.X = Depth / 100.0f;
+					Mesh->SetWorldScale3D(MeshScale);
+				}
+			}
+		}
+	}
 }
 
 void ABBCoastalEnvironment::BuildGeneratorMachinery()
@@ -441,7 +574,7 @@ void ABBCoastalEnvironment::BuildGeneratorMachinery()
 	AddInstanceComponent(ShedLight);
 	ShedLight->SetupAttachment(SceneRoot);
 	ShedLight->SetMobility(EComponentMobility::Movable);
-	ShedLight->SetRelativeLocation(FVector(1560.0f, 1120.0f, 238.0f));
+	ShedLight->SetRelativeLocation(GENERATOR_ANNEX_HERO_CENTER + FVector(0.0f, 0.0f, 238.0f));
 	ShedLight->IntensityUnits = ELightUnits::Lumens;
 	ShedLight->SetIntensity(GENERATOR_SHED_LIGHT_LUMENS);
 	ShedLight->SetLightColor(FLinearColor(1.0f, 0.66f, 0.38f));

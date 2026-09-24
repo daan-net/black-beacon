@@ -9,6 +9,31 @@ intended context), `TESTED` (built + exercised with evidence), `PLACEHOLDER`
 (scaffolding to be replaced), `PLANNED` (paper only). Anything written-but-not-
 compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
+## 2026-09-24 — M1 — Hero Lighthouse V0.1 integration
+
+- Added reproducible modular OBJ source and UE assets for the tapered tower,
+  gallery, lantern/Fresnel cage, annex facade, and local rock contact plinth,
+  guided by all eight `ART_REFERENCES/LIGHTHOUSE_HERO/` images. Blender is not
+  installed on this host; the source is generated with a deterministic Python
+  script and imported through UE 5.8.2 Interchange.
+- **User-visible:** moved the existing generator annex and objective trigger
+  beside the tower to match the reference composition. Kept the existing
+  generator, power, lighthouse, beam/reveal, stair actors, and gameplay
+  collision authoritative; the new hero meshes are visual-only. Narrowed the
+  stair flights to fit the taper while retaining all 84 steps and 520 cm rise
+  per floor.
+- Added rendered automation assertions and views for the tower/modules, annex,
+  player stair traversal, and powered lantern, alongside the existing beam
+  on/off, storm, and reveal captures. UE 5.8.2 Linux Development build
+  succeeded; the full Vulkan M01 suite passed 3/3 with zero test warnings/errors;
+  `./Tools/validate.sh` passed 45/45.
+- V0.1 is a tested integration checkpoint, not production-quality art signoff.
+  The stair frame has poor interior composition and the powered close lens frame
+  is overexposed. Imported materials are fallbacks; terrain and interior finish
+  remain rough. `ART_REFERENCES/LIGHTHOUSE_HERO/README_IMPLEMENTATION.md`
+  records dimensions, pivots, integration, asset layout, limits, and evidence.
+  Stop here for user visual review before detailed polish.
+
 ## 2026-09-24 — M1 — rendered beam source comparison
 
 - Added a controlled GameplayFlow capture sequence for the beam shaft at its

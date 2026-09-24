@@ -6,6 +6,7 @@
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "Materials/MaterialInterface.h"
 
 #include "BlackBeacon/Lighthouse/BBBeamRevealComponent.h"
 #include "BlackBeacon/Lighthouse/BBLighthouseController.h"
@@ -18,6 +19,7 @@ namespace
 	constexpr const TCHAR* kMeshCube = TEXT("/Engine/BasicShapes/Cube");
 	constexpr const TCHAR* kMeshCylinder = TEXT("/Engine/BasicShapes/Cylinder");
 	constexpr const TCHAR* kMeshPlane = TEXT("/Engine/BasicShapes/Plane");
+	constexpr const TCHAR* kLighthouseMetalMaterial = TEXT("/Game/BlackBeacon/Art/Lighthouse/Materials/M_LH_DarkIron.M_LH_DarkIron");
 
 	UStaticMesh* LoadBasicShape(const TCHAR* Path)
 	{
@@ -150,7 +152,7 @@ int32 UBBProceduralWorld::BuildSlice(UWorld* World)
 
 	// --- objective chain: enter / find / climb volumes ---
 	SpawnTriggerVolume(World, TEXT("BB_OBJ_ENTER_LIGHTHOUSE"), FVector(360.0f, 0.0f, 60.0f), FVector(220, 130, 160), true);
-	SpawnTriggerVolume(World, TEXT("BB_OBJ_FIND_GENERATOR"), FVector(1560.0f, 1120.0f, 60.0f), FVector(220, 260, 180), true);
+	SpawnTriggerVolume(World, TEXT("BB_OBJ_FIND_GENERATOR"), FVector(0.0f, -620.0f, 60.0f), FVector(220, 260, 180), true);
 	SpawnTriggerVolume(World, TEXT("BB_OBJ_CLIMB"), FVector(0.0f, 0.0f, 1700.0f), FVector(500, 500, 160), true);
 	Spawned += 3;
 
@@ -196,19 +198,17 @@ ABBLighthouseController* UBBProceduralWorld::SpawnLighthouse(UWorld* World)
 void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 {
 	const UBBProceduralWorld* const Lighting = GetDefault<UBBProceduralWorld>();
+	UMaterialInterface* const StairMetalMaterial = LoadObject<UMaterialInterface>(nullptr, kLighthouseMetalMaterial);
 	constexpr int32 kStepsPerFloor = 28;
 	constexpr float kStepHeight = kTowerFloorHeightCm / static_cast<float>(kStepsPerFloor);
 	constexpr float kTurnPerStepDeg = 360.0f / static_cast<float>(kStepsPerFloor);
-	constexpr float kStairRadius = 220.0f;
-	constexpr float kStairDepth = 180.0f;
-	constexpr float kOuterRailRadius = 315.0f;
 
 	// The central column closes the inner drop. The previous stairs had no
 	// physical reference or protection at the open centre.
 	SpawnMeshActor(
 		World, kMeshCylinder,
 		FTransform(FRotator::ZeroRotator, FVector(0.0f, 0.0f, kTowerFloorHeightCm * 1.5f)),
-		FVector(1.4f, 1.4f, kTowerFloorHeightCm * 1.5f / 100.0f),
+		FVector(0.9f, 0.9f, kTowerFloorHeightCm * 1.5f / 100.0f),
 		TEXT("BB_StairCore"));
 
 	// Bridge the doorway to the first tread at the same finished height. The
@@ -216,14 +216,19 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 	// narrow tread while stepping over its outside edge.
 	SpawnMeshActor(
 		World, kMeshCube,
-		FTransform(FRotator::ZeroRotator, FVector(365.0f, 0.0f, kStepHeight * 0.5f)),
-		FVector(1.1f, 1.0f, kStepHeight / 100.0f),
+		FTransform(FRotator::ZeroRotator, FVector(310.0f, 0.0f, kStepHeight * 0.5f)),
+		FVector(1.7f, 1.0f, kStepHeight / 100.0f),
 		TEXT("BB_StairEntryLanding"));
 
 	// Three stacked cylindrical wall sections + floor discs (greybox).
 	for (int32 Floor = 0; Floor < 3; ++Floor)
 	{
 		const float BaseZ = static_cast<float>(Floor) * kTowerFloorHeightCm;
+		// Preserve all 84 rise heights while stepping the upper flights inward to
+		// fit the tapered tower and keep treads/guards inside its stone skin.
+		const float StairRadius = Floor == 0 ? 190.0f : (Floor == 1 ? 155.0f : 130.0f);
+		const float StairDepth = Floor == 0 ? 130.0f : (Floor == 1 ? 110.0f : 90.0f);
+		const float OuterRailRadius = StairRadius + StairDepth * 0.5f - 15.0f;
 
 		// Wall section (cylinder basic mesh: r=50, h=100 -> scale to radius &
 		// height). Wall height slightly under floor height for a gap look.
@@ -236,6 +241,11 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 		if (Wall)
 		{
 			Wall->SetActorEnableCollision(false);
+			if (UStaticMeshComponent* const GreyboxShell = Wall->FindComponentByClass<UStaticMeshComponent>())
+			{
+				// The hero shell replaces this cylinder; retain the actor for its stair fill light.
+				GreyboxShell->SetVisibility(false);
+			}
 			// One unshadowed fill per floor keeps the greybox route readable
 			// without adding fixtures or changing stair collision.
 			UPointLightComponent* const Fill = NewObject<UPointLightComponent>(Wall, TEXT("StairFillLight"));
@@ -253,11 +263,19 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 		// Floor disc (cube: 100x100x100 -> scale to a thin disc).
 		if (Floor == 0)
 		{
-			SpawnMeshActor(
+			AActor* const FloorActor = SpawnMeshActor(
 				World, kMeshCube,
 				FTransform(FRotator::ZeroRotator, FVector(0, 0, BaseZ)),
 				FVector(kTowerRadiusCm * 2.0f / 100.0f, kTowerRadiusCm * 2.0f / 100.0f, 0.2f),
 				FName(TEXT("BB_TowerFloor")));
+			if (FloorActor)
+			{
+				if (UStaticMeshComponent* const GreyboxFloor = FloorActor->FindComponentByClass<UStaticMeshComponent>())
+				{
+					// Keep the gameplay floor collision while hiding its primitive appearance.
+					GreyboxFloor->SetVisibility(false);
+				}
+			}
 		}
 
 		// Helical stair: boxes spiralling up inside the tower.
@@ -268,8 +286,8 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 			const float AngleRad = FMath::DegreesToRadians(StepYawDeg);
 
 			FVector StepPos(
-				FMath::Cos(AngleRad) * kStairRadius,
-				FMath::Sin(AngleRad) * kStairRadius,
+				FMath::Cos(AngleRad) * StairRadius,
+				FMath::Sin(AngleRad) * StairRadius,
 				StepZ);
 
 			FRotator StepRot(0.0f, StepYawDeg, 0.0f);
@@ -277,11 +295,18 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 			// Keep the inner edge clear of the central column. Besides preventing
 			// visible intersections, this gives the player capsule room to steer
 			// through the curve without being pinched against hidden collision.
-			SpawnMeshActor(
+			AActor* const StepActor = SpawnMeshActor(
 				World, kMeshCube,
 				FTransform(StepRot, StepPos),
-				FVector(kStairDepth / 100.0f, 0.8f, kStepHeight / 100.0f),
+				FVector(StairDepth / 100.0f, 0.8f, kStepHeight / 100.0f),
 				TEXT("BB_StairStep"));
+			if (StepActor && StairMetalMaterial)
+			{
+				if (UStaticMeshComponent* const StepMesh = StepActor->FindComponentByClass<UStaticMeshComponent>())
+				{
+					StepMesh->SetMaterial(0, StairMetalMaterial);
+				}
+			}
 
 			// Leave the first tread of each revolution open at the outside edge.
 			// This is the access point from the floor below; placing a guard here
@@ -289,14 +314,21 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 			if (Step > 0)
 			{
 				const FVector RailPos(
-					FMath::Cos(AngleRad) * kOuterRailRadius,
-					FMath::Sin(AngleRad) * kOuterRailRadius,
+					FMath::Cos(AngleRad) * OuterRailRadius,
+					FMath::Sin(AngleRad) * OuterRailRadius,
 					StepZ + 48.0f);
-				SpawnMeshActor(
+				AActor* const GuardActor = SpawnMeshActor(
 					World, kMeshCube,
 					FTransform(StepRot, RailPos),
 					FVector(0.06f, 0.8f, 0.95f),
 					TEXT("BB_StairGuard"));
+				if (GuardActor && StairMetalMaterial)
+				{
+					if (UStaticMeshComponent* const GuardMesh = GuardActor->FindComponentByClass<UStaticMeshComponent>())
+					{
+						GuardMesh->SetMaterial(0, StairMetalMaterial);
+					}
+				}
 			}
 		}
 	}
@@ -305,15 +337,15 @@ void UBBProceduralWorld::SpawnTowerAndStairs(UWorld* World)
 	// tread put its underside in the capsule's head space during the approach.
 	SpawnMeshActor(
 		World, kMeshCube,
-		FTransform(FRotator::ZeroRotator, FVector(220.0f, -120.0f, kTowerFloorHeightCm * 3.0f)),
-		FVector(1.8f, 2.4f, 0.2f),
+		FTransform(FRotator::ZeroRotator, FVector(120.0f, -35.0f, kTowerFloorHeightCm * 3.0f)),
+		FVector(1.1f, 1.2f, 0.2f),
 		TEXT("BB_LanternFloor"));
 }
 
 void UBBProceduralWorld::SpawnGeneratorAnnex(UWorld* World)
 {
 	// Generator shed: a box near the tower base with the generator inside.
-	const FVector ShedCenter(1560.0f, 1120.0f, 150.0f);
+	const FVector ShedCenter(0.0f, -620.0f, 150.0f);
 
 	AActor* const Shed = SpawnMeshActor(
 		World, kMeshCube,
@@ -329,7 +361,7 @@ void UBBProceduralWorld::SpawnGeneratorAnnex(UWorld* World)
 	// The generator itself (interactable, power source).
 	AActor* const GenActor = SpawnMeshActor(
 		World, kMeshCube,
-		FTransform(FRotator(0, 0, 0), FVector(1560.0f, 1120.0f, 90.0f)),
+		FTransform(FRotator(0, 0, 0), FVector(0.0f, -620.0f, 90.0f)),
 		FVector(1.6f, 1.3f, 1.8f),
 		TEXT("BB_Generator"));
 	if (GenActor)

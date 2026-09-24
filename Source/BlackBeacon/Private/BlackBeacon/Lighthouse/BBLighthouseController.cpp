@@ -36,6 +36,34 @@ ABBLighthouseController::ABBLighthouseController()
 	TowerExteriorSkin->SetCanEverAffectNavigation(false);
 	TowerExteriorSkin->SetMaterial(0, LoadObject<UMaterialInterface>(
 		nullptr, TEXT("/Game/BlackBeacon/Materials/M_WetBasaltRock.M_WetBasaltRock")));
+	UStaticMesh* const HeroTowerMesh = LoadObject<UStaticMesh>(nullptr,
+		TEXT("/Game/BlackBeacon/Art/Lighthouse/Meshes/SM_BB_LH_TowerShell.SM_BB_LH_TowerShell"));
+	if (HeroTowerMesh)
+	{
+		TowerExteriorSkin->SetStaticMesh(HeroTowerMesh);
+		TowerExteriorSkin->SetRelativeLocation(FVector(0.0f, 0.0f, -1980.0f));
+		TowerExteriorSkin->SetRelativeScale3D(FVector::OneVector);
+	}
+	const auto AddHeroVisual = [this](const TCHAR* Name, const TCHAR* AssetPath, const FVector& RelativeLocation)
+	{
+		UStaticMeshComponent* const Visual = CreateDefaultSubobject<UStaticMeshComponent>(FName(Name));
+		Visual->SetupAttachment(RootComponent);
+		Visual->SetStaticMesh(LoadObject<UStaticMesh>(nullptr, AssetPath));
+		Visual->SetRelativeLocation(RelativeLocation);
+		Visual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Visual->SetCanEverAffectNavigation(false);
+		Visual->SetCastShadow(true);
+		HeroVisualComponents.Add(Visual);
+	};
+	AddHeroVisual(TEXT("HeroGallery"),
+		TEXT("/Game/BlackBeacon/Art/Lighthouse/Meshes/SM_BB_LH_Gallery.SM_BB_LH_Gallery"),
+		FVector(0.0f, 0.0f, -1980.0f));
+	AddHeroVisual(TEXT("HeroLanternRoom"),
+		TEXT("/Game/BlackBeacon/Art/Lighthouse/Meshes/SM_BB_LH_LanternRoom.SM_BB_LH_LanternRoom"),
+		FVector::ZeroVector);
+	AddHeroVisual(TEXT("HeroRockPlinth"),
+		TEXT("/Game/BlackBeacon/Art/Lighthouse/Meshes/SM_BB_LH_RockPlinth.SM_BB_LH_RockPlinth"),
+		FVector(0.0f, 0.0f, -1980.0f));
 	LanternFrame = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("LanternFrame"));
 	LanternFrame->SetupAttachment(RootComponent);
 	LanternFrame->SetStaticMesh(CubeMesh);
@@ -50,7 +78,7 @@ ABBLighthouseController::ABBLighthouseController()
 	LanternFresnelBands->SetCanEverAffectNavigation(false);
 	LanternFresnelBands->SetVisibility(false);
 	LanternFresnelBands->SetMaterial(0, LanternLitMaterial);
-	UStaticMeshComponent* const LanternRoof = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LanternRoof"));
+	LanternRoof = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LanternRoof"));
 	LanternRoof->SetupAttachment(RootComponent);
 	LanternRoof->SetStaticMesh(ConeMesh);
 	LanternRoof->SetRelativeLocation(FVector(0.0f, 0.0f, 148.0f));
@@ -58,6 +86,7 @@ ABBLighthouseController::ABBLighthouseController()
 	LanternRoof->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	LanternRoof->SetCastShadow(false);
 	LanternRoof->SetMaterial(0, LanternDarkMaterial);
+	LanternRoof->SetVisibility(false);
 
 	for (int32 Panel = 0; Panel < 8; ++Panel)
 	{
@@ -96,6 +125,7 @@ ABBLighthouseController::ABBLighthouseController()
 				SideRadial * 146.1f + FVector(0.0f, 0.0f, RailHeight), FVector(1.10f, 0.10f, 0.10f)));
 		}
 	}
+	LanternRoof->SetVisibility(false);
 
 	UStaticMeshComponent* const ControlMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ControlMesh"));
 	ControlMesh->SetupAttachment(RootComponent);

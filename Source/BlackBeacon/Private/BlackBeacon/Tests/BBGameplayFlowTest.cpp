@@ -106,6 +106,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<ABBWeatherController> Weather;
         TWeakObjectPtr<UMaterialInstanceDynamic> BeamShaftMaterial;
         TWeakObjectPtr<ACameraActor> GeneratorCaptureCamera;
+        TWeakObjectPtr<ACameraActor> HeroCaptureCamera;
         FVector RainFieldAnchor = FVector::ZeroVector;
         TWeakObjectPtr<ACameraActor> CaptureCamera;
         int32 CaptureIndex = 0;
@@ -114,6 +115,9 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         float BeamScatteringBeforeDiagnostic = 0.0f;
         float BeamOpacityBeforeDiagnostic = 0.0f;
         bool bOpeningCaptured = false;
+        bool bHeroCapturesComplete = false;
+        bool bHeroCaptureRequested = false;
+        int32 HeroCaptureIndex = 0;
         bool bGeneratorCameraReady = false;
         bool bGeneratorCaptured = false;
         bool bFlywheelMotionChecked = false;
@@ -165,6 +169,78 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             }
             if (State->bOpeningCaptured && Now - State->StageAt < 0.3)
             {
+                return false;
+            }
+            if (FApp::CanEverRender() && !State->bHeroCapturesComplete)
+            {
+                const FVector CameraPositions[] = {
+                    FVector(6500.0f, -8000.0f, 1750.0f),
+                    FVector(-2600.0f, -4300.0f, 420.0f),
+                    FVector(0.0f, -170.0f, 650.0f),
+                    FVector(0.0f, -240.0f, 1980.0f)
+                };
+                const FVector CameraTargets[] = {
+                    FVector(0.0f, -220.0f, 1000.0f),
+                    FVector(-165.0f, -620.0f, 150.0f),
+                    FVector(190.0f, -60.0f, 790.0f),
+                    FVector(0.0f, 0.0f, 1980.0f)
+                };
+                const float CameraFov[] = {55.0f, 65.0f, 80.0f, 65.0f};
+                const TCHAR* CaptureNames[] = {
+                    TEXT("BlackBeacon_Hero_A_ExteriorThreeQuarter.png"),
+                    TEXT("BlackBeacon_Hero_B_AnnexEntrance.png"),
+                    TEXT("BlackBeacon_Hero_C_Stairwell.png"),
+                    TEXT("BlackBeacon_Hero_D_LanternRoom.png")
+                };
+                if (!State->HeroCaptureCamera.IsValid())
+                {
+                    ACameraActor* Camera = World->SpawnActor<ACameraActor>();
+                    if (!Camera)
+                    {
+                        AddError(TEXT("Could not create a hero lighthouse capture camera"));
+                        return true;
+                    }
+                    State->HeroCaptureCamera = Camera;
+                    Camera->GetCameraComponent()->SetFieldOfView(CameraFov[0]);
+                    Camera->SetActorLocation(CameraPositions[0]);
+                    Camera->SetActorRotation((CameraTargets[0] - CameraPositions[0]).Rotation());
+                    World->GetFirstPlayerController()->SetViewTargetWithBlend(Camera, 0.0f);
+                    State->StageAt = Now;
+                    return false;
+                }
+                if (!State->bHeroCaptureRequested)
+                {
+                    if (Now - State->StageAt < 0.8)
+                    {
+                        return false;
+                    }
+                    FScreenshotRequest::RequestScreenshot(CaptureNames[State->HeroCaptureIndex], false, false);
+                    State->bHeroCaptureRequested = true;
+                    State->StageAt = Now;
+                    return false;
+                }
+                if (Now - State->StageAt < 0.05)
+                {
+                    return false;
+                }
+                State->bHeroCaptureRequested = false;
+                ++State->HeroCaptureIndex;
+                if (State->HeroCaptureIndex < UE_ARRAY_COUNT(CameraPositions))
+                {
+                    ACameraActor* Camera = State->HeroCaptureCamera.Get();
+                    Camera->SetActorLocation(CameraPositions[State->HeroCaptureIndex]);
+                    Camera->SetActorRotation((CameraTargets[State->HeroCaptureIndex]
+                        - CameraPositions[State->HeroCaptureIndex]).Rotation());
+                    Camera->GetCameraComponent()->SetFieldOfView(CameraFov[State->HeroCaptureIndex]);
+                    State->StageAt = Now;
+                    return false;
+                }
+                World->GetFirstPlayerController()->SetViewTargetWithBlend(
+                    World->GetFirstPlayerController()->GetPawn(), 0.0f);
+                State->HeroCaptureCamera->Destroy();
+                State->HeroCaptureCamera.Reset();
+                State->bHeroCapturesComplete = true;
+                State->StageAt = Now;
                 return false;
             }
             State->World = World;
@@ -233,6 +309,18 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 TestTrue(TEXT("Shipwreck debris blocks the player"), BlockingWreckageCount > 0);
                 TestTrue(TEXT("Generator annex has blocking walls and roof"), BlockingAnnexCount >= 8);
                 TestTrue(TEXT("Generator annex has both sides of an open doorway"), bHasNearDoorFrame && bHasFarDoorFrame);
+                UStaticMeshComponent* AnnexVisual = nullptr;
+                for (UStaticMeshComponent* const Mesh : CoastMeshes)
+                {
+                    if (Mesh && Mesh->GetName() == TEXT("AnnexHeroDetails"))
+                    {
+                        AnnexVisual = Mesh;
+                        break;
+                    }
+                }
+                TestTrue(TEXT("Generator annex receives a non-colliding hero detail shell"),
+                    AnnexVisual && AnnexVisual->GetStaticMesh()
+                    && AnnexVisual->GetCollisionEnabled() == ECollisionEnabled::NoCollision);
             }
             UGameInstance* GameInstance = World->GetGameInstance();
             UBBObjectiveSystem* Objectives = GameInstance ? GameInstance->GetSubsystem<UBBObjectiveSystem>() : nullptr;
@@ -258,6 +346,8 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             {
                 return true;
             }
+            TestTrue(TEXT("Functional generator annex sits beside the lighthouse approach"),
+                GeneratorActor->GetActorLocation().Equals(FVector(0.0f, -620.0f, 90.0f), 1.0f));
             UTexture2D* const LighthousePaint = LoadObject<UTexture2D>(nullptr,
                 TEXT("/Game/BlackBeacon/Textures/T_LighthousePaintAlbedo.T_LighthousePaintAlbedo"));
             UMaterialInstanceDynamic* const TowerMaterial = State->Lighthouse->TowerExteriorSkin
@@ -266,6 +356,65 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("Lighthouse exterior uses the weathered paint texture"),
                 TowerMaterial && LighthousePaint
                 && TowerMaterial->K2_GetTextureParameterValue(TEXT("RockAlbedo")) == LighthousePaint);
+            TestTrue(TEXT("Gameplay lighthouse tower shell uses the tapered hero mesh"),
+                State->Lighthouse->TowerExteriorSkin
+                && State->Lighthouse->TowerExteriorSkin->GetStaticMesh()
+                && State->Lighthouse->TowerExteriorSkin->GetStaticMesh()->GetName() == TEXT("SM_BB_LH_TowerShell"));
+            TestTrue(TEXT("Hero tower shell remains non-colliding"),
+                State->Lighthouse->TowerExteriorSkin
+                && State->Lighthouse->TowerExteriorSkin->GetCollisionEnabled() == ECollisionEnabled::NoCollision);
+            TestTrue(TEXT("Beacon optical origin remains at its gameplay transform"),
+                State->Lighthouse->BeamComponent
+                && State->Lighthouse->BeamComponent->GetComponentLocation().Equals(
+                    State->Lighthouse->GetActorLocation(), 0.1f));
+            const TCHAR* const HeroComponentNames[] = {
+                TEXT("HeroGallery"), TEXT("HeroLanternRoom"), TEXT("HeroRockPlinth")
+            };
+            for (const TCHAR* HeroName : HeroComponentNames)
+            {
+                UStaticMeshComponent* HeroPart = nullptr;
+                for (UStaticMeshComponent* const Mesh : TInlineComponentArray<UStaticMeshComponent*>(State->Lighthouse.Get()))
+                {
+                    if (Mesh && Mesh->GetName() == HeroName)
+                    {
+                        HeroPart = Mesh;
+                        break;
+                    }
+                }
+                TestTrue(FString::Printf(TEXT("Hero visual %s is loaded without collision"), HeroName),
+                    HeroPart && HeroPart->GetStaticMesh()
+                    && HeroPart->GetCollisionEnabled() == ECollisionEnabled::NoCollision);
+            }
+            AActor* TowerWall = FindTaggedActor(World, TEXT("BB_TowerWall"));
+            UStaticMeshComponent* TowerWallMesh = TowerWall ? TowerWall->FindComponentByClass<UStaticMeshComponent>() : nullptr;
+            UPointLightComponent* StairFill = TowerWall ? TowerWall->FindComponentByClass<UPointLightComponent>() : nullptr;
+            TestTrue(TEXT("Obsolete blockout wall is hidden while its stair fill light remains active"),
+                TowerWallMesh && !TowerWallMesh->IsVisible() && StairFill && StairFill->IsVisible());
+            AActor* StairTread = FindTaggedActor(World, TEXT("BB_StairStep"));
+            UStaticMeshComponent* StairTreadMesh = StairTread ? StairTread->FindComponentByClass<UStaticMeshComponent>() : nullptr;
+            TestTrue(TEXT("Existing stair tread collision is retained under the iron material"),
+                StairTreadMesh && StairTreadMesh->GetCollisionEnabled() == ECollisionEnabled::QueryAndPhysics
+                && StairTreadMesh->GetMaterial(0)
+                && StairTreadMesh->GetMaterial(0)->GetName() == TEXT("M_LH_DarkIron"));
+            int32 StairCountByFloor[3] = {0, 0, 0};
+            bool bStairsFitTaperedTower = true;
+            for (TActorIterator<AActor> It(World); It; ++It)
+            {
+                if (!It->ActorHasTag(TEXT("BB_StairStep")))
+                {
+                    continue;
+                }
+                const FVector StepLocation = It->GetActorLocation();
+                const int32 Floor = FMath::Clamp(FMath::FloorToInt(StepLocation.Z / 520.0f), 0, 2);
+                ++StairCountByFloor[Floor];
+				const float ExpectedRadius = Floor == 0 ? 190.0f : (Floor == 1 ? 155.0f : 130.0f);
+                bStairsFitTaperedTower &= FMath::IsNearlyEqual(
+                    FVector2D(StepLocation).Size(), ExpectedRadius, 0.5f);
+            }
+            TestTrue(TEXT("Saved stair actors are dressed to fit the hero tower taper"), bStairsFitTaperedTower);
+            TestEqual(TEXT("Lower stair flight keeps all 28 treads"), StairCountByFloor[0], 28);
+            TestEqual(TEXT("Middle stair flight keeps all 28 treads"), StairCountByFloor[1], 28);
+            TestEqual(TEXT("Upper stair flight keeps all 28 treads"), StairCountByFloor[2], 28);
             TArray<UStaticMeshComponent*> GeneratorMeshes;
             GeneratorActor->GetComponents<UStaticMeshComponent>(GeneratorMeshes);
             int32 NonBlockingGeneratorDetails = 0;
@@ -385,14 +534,14 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             {
                 TestTrue(TEXT("Beam contributes to volumetric fog"), BeamLight->VolumetricScatteringIntensity > 0.0f);
             }
-            TestTrue(TEXT("Generator spawned at usable height in annex"), GeneratorActor->GetActorLocation().Equals(FVector(1560.0f, 1120.0f, 90.0f), 1.0f));
+            TestTrue(TEXT("Generator spawned at usable height in attached annex"), GeneratorActor->GetActorLocation().Equals(FVector(0.0f, -620.0f, 90.0f), 1.0f));
             TestTrue(TEXT("Anomaly spawned on far cliff"), State->Anomaly->GetActorLocation().Equals(FVector(-5200.0f, 4200.0f, 80.0f), 1.0f));
             TestTrue(TEXT("Player starts at landing"), FVector2D(State->Pawn->GetActorLocation()).Equals(FVector2D(-4500.0f, -600.0f), 10.0f));
             State->Pawn->SetActorLocation(FVector(360.0f, 0.0f, 100.0f));
             TestTrue(TEXT("Entering lighthouse volume completes objective"), Objectives->IsCompleted(TEXT("BB_OBJ_ENTER_LIGHTHOUSE")));
-            State->Pawn->SetActorLocation(FVector(1560.0f, 1120.0f, 100.0f));
+            State->Pawn->SetActorLocation(FVector(0.0f, -620.0f, 100.0f));
             TestTrue(TEXT("Entering annex volume finds generator"), Objectives->IsCompleted(TEXT("BB_OBJ_FIND_GENERATOR")));
-            State->Pawn->SetActorLocation(FVector(1300.0f, 1120.0f, 100.0f));
+            State->Pawn->SetActorLocation(FVector(-260.0f, -620.0f, 100.0f));
             const FVector CameraLocation = Character->GetFirstPersonCamera()->GetComponentLocation();
             const FVector NaturalAimTarget(GeneratorActor->GetActorLocation().X, GeneratorActor->GetActorLocation().Y, CameraLocation.Z);
             Character->GetController()->SetControlRotation((NaturalAimTarget - CameraLocation).Rotation());
@@ -462,8 +611,8 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                     AddError(TEXT("Could not create a generator visual probe camera"));
                     return true;
                 }
-                const FVector CameraLocation(1230.0f, 1120.0f, 155.0f);
-                const FVector GeneratorTarget(1560.0f, 1120.0f, 105.0f);
+                const FVector CameraLocation(-330.0f, -620.0f, 155.0f);
+                const FVector GeneratorTarget(0.0f, -620.0f, 105.0f);
                 Camera->SetActorLocation(CameraLocation);
                 Camera->SetActorRotation((GeneratorTarget - CameraLocation).Rotation());
                 State->GeneratorCaptureCamera = Camera;
@@ -548,6 +697,15 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 - Lighthouse->BeamComponent->GetComponentLocation();
             Lighthouse->BeamComponent->SetManualYawTarget(FMath::RadiansToDegrees(FMath::Atan2(ToAnomaly.Y, ToAnomaly.X)));
             Lighthouse->BeamComponent->SetManualPitchDegrees(FMath::RadiansToDegrees(FMath::Atan2(ToAnomaly.Z, FVector2D(ToAnomaly.X, ToAnomaly.Y).Size())));
+            ABBlackBeaconPlayerCharacter* Character = Cast<ABBlackBeaconPlayerCharacter>(State->Pawn.Get());
+            if (FApp::CanEverRender() && Character && Character->GetController())
+            {
+                const FVector OpticsTarget = Lighthouse->GetActorLocation();
+                Character->GetController()->SetControlRotation(
+                    (OpticsTarget - Character->GetFirstPersonCamera()->GetComponentLocation()).Rotation());
+                FScreenshotRequest::RequestScreenshot(
+                    TEXT("BlackBeacon_Hero_D_LanternRoom.png"), false, false);
+            }
             State->Stage = 4;
             State->StageAt = Now;
             return false;

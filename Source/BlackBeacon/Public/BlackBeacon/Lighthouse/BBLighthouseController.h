@@ -103,6 +103,12 @@ private:
 	TObjectPtr<UInstancedStaticMeshComponent> LanternFresnelBands = nullptr;
 
 	UPROPERTY()
+	TObjectPtr<UStaticMeshComponent> LanternRoof = nullptr;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UStaticMeshComponent>> HeroVisualComponents;
+
+	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> FresnelBandsMaterial = nullptr;
 
 	UPROPERTY()

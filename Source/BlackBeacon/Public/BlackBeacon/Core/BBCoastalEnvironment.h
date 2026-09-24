@@ -25,6 +25,7 @@ protected:
 
 private:
 	void BuildRevealedRuin();
+	void DressLighthouseGreybox();
 	void BuildGeneratorMachinery();
 	void HandleGeneratorRunningChanged(bool bRunning);
 	void AdvanceGeneratorFlywheel();
@@ -44,6 +45,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Coast")
 	TObjectPtr<UStaticMeshComponent> OceanSurface = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "BlackBeacon|Lighthouse")
+	TObjectPtr<UStaticMeshComponent> AnnexHeroDetails = nullptr;
 
 	UPROPERTY()
 	TObjectPtr<USceneComponent> GeneratorFlywheelPivot = nullptr;

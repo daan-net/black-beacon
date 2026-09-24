@@ -5,7 +5,9 @@
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "GameFramework/Controller.h"
 #include "HAL/PlatformTime.h"
+#include "Misc/App.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 #include "BlackBeacon/Core/BBPlayerCharacter.h"
@@ -21,6 +23,8 @@ bool FBBStairTraversalTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<ABBlackBeaconPlayerCharacter> Character;
         TArray<FVector> Steps;
         bool bFoundEntryLanding = false;
+        bool bStairViewCaptured = false;
+        bool bStairScreenshotPending = false;
         int32 NextStep = 1;
     };
     TSharedRef<FTraversalState> State = MakeShared<FTraversalState>();
@@ -76,14 +80,33 @@ bool FBBStairTraversalTest::RunTest(const FString& Parameters)
                 return true;
             }
             const FVector First = State->Steps[0];
-            TestTrue(TEXT("Stair treads clear the central core"), FVector2D(First).Size() >= 219.0f);
+            TestTrue(TEXT("First stair tread clears the tapered core"), FVector2D(First).Size() >= 189.0f);
             State->Character->SetActorLocation(FVector(First.X, First.Y, First.Z + 100.0f));
             return false;
         }
 
         ABBlackBeaconPlayerCharacter* Character = State->Character.Get();
+        if (State->bStairScreenshotPending)
+        {
+            State->bStairScreenshotPending = false;
+            return false;
+        }
         if (State->NextStep < State->Steps.Num())
         {
+            if (FApp::CanEverRender() && !State->bStairViewCaptured && State->NextStep >= 42)
+            {
+                if (AController* const Controller = Character->GetController())
+                {
+                    const FVector Position = Character->GetActorLocation();
+                    const FVector ToNextStep = State->Steps[State->NextStep] - Position;
+                    Controller->SetControlRotation(FRotator(0.0f, ToNextStep.Rotation().Yaw, 0.0f));
+                    FScreenshotRequest::RequestScreenshot(
+                        TEXT("BlackBeacon_Hero_C_Stairwell.png"), false, false);
+                    State->bStairViewCaptured = true;
+                    State->bStairScreenshotPending = true;
+                    return false;
+                }
+            }
             const FVector Target = State->Steps[State->NextStep];
             const FVector Location = Character->GetActorLocation();
             if (FVector2D::Distance(FVector2D(Target), FVector2D(Location)) < 55.0f
