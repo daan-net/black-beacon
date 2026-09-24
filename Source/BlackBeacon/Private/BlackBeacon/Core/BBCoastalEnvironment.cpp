@@ -20,13 +20,14 @@ namespace
 {
 	constexpr const TCHAR* CUBE_MESH = TEXT("/Engine/BasicShapes/Cube");
 	constexpr const TCHAR* CYLINDER_MESH = TEXT("/Engine/BasicShapes/Cylinder");
-	constexpr const TCHAR* SPHERE_MESH = TEXT("/Engine/BasicShapes/Sphere");
+	constexpr const TCHAR* ROCK_MESH = TEXT("/PCG/SampleContent/SimpleForest/Meshes/PCG_Boulder_02.PCG_Boulder_02");
 	constexpr const TCHAR* PLANE_MESH = TEXT("/Engine/BasicShapes/Plane");
 	constexpr const TCHAR* COAST_MATERIAL = TEXT("/Game/BlackBeacon/Materials/M_CoastSurface.M_CoastSurface");
 	constexpr const TCHAR* BASALT_MATERIAL = TEXT("/Game/BlackBeacon/Materials/M_WetBasaltRock.M_WetBasaltRock");
 	constexpr const TCHAR* WRECK_HULL_TEXTURE = TEXT("/Game/BlackBeacon/Textures/T_WreckHullAlbedo.T_WreckHullAlbedo");
 	constexpr const TCHAR* OCEAN_MATERIAL = TEXT("/Engine/EngineMaterials/WaterMaterial.DefaultWaterMaterial");
 	constexpr float GENERATOR_SHED_LIGHT_LUMENS = 850.0f;
+	constexpr float ROCK_SAMPLE_SCALE = 0.4f;
 
 	struct FCoastShape
 	{
@@ -183,8 +184,8 @@ ABBCoastalEnvironment::ABBCoastalEnvironment()
 		OceanSurface->SetCastShadow(false);
 	}
 
-	// The low shelf stays a broad shore form. The remaining shapes are
-	// boulders: one instanced sphere mesh replaces dozens of hard-edged cubes.
+	// The low shelf stays a broad shore form. A single engine-sample boulder
+	// mesh gives the instanced field a faceted coastal silhouette.
 	const FCoastShape& Shelf = ROCKS[0];
 	RockSurfaces.Add(AddShape(
 		TEXT("CoastShelf"), CUBE_MESH,
@@ -192,7 +193,7 @@ ABBCoastalEnvironment::ABBCoastalEnvironment()
 
 	RockField = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("CoastRockField"));
 	RockField->SetupAttachment(SceneRoot);
-	RockField->SetStaticMesh(LoadObject<UStaticMesh>(nullptr, SPHERE_MESH));
+	RockField->SetStaticMesh(LoadObject<UStaticMesh>(nullptr, ROCK_MESH));
 	RockField->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	RockField->SetCollisionResponseToAllChannels(ECR_Block);
 	RockField->SetGenerateOverlapEvents(false);
@@ -212,12 +213,12 @@ ABBCoastalEnvironment::ABBCoastalEnvironment()
 			FMath::Cos(Angle) * Shape.Scale.Y * 21.0f,
 			-Shape.Scale.Z * 10.0f);
 
-		// Overlapping lobes break the perfect sphere silhouette without adding a mesh plugin.
-		RockField->AddInstance(FTransform(Shape.Rotation, Shape.Location, Shape.Scale * 0.68f));
+		// Overlapping lobes break the source mesh silhouette without extra components.
+		RockField->AddInstance(FTransform(Shape.Rotation, Shape.Location, Shape.Scale * (0.68f * ROCK_SAMPLE_SCALE)));
 		RockField->AddInstance(FTransform(Shape.Rotation, Shape.Location + OffsetA,
-			Shape.Scale * FVector(0.43f, 0.50f, 0.45f)));
+			Shape.Scale * FVector(0.43f, 0.50f, 0.45f) * ROCK_SAMPLE_SCALE));
 		RockField->AddInstance(FTransform(Shape.Rotation, Shape.Location + OffsetB,
-			Shape.Scale * FVector(0.46f, 0.41f, 0.48f)));
+			Shape.Scale * FVector(0.46f, 0.41f, 0.48f) * ROCK_SAMPLE_SCALE));
 	}
 
 	for (int32 Index = 0; Index < UE_ARRAY_COUNT(PATH_STONES); ++Index)

@@ -180,12 +180,18 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 TestNotNull(TEXT("Coastal boulder field"), RockField);
                 if (RockField)
                 {
+                    TestNotNull(TEXT("Instanced coast rocks use the engine sample boulder mesh"), RockField->GetStaticMesh().Get());
                     TestEqual(TEXT("Coastal boulders block the player"),
                         RockField->GetCollisionResponseToChannel(ECC_Pawn), ECR_Block);
                     TestTrue(TEXT("Coastal boulders have collision enabled"),
                         RockField->GetCollisionEnabled() == ECollisionEnabled::QueryAndPhysics);
                     TestTrue(TEXT("Coastal rock field uses clustered lobe shapes"),
                         RockField->GetInstanceCount() > 150);
+                    if (RockField->GetStaticMesh())
+                    {
+                        TestEqual(TEXT("Coastal rock field uses the intended boulder mesh"),
+                            RockField->GetStaticMesh()->GetName(), FString(TEXT("PCG_Boulder_02")));
+                    }
                 }
 
                 TArray<UStaticMeshComponent*> CoastMeshes;

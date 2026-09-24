@@ -36,6 +36,22 @@ compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
   3/3 with zero warnings/errors, and `./Tools/validate.sh` passed all 45 logic
   checks. M1 remains open.
 
+## 2026-09-24 — M1 — faceted coastal boulders
+
+- Replaced the smooth sphere instances in the coastal rock field with the UE
+  5.8.2 PCG sample `PCG_Boulder_02`, keeping the existing instancing, wet-basalt
+  material, placements, and blocking collision. Scaled the sample mesh to 0.4
+  of the previous blockout transform so the generator approach stays clear.
+- Added a GameplayFlow assertion that the engine mesh loads. UE 5.8.2 Linux
+  Development built successfully; the full rendered Vulkan M01 suite passed
+  3/3 (GameplayFlow, PlayerControls, StairTraversal) with zero warnings/errors;
+  and `./Tools/validate.sh` passed all 45 engine-independent checks. The opening
+  capture now has faceted rock silhouettes; they remain low-poly placeholders,
+  not finished coastal terrain. The mesh comes from UE's enabled-by-default PCG
+  sample content; no PCG gameplay code or module dependency was added. The
+  five-second automation warm-up measured 42.98 FPS and is not a gameplay
+  benchmark.
+
 ## 2026-09-23 — M0.2 — animate generator startup
 
 - **User-visible:** The annex generator's flywheel now rotates in sync with its real running and spin-up state, accelerates as the four-second power ramp advances, and coasts down on shutdown. The environment binds to a new running-state event and updates the wheel on a 20 Hz timer only while it is turning. GameplayFlow asserts measurable wheel rotation during spin-up and coast-down. UE 5.8.2 built successfully; the full rendered Vulkan M01 suite passed 3/3 with zero test warnings/errors; `./Tools/validate.sh` passed with 45/45 logic checks. The five-second 1920x1080 automation warm-up measured 43.98 FPS, below the 60 FPS target and not a representative gameplay benchmark. The machine remains primitive greybox geometry.

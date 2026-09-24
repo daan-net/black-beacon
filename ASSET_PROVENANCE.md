@@ -1,5 +1,15 @@
 # Asset provenance
 
+## Coastal Boulder Mesh
+
+- Source: UE 5.8.2 installed engine PCG sample content,
+  `/Engine/Plugins/PCG/Content/SampleContent/SimpleForest/Meshes/PCG_Boulder_02.uasset`.
+- Referenced as `/PCG/SampleContent/SimpleForest/Meshes/PCG_Boulder_02` and
+  instanced with the project's wet-basalt material. No PCG gameplay module or
+  graph is used by BLACK BEACON.
+- This is engine sample content, not an external or purchased asset. The coast
+  field remains placeholder geometry pending authored terrain assets.
+
 ## Shipwreck Hull Section
 
 - Source: [3DAssets.dev — Shipwreck Hull Section](https://3dassets.dev/assets/sunken-city-and-underwater-ruins-shipwreck-hull-sectio-bdebf831)
