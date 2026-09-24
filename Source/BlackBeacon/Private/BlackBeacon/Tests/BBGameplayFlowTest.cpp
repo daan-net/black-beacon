@@ -115,6 +115,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         float BeamScatteringBeforeDiagnostic = 0.0f;
         float BeamOpacityBeforeDiagnostic = 0.0f;
         bool bOpeningCaptured = false;
+        bool bOpeningViewChecked = false;
         bool bHeroCapturesComplete = false;
         bool bHeroCaptureRequested = false;
         int32 HeroCaptureIndex = 0;
@@ -156,6 +157,11 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             {
                 return false;
             }
+            State->World = World;
+            State->Pawn = World->GetFirstPlayerController()
+                ? World->GetFirstPlayerController()->GetPawn()
+                : nullptr;
+            TestNotNull(TEXT("Player pawn"), State->Pawn.Get());
             if (FApp::CanEverRender() && !State->bOpeningCaptured)
             {
                 if (Now - State->StartedAt < 3.0)
@@ -177,20 +183,35 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                     FVector(6500.0f, -8000.0f, 1750.0f),
                     FVector(-2600.0f, -4300.0f, 420.0f),
                     FVector(0.0f, -170.0f, 650.0f),
-                    FVector(0.0f, -240.0f, 1980.0f)
+                    FVector(0.0f, -240.0f, 1980.0f),
+                    FVector(0.0f, -90.0f, 700.0f),
+                    FVector(0.0f, -2500.0f, 150.0f),
+                    FVector(-350.0f, -700.0f, 190.0f),
+                    FVector(100.0f, -135.0f, 1080.0f),
+                    FVector(0.0f, -150.0f, 1990.0f)
                 };
                 const FVector CameraTargets[] = {
                     FVector(0.0f, -220.0f, 1000.0f),
                     FVector(-165.0f, -620.0f, 150.0f),
                     FVector(190.0f, -60.0f, 790.0f),
-                    FVector(0.0f, 0.0f, 1980.0f)
+                    FVector(0.0f, 0.0f, 1980.0f),
+                    FVector(145.0f, -45.0f, 1280.0f),
+                    FVector(0.0f, 0.0f, 1350.0f),
+                    FVector(0.0f, -60.0f, 60.0f),
+                    FVector(210.0f, -35.0f, 1200.0f),
+                    FVector(100.0f, 0.0f, 1980.0f)
                 };
-                const float CameraFov[] = {55.0f, 65.0f, 80.0f, 65.0f};
+                const float CameraFov[] = {55.0f, 65.0f, 80.0f, 65.0f, 75.0f, 65.0f, 75.0f, 70.0f, 65.0f};
                 const TCHAR* CaptureNames[] = {
                     TEXT("BlackBeacon_Hero_A_ExteriorThreeQuarter.png"),
                     TEXT("BlackBeacon_Hero_B_AnnexEntrance.png"),
                     TEXT("BlackBeacon_Hero_C_Stairwell.png"),
-                    TEXT("BlackBeacon_Hero_D_LanternRoom.png")
+                    TEXT("BlackBeacon_Hero_D_LanternRoom.png"),
+                    TEXT("BlackBeacon_Material_01_StairwellUp.png"),
+                    TEXT("BlackBeacon_Material_02_ExteriorUp.png"),
+                    TEXT("BlackBeacon_Material_03_BaseRocks.png"),
+                    TEXT("BlackBeacon_Material_04_StairClose.png"),
+                    TEXT("BlackBeacon_Material_05_LanternRoom.png")
                 };
                 if (!State->HeroCaptureCamera.IsValid())
                 {
@@ -240,21 +261,27 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 State->HeroCaptureCamera->Destroy();
                 State->HeroCaptureCamera.Reset();
                 State->bHeroCapturesComplete = true;
+                if (!State->bOpeningViewChecked && State->Pawn.IsValid())
+                {
+                    const APlayerController* const PlayerController = World->GetFirstPlayerController();
+                    if (PlayerController)
+                    {
+                        const float LighthouseYaw = (FVector::ZeroVector - State->Pawn->GetActorLocation()).Rotation().Yaw;
+                        const float OpeningYaw = PlayerController->GetControlRotation().Yaw;
+                        const float OpeningYawDelta = FMath::FindDeltaAngleDegrees(OpeningYaw, LighthouseYaw);
+                        TestTrue(FString::Printf(TEXT("Shore opening faces the lighthouse horizontally (view=%.2f target=%.2f delta=%.2f)"),
+                            OpeningYaw, LighthouseYaw, OpeningYawDelta), FMath::Abs(OpeningYawDelta) < 1.0f);
+                        TestTrue(TEXT("Shore opening tilts up enough to frame the lantern"),
+                            PlayerController->GetControlRotation().Pitch >= 4.0f);
+                    }
+                    State->bOpeningViewChecked = true;
+                }
                 State->StageAt = Now;
                 return false;
             }
             State->World = World;
             State->Pawn = World->GetFirstPlayerController() ? World->GetFirstPlayerController()->GetPawn() : nullptr;
             TestNotNull(TEXT("Player pawn"), State->Pawn.Get());
-            const APlayerController* PlayerController = World->GetFirstPlayerController();
-            if (State->Pawn.IsValid() && PlayerController)
-            {
-                const float LighthouseYaw = (FVector::ZeroVector - State->Pawn->GetActorLocation()).Rotation().Yaw;
-                TestTrue(TEXT("Shore opening faces the lighthouse horizontally"),
-                    FMath::Abs(FMath::FindDeltaAngleDegrees(PlayerController->GetControlRotation().Yaw, LighthouseYaw)) < 1.0f);
-                TestTrue(TEXT("Shore opening tilts up enough to frame the lantern"),
-                    PlayerController->GetControlRotation().Pitch >= 4.0f);
-            }
             ABBlackBeaconPlayerCharacter* Character = Cast<ABBlackBeaconPlayerCharacter>(State->Pawn.Get());
             State->Interaction = Character ? Character->GetInteractionComponent() : nullptr;
             TestNotNull(TEXT("Player interaction component"), State->Interaction.Get());

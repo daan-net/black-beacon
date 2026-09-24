@@ -24,10 +24,12 @@ class Mesh:
 
     def __post_init__(self):
         self.vertices: list[tuple[float, float, float]] = []
+        self.uvs: list[tuple[float, float]] = []
         self.faces: list[tuple[str, tuple[int, ...]]] = []
 
-    def v(self, p):
+    def v(self, p, uv=None):
         self.vertices.append(tuple(float(x) for x in p))
+        self.uvs.append(tuple(float(x) for x in (uv if uv is not None else (p[0] / 1000.0, p[2] / 1000.0))))
         return len(self.vertices)
 
     def face(self, material, *ids):
@@ -47,10 +49,21 @@ class Mesh:
             for dy in (-sy, sy):
                 for dx in (-sx, sx):
                     points.append((x + dx * ca - dy * sa, y + dx * sa + dy * ca, z + dz))
-        ids = [self.v(p) for p in points]
+        # Each face receives its own UV island so narrow trim and tall pilasters
+        # do not inherit a tiny shared-vertex projection and stretch the paint.
         for a, b, c, d in ((0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1),
                            (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)):
-            self.quad(material, ids[a], ids[b], ids[c], ids[d])
+            face_ids = []
+            for index in (a, b, c, d):
+                px, py, pz = points[index]
+                if abs(points[a][2] - points[b][2]) < 1e-4:
+                    uv = ((px - x) / 200.0, (py - y) / 200.0)
+                elif abs(points[a][0] - points[b][0]) < 1e-4:
+                    uv = ((py - y) / 200.0, (pz - z) / 200.0)
+                else:
+                    uv = ((px - x) / 200.0, (pz - z) / 200.0)
+                face_ids.append(self.v((px, py, pz), uv))
+            self.quad(material, *face_ids)
 
     def cylinder(self, center, radius, height, material, sides=32,
                  top_radius=None, bottom_radius=None, start=0.0):
@@ -103,8 +116,8 @@ class Mesh:
             # The Interchange OBJ translator expects a UV index for every vertex.
             # These deterministic planar coordinates are sufficient for the
             # non-textured imported material fallbacks; authored UVs can replace them.
-            for x, y, z in self.vertices:
-                f.write(f"vt {x / 1000.0:.6f} {z / 1000.0:.6f}\n")
+            for u, v in self.uvs:
+                f.write(f"vt {u:.6f} {v:.6f}\n")
             active = None
             for material, ids in self.faces:
                 if material != active:
@@ -113,11 +126,11 @@ class Mesh:
                 f.write("f " + " ".join(f"{index}/{index}" for index in ids) + "\n")
         (folder / f"{self.name}.mtl").write_text(
             "newmtl TowerPaint\nKd 0.72 0.75 0.78\nKs 0.12 0.12 0.12\nNs 34\n"
-            "newmtl DarkIron\nKd 0.055 0.072 0.082\nKs 0.42 0.36 0.29\nNs 90\n"
-            "newmtl WarmBrass\nKd 0.38 0.20 0.065\nKs 0.72 0.54 0.28\nNs 170\n"
-            "newmtl LanternGlass\nKd 0.06 0.10 0.12\nKs 0.82 0.85 0.80\nNs 230\n"
-            "newmtl AgedWood\nKd 0.15 0.095 0.060\nKs 0.12 0.10 0.08\nNs 24\n"
-            "newmtl WetRock\nKd 0.065 0.078 0.080\nKs 0.32 0.36 0.38\nNs 70\n",
+            "newmtl DarkIron\nKd 0.055 0.072 0.082\nKs 0.12 0.12 0.12\nNs 28\n"
+            "newmtl WarmBrass\nKd 0.38 0.20 0.065\nKs 0.32 0.27 0.18\nNs 48\n"
+            "newmtl LanternGlass\nKd 0.06 0.10 0.12\nKs 0.18 0.18 0.18\nNs 48\n"
+            "newmtl AgedWood\nKd 0.15 0.095 0.060\nKs 0.08 0.08 0.08\nNs 18\n"
+            "newmtl WetRock\nKd 0.065 0.078 0.080\nKs 0.10 0.10 0.10\nNs 22\n",
             encoding="ascii")
         print(f"{path}: {len(self.vertices)} vertices, {len(self.faces)} triangles")
 
@@ -129,26 +142,30 @@ def tower_shell():
     rings = []
     for z, r in levels:
         ring = []
-        for i in range(n):
+        for i in range(n + 1):
             a = math.tau * i / n
-            ring.append(m.v((math.cos(a) * r, math.sin(a) * r, z)))
+            # One UV tile spans about two metres in both axes. A single 0..1 U
+            # around the full 19 m circumference caused obvious horizontal stretch.
+            ring.append(m.v((math.cos(a) * r, math.sin(a) * r, z),
+                            (i / n * math.tau * 250.0 / 200.0, z / 200.0)))
         rings.append(ring)
     for k in range(len(rings) - 1):
         for i in range(n):
-            j = (i + 1) % n
+            j = i + 1
             m.quad("TowerPaint", rings[k][i], rings[k][j], rings[k + 1][j], rings[k + 1][i])
     # A thin, inward-facing lining keeps the stairwell visually enclosed while
     # the gameplay stair actors remain independent and collision-authoritative.
     inner_rings = []
     for z, radius in levels:
         ring = []
-        for i in range(n):
+        for i in range(n + 1):
             a = math.tau * i / n
-            ring.append(m.v((math.cos(a) * (radius - 20), math.sin(a) * (radius - 20), z)))
+            ring.append(m.v((math.cos(a) * (radius - 20), math.sin(a) * (radius - 20), z),
+                            (i / n * math.tau * 230.0 / 200.0, z / 200.0)))
         inner_rings.append(ring)
     for k in range(len(inner_rings) - 1):
         for i in range(n):
-            j = (i + 1) % n
+            j = i + 1
             m.quad("TowerPaint", inner_rings[k][j], inner_rings[k][i],
                    inner_rings[k + 1][i], inner_rings[k + 1][j])
     # Raised masonry pilasters and restrained ring courses break the plain cylinder silhouette.

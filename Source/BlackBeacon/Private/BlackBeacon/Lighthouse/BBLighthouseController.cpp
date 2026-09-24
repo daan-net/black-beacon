@@ -147,6 +147,12 @@ void ABBLighthouseController::BeginPlay()
 	Super::BeginPlay();
 	if (TowerExteriorSkin && LanternDarkMaterial)
 	{
+		UMaterialInterface* const TowerMaterial = LoadObject<UMaterialInterface>(nullptr,
+			TEXT("/Game/BlackBeacon/Materials/M_WetBasaltRock.M_WetBasaltRock"));
+		if (TowerMaterial)
+		{
+			TowerExteriorSkin->SetMaterial(0, TowerMaterial);
+		}
 		if (UMaterialInstanceDynamic* const Material = TowerExteriorSkin->CreateAndSetMaterialInstanceDynamic(0))
 		{
 			UTexture2D* const LighthousePaint = LoadObject<UTexture2D>(nullptr,
@@ -156,7 +162,9 @@ void ABBLighthouseController::BeginPlay()
 				Material->SetTextureParameterValue(TEXT("RockAlbedo"), LighthousePaint);
 			}
 			Material->SetVectorParameterValue(TEXT("BaseColor"), FLinearColor(0.72f, 0.75f, 0.78f));
-			Material->SetScalarParameterValue(TEXT("Roughness"), 0.9f);
+			Material->SetScalarParameterValue(TEXT("Metallic"), 0.0f);
+			Material->SetScalarParameterValue(TEXT("Specular"), 0.30f);
+			Material->SetScalarParameterValue(TEXT("Roughness"), 0.86f);
 		}
 	}
 	if (LanternFresnelBands)
@@ -165,7 +173,7 @@ void ABBLighthouseController::BeginPlay()
 		if (FresnelBandsMaterial)
 		{
 			FresnelBandsMaterial->SetVectorParameterValue(TEXT("LensTint"), FLinearColor(1.0f, 0.46f, 0.16f));
-			FresnelBandsMaterial->SetScalarParameterValue(TEXT("LensIntensity"), 1.1f);
+			FresnelBandsMaterial->SetScalarParameterValue(TEXT("LensIntensity"), 0.55f);
 		}
 	}
 	RegisterWithPowerSystem();
@@ -408,17 +416,17 @@ void ABBLighthouseController::UpdateLanternHousingState()
 				if (Base == LanternLitMaterial)
 				{
 					Material->SetVectorParameterValue(TEXT("LensTint"), Color);
-					Material->SetScalarParameterValue(TEXT("LensIntensity"), 1.25f);
+					Material->SetScalarParameterValue(TEXT("LensIntensity"), 0.60f);
 				}
 				Material->SetScalarParameterValue(TEXT("Roughness"), Roughness);
 			}
 		}
 	};
-	SetSurface(LanternFrame, LanternDarkMaterial, FLinearColor(0.018f, 0.024f, 0.030f), 0.68f);
+	SetSurface(LanternFrame, LanternDarkMaterial, FLinearColor(0.018f, 0.024f, 0.030f), 0.78f);
 	for (UStaticMeshComponent* const GlassPanel : LanternGlazingPanels)
 	{
 		SetSurface(GlassPanel, bLanternLit ? LanternLitMaterial : LanternDarkMaterial,
 			bLanternLit ? FLinearColor(0.72f, 0.30f, 0.065f) : FLinearColor(0.012f, 0.018f, 0.026f),
-			bLanternLit ? 0.25f : 0.62f);
+			bLanternLit ? 0.48f : 0.82f);
 	}
 }

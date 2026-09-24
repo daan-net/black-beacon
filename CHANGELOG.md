@@ -9,6 +9,34 @@ intended context), `TESTED` (built + exercised with evidence), `PLACEHOLDER`
 (scaffolding to be replaced), `PLANNED` (paper only). Anything written-but-not-
 compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
+## 2026-09-24 — M1 — Hero lighthouse material and UV correction
+
+- **User-visible:** Reparented the six imported lighthouse material instances
+  from the Interchange Phong master to the project's opaque PBR masters. This
+  removes the high imported Phong specular/shininess response from stone, iron,
+  wood, brass, and dark windows. Aged iron is now 0.12 metallic / 0.72 rough;
+  tower paint is 0 / 0.84; wood is 0 / 0.76. The separate Fresnel lens effect
+  remains additive; no tower, stair, or door material uses a translucent glass
+  response.
+- Corrected cylindrical tower UVs to tile around the circumference at roughly
+  two metres per tile and mapped box faces by their dimensions. The material
+  audit found only albedo maps: no ORM, roughness, metallic, AO, or normal maps
+  are imported, so there were no packed channels to remap. Albedo imports now
+  use sRGB, default color compression, and world texture-group mips.
+- Added a low-cost world-normal / object-height wetness mask that darkens and
+  roughness-blends exposed/lower surfaces without affecting Metallic. Reduced
+  stair-fill lights from 350 to 180 lumens and radius from 680 to 460 cm, raised
+  moon sky fill from 0.22 to 0.28, and restrained Fresnel/glazing highlights.
+- Fixed two material-review camera targets; the former stair-close camera
+  looked at its own position and produced an unusable frame. The five real
+  Vulkan captures are `BlackBeacon_Material_01_StairwellUp.png` through
+  `BlackBeacon_Material_05_LanternRoom.png` under `Saved/Screenshots/LinuxEditor/`.
+- UE 5.8.2 Linux Development build succeeded; the full Vulkan M01 suite passed
+  3/3 with zero test warnings/errors; `./Tools/validate.sh` passed 45/45.
+  Current renders show rougher, better-scaled exterior surfaces. Close interior
+  walls remain pale and the lantern-room view is dark, so human visual sign-off
+  and further lighting work remain open. No M1 completion is claimed.
+
 ## 2026-09-24 — M1 — Hero Lighthouse V0.1 integration
 
 - Added reproducible modular OBJ source and UE assets for the tapered tower,
