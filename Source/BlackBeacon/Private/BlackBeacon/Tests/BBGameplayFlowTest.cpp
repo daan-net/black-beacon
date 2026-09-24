@@ -166,6 +166,15 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             State->World = World;
             State->Pawn = World->GetFirstPlayerController() ? World->GetFirstPlayerController()->GetPawn() : nullptr;
             TestNotNull(TEXT("Player pawn"), State->Pawn.Get());
+            const APlayerController* PlayerController = World->GetFirstPlayerController();
+            if (State->Pawn.IsValid() && PlayerController)
+            {
+                const float LighthouseYaw = (FVector::ZeroVector - State->Pawn->GetActorLocation()).Rotation().Yaw;
+                TestTrue(TEXT("Shore opening faces the lighthouse horizontally"),
+                    FMath::Abs(FMath::FindDeltaAngleDegrees(PlayerController->GetControlRotation().Yaw, LighthouseYaw)) < 1.0f);
+                TestTrue(TEXT("Shore opening tilts up enough to frame the lantern"),
+                    PlayerController->GetControlRotation().Pitch >= 4.0f);
+            }
             ABBlackBeaconPlayerCharacter* Character = Cast<ABBlackBeaconPlayerCharacter>(State->Pawn.Get());
             State->Interaction = Character ? Character->GetInteractionComponent() : nullptr;
             TestNotNull(TEXT("Player interaction component"), State->Interaction.Get());
