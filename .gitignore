@@ -44,3 +44,6 @@ Tests/build/
 # Python source generators
 __pycache__/
 *.pyc
+
+# Blender automatic backup
+*.blend1
