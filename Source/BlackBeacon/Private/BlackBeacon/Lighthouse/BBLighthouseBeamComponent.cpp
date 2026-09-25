@@ -145,6 +145,11 @@ void UBBLighthouseBeamComponent::SetRotationMode(EBBBeamRotationMode InMode)
 	{
 		return;
 	}
+	if (InMode == EBBBeamRotationMode::Manual)
+	{
+		TargetYawDeg = CurrentYawDeg;
+	}
+    bManualAimReceived = false;
 	RotationMode = InMode;
 	OnRotationModeChanged.Broadcast(RotationMode);
 }
@@ -170,16 +175,20 @@ void UBBLighthouseBeamComponent::SetPowered(bool bInPowered)
 
 void UBBLighthouseBeamComponent::SetManualYawTarget(float YawDegrees)
 {
-	TargetYawDeg = YawDegrees;
 	if (RotationMode != EBBBeamRotationMode::Manual)
 	{
 		SetRotationMode(EBBBeamRotationMode::Manual);
 	}
+	TargetYawDeg = FRotator::NormalizeAxis(YawDegrees);
+    bManualAimReceived |= FMath::Abs(FMath::FindDeltaAngleDegrees(CurrentYawDeg, TargetYawDeg)) > 0.01f;
 }
 
 void UBBLighthouseBeamComponent::SetManualPitchDegrees(float PitchDegrees)
 {
-	CurrentPitchDeg = FMath::Clamp(PitchDegrees, -20.0f, 20.0f);
+    const float NewPitch = FMath::Clamp(PitchDegrees, MinPitchDegrees, MaxPitchDegrees);
+    bManualAimReceived |= FMath::Abs(NewPitch - CurrentPitchDeg) > 0.01f;
+    CurrentPitchDeg = NewPitch;
+	PublishBeamState();
 }
 
 void UBBLighthouseBeamComponent::SetBeamIntensityTarget(float Intensity01)
@@ -192,23 +201,17 @@ void UBBLighthouseBeamComponent::TickComponent(float DeltaTime, ELevelTick TickT
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// Reveal objects are driven every tick while the machine exists: the
-	// beam resting on something is exactly when reveals must accumulate.
-	const BlackBeacon::Logics::FBBBeamQuery Query = BuildQuery();
-	UpdateReveals(Query, DeltaTime);
-
-	if (!bPowered)
-	{
-		return; // dead lantern: nothing moves
-	}
-
-	const bool bYawChanged = UpdateRotation(DeltaTime);
-	const bool bIntensityChanged = UpdateIntensity(DeltaTime);
-	if (bYawChanged || bIntensityChanged)
-	{
-		PublishBeamState();
-		ApplyVisibleState();
-	}
+    if (bPowered)
+    {
+        const bool bYawChanged = UpdateRotation(DeltaTime);
+        const bool bIntensityChanged = UpdateIntensity(DeltaTime);
+        if (bYawChanged || bIntensityChanged)
+        {
+            PublishBeamState();
+        }
+    }
+    // The visible light and gameplay query use the same frame's direction.
+    UpdateReveals(BuildQuery(), DeltaTime);
 }
 
 bool UBBLighthouseBeamComponent::UpdateRotation(float DeltaTime)
@@ -256,9 +259,10 @@ bool UBBLighthouseBeamComponent::UpdateIntensity(float DeltaTime)
 	const float Ground = bPowered ? FlickerFactor : 0.0f;
 	const float Target = IntensityTarget * Ground;
 	constexpr float IntensityResponse = 8.0f; // smooth but prompt hunt
+	const float PreviousIntensity = IntensityCurrent;
 	IntensityCurrent = FMath::FInterpConstantTo(IntensityCurrent, Target, DeltaTime, IntensityResponse);
 
-	return !FMath::IsNearlyEqual(IntensityCurrent, Target, 1e-4f);
+	return !FMath::IsNearlyEqual(IntensityCurrent, PreviousIntensity, 1e-4f);
 }
 
 BlackBeacon::Logics::FBBBeamQuery UBBLighthouseBeamComponent::BuildQuery() const
@@ -277,6 +281,7 @@ BlackBeacon::Logics::FBBBeamQuery UBBLighthouseBeamComponent::BuildQuery() const
 	Query.Intensity01 = bPowered ? FMath::Clamp(IntensityCurrent, 0.0f, 1.0f) : 0.0f;
 	Query.RangeCm = BeamRangeCm;
 	Query.bPowered = bPowered;
+    Query.bDiscoveryEnabled = RotationMode == EBBBeamRotationMode::Manual && bManualAimReceived;
 	return Query;
 }
 

@@ -41,6 +41,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "BlackBeacon|Player")
 	bool IsStandingOnStairTread() const;
 
+    FVector AssistedForward(const FVector& Forward, const FVector2D& Input);
+
 	// --- access (interaction component resolves its trace from the camera) ---
 	UCameraComponent* GetFirstPersonCamera() const { return CameraComponent; }
 	UBBInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
@@ -61,6 +63,10 @@ protected:
 
 private:
 	void UpdateStance(float DeltaSeconds);
+    FVector previousStairPosition = FVector::ZeroVector;
+    bool bStairForwardInput = false;
+    UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement")
+    float StairWalkSpeed = 180.0f;
 
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Player|Movement")
 	float WalkSpeed = 400.0f;

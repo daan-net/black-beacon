@@ -660,7 +660,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 State->GeneratorCaptureCamera->Destroy();
                 State->GeneratorCaptureCamera.Reset();
             }
-            State->Pawn->SetActorLocation(FVector(-100.0f, 0.0f, 1650.0f));
+            State->Pawn->SetActorLocation(FVector(-75.0f, -85.0f, 1660.0f));
             TestTrue(TEXT("Lantern volume completes climb objective"), Objectives->IsCompleted(TEXT("BB_OBJ_CLIMB")));
             ABBlackBeaconPlayerCharacter* Character = Cast<ABBlackBeaconPlayerCharacter>(State->Pawn.Get());
             UStaticMeshComponent* ControlMesh = nullptr;
@@ -704,7 +704,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("Player trace takes beam control"), State->Interaction->TryInteract());
             if (PlayerController && PlayerController->PromptWidget)
             {
-                TestEqual(TEXT("Beam prompt refreshes in manual mode"), PlayerController->PromptWidget->GetCurrentPrompt().ToString(), FString(TEXT("Release Beam Control")));
+                TestEqual(TEXT("Beam prompt refreshes in manual mode"), PlayerController->PromptWidget->GetCurrentPrompt().ToString(), FString(TEXT("Mouse: aim searchlight | Hold on the wreck | E: release")));
             }
             TestTrue(TEXT("Manual beam control active"), Lighthouse->IsBeamInManualMode());
             TestTrue(TEXT("Aim objective completed"), Objectives->IsCompleted(TEXT("BB_OBJ_AIM_BEAM")));
@@ -755,8 +755,8 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 WreckMaterial && WreckTexture
                 && WreckMaterial->K2_GetTextureParameterValue(TEXT("RockAlbedo")) == WreckTexture);
             TestTrue(TEXT("BeamReveal exposes pieces intersecting the moving beam"), VisibleRuinParts > 0);
-            TestTrue(TEXT("Only beam-intersected ruin parts are visible"),
-                VisibleRuinParts < State->TaggedRevealPartCount);
+            TestEqual(TEXT("A held hull hit reveals the coherent wreck silhouette"),
+                VisibleRuinParts, State->TaggedRevealPartCount);
             TestTrue(TEXT("Ruin structure has a distant landmark silhouette"), TallestRuinPartExtent >= 800.0f);
             TestTrue(TEXT("The anomaly has completed its reveal transition"), State->AnomalyReveal->WasFullyRevealed());
             TestTrue(TEXT("The revealed fragment has full visible weight"), State->AnomalyReveal->GetVisibilityAmount() >= 0.99f);

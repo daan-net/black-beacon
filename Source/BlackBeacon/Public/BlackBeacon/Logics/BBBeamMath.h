@@ -55,6 +55,7 @@ namespace BlackBeacon::Logics
 		double  Intensity01 = 1.0;    // current intensity, 0..1 (post lerp/flicker/power)
 		double  RangeCm = 180000.0;   // how far the cone meaningfully reads
 		bool    bPowered = true;
+        bool bDiscoveryEnabled = true; // Runtime beam enables discovery only after manual aim input.
 	};
 
 	class FBBBeamMath

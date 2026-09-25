@@ -3,10 +3,12 @@
 #include "Camera/CameraComponent.h"
 #include "CollisionQueryParams.h"
 #include "CollisionShape.h"
+#include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 
 #include "BlackBeacon/Interaction/BBInteractableInterface.h"
+#include "BlackBeacon/Lighthouse/BBLighthouseController.h"
 
 UBBInteractionComponent::UBBInteractionComponent()
 {
@@ -88,7 +90,9 @@ void UBBInteractionComponent::RefreshFocus()
 		Hit, Start, End, FQuat::Identity, ECC_Visibility,
 		FCollisionShape::MakeSphere(FMath::Max(TraceRadius, 0.0f)), Params))
 	{
-		if (FindInteractableOnActor(Hit.GetActor()))
+		if (Hit.GetComponent() && !Hit.GetComponent()->ComponentHasTag(TEXT("BB_NoInteraction"))
+            && (!Hit.GetActor()->IsA<ABBLighthouseController>() || Hit.GetComponent()->GetFName()==TEXT("ControlMesh"))
+            && FindInteractableOnActor(Hit.GetActor()))
 		{
 			ApplyFocus(Hit.GetActor());
 			return;
@@ -130,6 +134,7 @@ void UBBInteractionComponent::ClearFocus()
 
 bool UBBInteractionComponent::TryInteract()
 {
+    RefreshFocus();
 	AActor* const Actor = FocusedActor.Get();
 	if (!Actor)
 	{

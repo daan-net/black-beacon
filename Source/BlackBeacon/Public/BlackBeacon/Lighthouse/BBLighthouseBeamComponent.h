@@ -89,6 +89,12 @@ public:
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
 	float ManualRotationDegPerSec = 60.0f;
 
+    UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
+    float MinPitchDegrees = -20.0f;
+
+    UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
+    float MaxPitchDegrees = 8.0f;
+
 	UPROPERTY(config, EditAnywhere, Category = "BlackBeacon|Beam")
 	float BeamRangeCm = 180000.0f;
 
@@ -171,6 +177,7 @@ private:
 	float IntensityCurrent = 1.0f;
 	float FlickerPhase = 0.0f;
 	bool bPowered = false;
+    bool bManualAimReceived = false;
 
 	TArray<TWeakObjectPtr<UBBBeamRevealComponent>> SubscribedReveals;
 };

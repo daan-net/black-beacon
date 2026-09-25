@@ -6,7 +6,7 @@ namespace BlackBeacon::Logics
 {
 	bool FBBRevealMachine::IsIlluminated(const FBBBeamQuery& Beam, const BBVec3& ObjectPosition) const
 	{
-		return Beam.bPowered
+		return Beam.bPowered && Beam.bDiscoveryEnabled
 			&& FBBBeamMath::ComputeConeIntensity(Beam, ObjectPosition) >= Params.MinBeamIntensity;
 	}
 
@@ -103,7 +103,8 @@ namespace BlackBeacon::Logics
 			break;
 
 		case EBBRevealPhase::Fading:
-			break; // handled by the amount lerp below
+			if (bLit) Phase = EBBRevealPhase::Revealing;
+			break;
 		}
 
 		// --- visibility amount ---

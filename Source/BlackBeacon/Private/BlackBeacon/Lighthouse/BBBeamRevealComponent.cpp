@@ -103,11 +103,26 @@ void UBBBeamRevealComponent::UpdateFromBeam(const BlackBeacon::Logics::FBBBeamQu
 	const bool bWasFullyRevealed = WasFullyRevealed();
 	if (bUseTaggedPartReveal && !TaggedPartStates.IsEmpty())
 	{
-		for (FTaggedPartState& Part : TaggedPartStates)
-		{
-			if (UStaticMeshComponent* const Mesh = Part.Mesh.Get())
+        FVector SearchPoint = Owner->GetActorLocation();
+        double BestIntensity = -1.0;
+        if (Owner->ActorHasTag(TEXT("BB_Anomaly")))
+        {
+            for (const FTaggedPartState& Part : TaggedPartStates)
+            {
+                if (const UStaticMeshComponent* Mesh = Part.Mesh.Get(); Mesh && Mesh->GetName().StartsWith(TEXT("RevealedRuinPart_")))
+                {
+                    const FVector Point = Mesh->Bounds.Origin;
+                    const double Intensity = BlackBeacon::Logics::FBBBeamMath::ComputeConeIntensity(BeamQuery,
+                        BlackBeacon::Logics::BBVec3(Point.X,Point.Y,Point.Z));
+                    if (Intensity > BestIntensity) { BestIntensity = Intensity; SearchPoint = Point; }
+                }
+            }
+        }
+        for (FTaggedPartState& Part : TaggedPartStates)
+        {
+            if (UStaticMeshComponent* const Mesh = Part.Mesh.Get())
 			{
-				const FVector Position = Mesh->Bounds.Origin;
+				const FVector Position = BestIntensity >= 0.0 ? SearchPoint : Mesh->Bounds.Origin;
 				Part.Machine.Tick(DeltaTime, BeamQuery,
 					BlackBeacon::Logics::BBVec3(Position.X, Position.Y, Position.Z));
 			}

@@ -64,7 +64,7 @@ def tower():
     for z in (48,190):m.box((335,-112,z),(13,108,8),'DarkIron',-25)
     return m
 
-def gallery():
+def gallery(playtest_access=False):
     m=Mesh('SM_BB_LH_Gallery')
     m.lathe([(1400,226),(1460,249),(1500,288),(1522,335),(1540,378)],'CutStone')
     m.ring(1545,394,277,30,'DarkIron')
@@ -86,7 +86,10 @@ def gallery():
         if i in (0,15):continue
         m.face([polar(251,a,1570),polar(251,b,1570),polar(251,b,1740),polar(251,a,1740)],'TowerPaint')
         m.face([polar(237,b,1570),polar(237,a,1570),polar(237,a,1740),polar(237,b,1740)],'InteriorPlaster')
-    m.ring(1740,266,234,20,'DarkIron')
+    if playtest_access:
+        m.ring(1740,266,234,20,'DarkIron',96,T/16,T-T/16)
+    else:
+        m.ring(1740,266,234,20,'DarkIron')
     # External maintenance ladder is fixed to the taper, with proper standoff brackets.
     for y in (-26,26):m.rod((radius(200)+22,y,200),(radius(1450)+22,y,1450),3,'DarkIron')
     for z in range(220,1441,30):

@@ -12,6 +12,8 @@
 
 #include "BlackBeacon/Lighthouse/BBLighthouseBeamComponent.h"
 #include "BlackBeacon/Lighthouse/BBHeroArchitectureComponent.h"
+#include "BlackBeacon/Lighthouse/BBLighthouseCollisionComponent.h"
+#include "BlackBeacon/Lighthouse/BBBeamControlComponent.h"
 #include "BlackBeacon/Objectives/BBObjectiveSystem.h"
 #include "BlackBeacon/Power/BBPowerSystem.h"
 
@@ -149,6 +151,9 @@ void ABBLighthouseController::BeginPlay()
     UBBHeroArchitectureComponent* Architecture = NewObject<UBBHeroArchitectureComponent>(this, TEXT("HeroArchitecture"));
     AddInstanceComponent(Architecture);
     Architecture->RegisterComponent();
+    auto* Collision = NewObject<UBBLighthouseCollisionComponent>(this, TEXT("LighthouseCollision"));
+    AddInstanceComponent(Collision);
+    Collision->RegisterComponent();
     LanternFrame->SetVisibility(false);
 	if (TowerExteriorSkin && LanternDarkMaterial)
 	{
@@ -237,7 +242,7 @@ void ABBLighthouseController::NotifyPowerState(bool bPoweredNow, float SuppliedW
 		HandleFirstPower(SuppliedWatts);
 	}
 
-	if (bChanged)
+	if (bChanged && bPowered)
 	{
 		// The "RESTORE POWER" beat is complete the moment the lantern works.
 		if (UWorld* const World = GetWorld())
@@ -290,8 +295,16 @@ void ABBLighthouseController::OnInteract(APlayerController* InteractingControlle
 {
 	if (bBeamStarted)
 	{
-		ToggleBeamControl();
-		return;
+        ToggleBeamControl();
+        if (InteractingController)
+        {
+            if (UBBBeamControlComponent* Control = InteractingController->FindComponentByClass<UBBBeamControlComponent>())
+            {
+                if (IsBeamInManualMode()) Control->Acquire(this);
+                else Control->Release();
+            }
+        }
+        return;
 	}
 
 	if (!bPowered)

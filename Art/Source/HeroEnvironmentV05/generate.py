@@ -58,20 +58,23 @@ def dial(m, c, r):
     m.rod(add(c, (-3,0,0)), add(c, (-3.5,0,0)), 1.3, 'WarmBrass', 12)
 
 
-def lantern():
+def lantern(playtest_access=False):
     m = Mesh('SM_BB_LH_LanternRoom')
     # Sixteen slender cast columns with distinct shoes, caps and gasket rebates.
     for z, r, h in ((-241,264,14),(-231,258,6),(120,266,12),(143,289,18)):
-        m.ring(z,r,r-14,h,'DarkIron')
+        if playtest_access and z < -200:
+            m.ring(z,r,r-14,h,'DarkIron',96,TAU/16,TAU-TAU/16)
+        else:
+            m.ring(z,r,r-14,h,'DarkIron')
     for i in range(16):
         a=i*TAU/16
-        m.rod(polar(251,a,-405),polar(251,a,132),3.8,'DarkIron',12)
-        for z in (-390,-241,111):
+        m.rod(polar(251,a,-180 if playtest_access and i==0 else -405),polar(251,a,132),3.8,'DarkIron',12)
+        for z in ((111,) if playtest_access and i==0 else (-390,-241,111)):
             m.box(polar(251,a,z),(13,17,24),'DarkIron',math.degrees(a))
             bolt(m,polar(260,a,z+10),2)
         # One transom gives tall glazing proportions; no horizontal bars at optical centre.
         m.rod(polar(251,a,-121),polar(251,a+TAU/16,-121),2.4,'DarkIron')
-        for z in (-230,116):
+        for z in ((116,) if playtest_access and i in (0,15) else (-230,116)):
             m.rod(polar(248,a,z),polar(248,a+TAU/16,z),1.4,'WarmBrass')
         # Curved spandrel braces beneath the cornice.
         for side in (-1,1):
@@ -81,6 +84,7 @@ def lantern():
     for i in range(16):
         a=i*TAU/16+.018;b=(i+1)*TAU/16-.018
         for lo,hi in ((-227,-125),(-117,112)):
+            if playtest_access and i in (0,15):lo=max(lo,-180)
             m.face([polar(250,a,lo),polar(250,b,lo),polar(250,b,hi),polar(250,a,hi)],'LanternGlass')
     profile=[(152,293),(167,286),(198,258),(230,211),(260,148),(280,74),(285,22)]
     m.lathe(profile,'RoofCopper')
@@ -121,6 +125,7 @@ def lantern():
             m.box((35,-32+r*math.cos(a),z+r*math.sin(a)),(9,4,4),'DarkIron')
     m.rod((35,-32,-230),(35,-32,-109),3.5,'WarmBrass')
     m.rod((-28,0,-237),(-28,0,-189),2,'WarmBrass')
+    console_start = len(m.vertices)
     # Existing control footprint: front-facing instruments at the unchanged interaction point.
     m.box((208,0,-361),(51,90,87),'EngineEnamel')
     m.box((180,0,-321),(5,98,34),'DarkIron')
@@ -129,6 +134,12 @@ def lantern():
         m.rod((175,y,-344),(169,y,-344),3.2,'WarmBrass',12)
     m.rod((192,-55,-383),(192,-55,-314),3,'DarkIron')
     m.rod((192,-55,-315),(181,-55,-297),2,'WarmBrass')
+    if playtest_access:
+        m.vertices[console_start:] = [((-175-(p[0]-208),-85-p[1],p[2]),uv)
+                                     for p,uv in m.vertices[console_start:]]
+        for a in (-TAU/16,TAU/16):
+            m.rod(polar(248,a,-407),polar(248,a,-175),4,'DarkIron')
+        m.rod(polar(248,-TAU/16,-175),polar(248,TAU/16,-175),4,'DarkIron')
     return m
 
 

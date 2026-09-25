@@ -6,6 +6,7 @@
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
 #include "Camera/PlayerCameraManager.h"
+#include "BlackBeacon/Lighthouse/BBBeamControlComponent.h"
 
 #include "BlackBeacon/Core/BBPlayerCharacter.h"
 #include "BlackBeacon/Core/BBGameState.h"
@@ -19,6 +20,7 @@
 ABBlackBeaconPlayerController::ABBlackBeaconPlayerController()
 {
 	bShowMouseCursor = false;
+    CreateDefaultSubobject<UBBBeamControlComponent>(TEXT("BeamControl"));
 }
 
 void ABBlackBeaconPlayerController::BeginPlay()
@@ -142,6 +144,7 @@ void ABBlackBeaconPlayerController::CreateInputAssets()
 
 void ABBlackBeaconPlayerController::HandleMove(const FInputActionValue& Value)
 {
+    if (IsMoveInputIgnored()) return;
 	if (!PossessedCharacter)
 	{
 		PossessedCharacter = Cast<ABBlackBeaconPlayerCharacter>(GetPawn());
@@ -156,7 +159,7 @@ void ABBlackBeaconPlayerController::HandleMove(const FInputActionValue& Value)
 	const FVector Forward = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector Right = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-	PossessedCharacter->AddMovementInput(Forward, Axis.Y);
+	PossessedCharacter->AddMovementInput(PossessedCharacter->AssistedForward(Forward, Axis), Axis.Y);
 	PossessedCharacter->AddMovementInput(Right, Axis.X);
 }
 
@@ -164,18 +167,11 @@ void ABBlackBeaconPlayerController::HandleLook(const FInputActionValue& Value)
 {
 	const FVector2D Axis = Value.Get<FVector2D>();
 
-	// While manning the beam, horizontal look aims the lantern instead of
-	// the camera (the lens becomes the "body"). Cached on take-control so
-	// this is O(1) per frame - never a world search.
-	if (CachedBeamController && CachedBeamController->IsPowered()
-		&& CachedBeamController->IsBeamInManualMode())
-	{
-		if (UBBLighthouseBeamComponent* const Beam = CachedBeamController->BeamComponent)
-		{
-			Beam->SetManualYawTarget(Beam->GetCurrentYawDegrees() + Axis.X * ManualAimSensitivity);
-		}
-		return;
-	}
+    if (UBBBeamControlComponent* Control = FindComponentByClass<UBBBeamControlComponent>(); Control && Control->IsActive())
+    {
+        Control->Aim(Axis * ManualAimSensitivity);
+        return;
+    }
 
 	if (PossessedCharacter && PossessedCharacter->IsStandingOnStairTread())
 	{
@@ -183,7 +179,7 @@ void ABBlackBeaconPlayerController::HandleLook(const FInputActionValue& Value)
 		FRotator Rotation = GetControlRotation();
 		Rotation.Yaw += Axis.X * MouseYawDegreesPerCount;
 		Rotation.Pitch = FMath::Clamp(
-			Rotation.Pitch + Axis.Y * MousePitchDegreesPerCount,
+			FRotator::NormalizeAxis(Rotation.Pitch) + Axis.Y * MousePitchDegreesPerCount,
 			StairPitchMinDegrees,
 			StairPitchMaxDegrees);
 		Rotation.Roll = 0.0f;
@@ -224,6 +220,12 @@ void ABBlackBeaconPlayerController::HandleCrouch()
 
 void ABBlackBeaconPlayerController::HandleInteract()
 {
+    if (UBBBeamControlComponent* Control = FindComponentByClass<UBBBeamControlComponent>(); Control && Control->IsActive())
+    {
+        Control->Release();
+        if (PromptWidget) PromptWidget->SetPromptText(FText::GetEmpty());
+        return;
+    }
 	if (!InteractionComponent)
 	{
 		return;
@@ -265,7 +267,9 @@ void ABBlackBeaconPlayerController::OnInteractionFocusChanged(AActor* FocusedAct
 {
 	if (PromptWidget)
 	{
-		PromptWidget->SetPromptText(Prompt);
+		const UBBBeamControlComponent* Control = FindComponentByClass<UBBBeamControlComponent>();
+        PromptWidget->SetPromptText(Control && Control->IsActive()
+            ? FText::FromString(TEXT("Mouse: aim searchlight | Hold on the wreck | E: release")) : Prompt);
 	}
 }
 
@@ -290,6 +294,7 @@ void ABBlackBeaconPlayerController::HandleSave()
 
 void ABBlackBeaconPlayerController::HandleLoad()
 {
+    if (UBBBeamControlComponent* Control = FindComponentByClass<UBBBeamControlComponent>()) Control->Release();
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		if (UBBSaveSubsystem* SaveSys = GI->GetSubsystem<UBBSaveSubsystem>())

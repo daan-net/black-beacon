@@ -1,3 +1,8 @@
+## V0.5.1 playtest stabilization — work in progress
+
+Baseline: `d1bbab5`, branch `work/v051-playtest-candidate`. V0.5 checkpoint preserved.
+IMPLEMENTED: collision proxies, stair assistance, two-axis optical controls and pitch synchronization compile in Unreal 5.8.2. Logic tests and the two-mesh access import pass. The in-engine playtest is running. Do not treat this working tree as a playable checkpoint until the V0.5.1 validation record is complete.
+
 # BLACK BEACON — Current State
 
 **Last updated:** 2026-09-25 · **Milestone:** V0.5 hero environment playable checkpoint validated

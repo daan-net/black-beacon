@@ -1,3 +1,4 @@
+#include "BlackBeacon/Logics/BBStairAssist.h"
 // BLACK BEACON - logic layer unit tests.
 //
 // Standalone tests for the engine-free Logics layer. Run with:
@@ -256,6 +257,29 @@ namespace
 
 int main()
 {
+    Check(NearlyEqual(FBBStairAssist::TargetRadius(100),178), "stairs: lower lane");
+    Check(NearlyEqual(FBBStairAssist::TargetRadius(1500),118), "stairs: upper lane clears guard");
+    Check(FBBStairAssist::TargetRadius(500)>FBBStairAssist::TargetRadius(540), "stairs: flight transition narrows smoothly");
+    Check(FBBStairAssist::TravelYaw({180,0,100},{179,-10,101},true)<0, "stairs: ascent follows clockwise travel");
+    Check(FBBStairAssist::TravelYaw({180,0,100},{179,10,99},true)>0, "stairs: descent reverses steering");
+    Check(FBBStairAssist::TravelYaw({180,0,100},{179,-10,101},false)==0, "stairs: no steering while stopped or strafing");
+    Check(FBBStairAssist::TravelYaw({180,0,100},{0,180,800},true)==0, "stairs: teleport cannot turn camera");
+    const auto Free=FBBStairAssist::CenteredForward({0,-1,0},{195,0,100},100,1,1);
+    Check(Free.X==0 && Free.Y==-1, "stairs: strafe overrides assistance");
+    const auto Center=FBBStairAssist::CenteredForward({0,-1,0},{195,0,100},100,1,0);
+    Check(Center.X<0 && Center.Y<0, "stairs: forward movement gently corrects radius");
+    FBBRevealMachine Search;
+    FBBRevealParams SearchParams; SearchParams.RevealDelay=.25; SearchParams.FadeTime=.75; SearchParams.bPersistent=false;
+    Search.SetParams(SearchParams);
+    FBBBeamQuery SearchBeam; SearchBeam.Direction={1,0,0}; SearchBeam.bDiscoveryEnabled=false;
+    Search.Tick(10,SearchBeam,{100,0,0});
+    Check(!Search.WasFullyRevealed(), "search: auto sweep or acquire alone cannot discover");
+    SearchBeam.bDiscoveryEnabled=true; Search.Tick(.25,SearchBeam,{100,0,0}); Search.Tick(.75,SearchBeam,{100,0,0});
+    Check(Search.WasFullyRevealed(), "search: manual aim plus dwell discovers");
+    SearchBeam.bDiscoveryEnabled=false; Search.Tick(.2,SearchBeam,{100,0,0});
+    const auto Faded=Search.GetVisibilityAmount();
+    SearchBeam.bDiscoveryEnabled=true; Search.Tick(.1,SearchBeam,{100,0,0});
+    Check(Search.GetVisibilityAmount()>Faded, "search: reacquire reverses fade without hiding first");
 	TestBeamMath();
 	TestRevealMachine();
 	TestObjectiveGraph();
