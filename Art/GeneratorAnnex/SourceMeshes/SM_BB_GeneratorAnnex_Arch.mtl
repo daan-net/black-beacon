@@ -1,0 +1,24 @@
+newmtl TowerPaint
+Kd 0.72 0.75 0.78
+Ks 0.12 0.12 0.12
+Ns 34
+newmtl DarkIron
+Kd 0.055 0.072 0.082
+Ks 0.12 0.12 0.12
+Ns 28
+newmtl WarmBrass
+Kd 0.38 0.20 0.065
+Ks 0.32 0.27 0.18
+Ns 48
+newmtl LanternGlass
+Kd 0.06 0.10 0.12
+Ks 0.18 0.18 0.18
+Ns 48
+newmtl AgedWood
+Kd 0.15 0.095 0.060
+Ks 0.08 0.08 0.08
+Ns 18
+newmtl WetRock
+Kd 0.065 0.078 0.080
+Ks 0.10 0.10 0.10
+Ns 22
