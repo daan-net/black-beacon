@@ -1,6 +1,35 @@
 # BLACK BEACON — Current State
 
-**Last updated:** 2026-09-25 · **Milestone:** V0.4 playable validation complete; art/performance gates remain open
+**Last updated:** 2026-09-25 · **Milestone:** V0.5 hero environment playable checkpoint validated
+
+## V0.5 — TESTED hero environment playable checkpoint
+
+Completed on `work/v05-hero-environment` from validated `cf3923a`. V0.4 tags
+remain unchanged. No experimental branch content was merged.
+
+- **IMPLEMENTED / TESTED:** authored lantern bays/dome, prism optics, compact arc,
+  level rotating carriage, supported drive and instrument console; engine,
+  alternator, flywheel, switchboard and service lamp; new surface/weathering and
+  softer finite beam scattering. Six source/Unreal mesh modules, eight new Unreal
+  mesh/material assets. Editable Python/OBJ/MTL/HLSL sources, no Blender file.
+- **TESTED:** final UE 5.8.2 / Vulkan / native 1080p suite **5/5**, zero test
+  warnings/errors, exit 0. Launch, generator interaction, all 84 stair rises,
+  gallery/hatch, lantern access, beacon control/rotation, reveal/fade, objectives
+  and save restoration pass. Exactly one directional light remains.
+- UE editor build succeeded; `./Tools/validate.sh` passes 53 logic and five geometry
+  checks. Gallery/deck and all eight reference PNGs match `cf3923a` byte-for-byte.
+- Review corrections replaced obsolete prototype assertions, supplied explicit
+  normals, corrected emitter/glass shadows and moved opaque machinery/stairs to
+  Nanite. The observed VSM overflow did not recur in the final complete run.
+- Final report: `Saved/Automation/VisualRebuildV05Release/index.json`.
+  Fifteen actual gameplay captures, six-view sheet and matching-camera comparison:
+  `Saved/VisualRebuildV05/Validation/`. Full findings: `V05_VALIDATION.md`.
+
+No known blocker remains in the tested route. Visual limits remain: regular lens
+courses/approximate optics, simplified machinery and dark lower faces, procedural
+wall weathering, weak coast/foam/wreck assets. No production-art or sustained
+60-FPS acceptance is claimed. Recommended next: V0.6 coastal approach and
+shipwreck hero pass; not started. Preserve this stable V0.5 state.
 
 ## V0.4 — TESTED playable checkpoint; validation complete
 
@@ -38,7 +67,7 @@ beam still reads dense/uniform, close Fresnel is overbright, generator machinery
 is primitive, coastal rocks/foam lack convincing contact and scale, and some
 warm wall pools show repetitive surface detail. V0.4 is a validated playable
 checkpoint, not final production-art acceptance. No micro-polish or V0.5 work
-was started. See `V04_VALIDATION.md` for findings and the recommended next milestone.
+was started during that V0.4 validation session. See `V04_VALIDATION.md` for findings and the recommended next milestone.
 
 Source reproducibility caveat: committed OBJ/UE assets define this checkpoint;
 pre-pause generator-only variations remain unexported. `V04_RESUME.md` records

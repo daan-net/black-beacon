@@ -1,17 +1,21 @@
 """Geometric regression checks independent of Unreal and render quality."""
-import sys, unittest, math
+import sys, unittest, math, importlib.util
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'Art/Source/VisualRebuildV04'))
 from generate import stairs,deck,tower,radius
+v05_path=Path(__file__).resolve().parents[1]/'Art/Source/HeroEnvironmentV05/generate.py'
+v05_spec=importlib.util.spec_from_file_location('v05_source',v05_path)
+v05=importlib.util.module_from_spec(v05_spec)
+v05_spec.loader.exec_module(v05)
 
 class Architecture(unittest.TestCase):
     def test_stair_tops_preserve_all_gameplay_rises(self):
-        m=stairs()
+        m=v05.stairs()
         # Main tread boxes have two top triangles per rise at exactly the saved height.
         horizontal=[]
         for mat,ids,smooth in m.faces:
             ps=[m.vertices[i-1][0] for i in ids]
-            if mat=='DarkIron' and max(p[2] for p in ps)-min(p[2] for p in ps)<1e-6:
+            if mat=='StairIron' and max(p[2] for p in ps)-min(p[2] for p in ps)<1e-6:
                 horizontal.append(ps[0][2])
         for step in range(1,85):
             self.assertTrue(any(abs(z-step*520/28)<1e-6 for z in horizontal),step)

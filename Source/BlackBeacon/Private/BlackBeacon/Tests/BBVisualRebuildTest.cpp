@@ -14,7 +14,7 @@
 #include "BlackBeacon/Power/BBGeneratorComponent.h"
 #include "BlackBeacon/Lighthouse/BBLighthouseController.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBBVisualRebuildTest,"BlackBeacon.V04.ArchitectureReview",
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBBVisualRebuildTest,"BlackBeacon.V05.ArchitectureReview",
     EAutomationTestFlags::ClientContext | EAutomationTestFlags::EngineFilter)
 
 bool FBBVisualRebuildTest::RunTest(const FString& Parameters)
@@ -35,7 +35,7 @@ bool FBBVisualRebuildTest::RunTest(const FString& Parameters)
     ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this,State]()
     {
         const double Now=FPlatformTime::Seconds();
-        if (Now-State->Start>150) { AddError(TEXT("V0.4 review timed out"));return true; }
+        if (Now-State->Start>150) { AddError(TEXT("V0.5 review timed out"));return true; }
         if (!State->World)
         {
             for (const FWorldContext& C:GEngine->GetWorldContexts())
@@ -94,14 +94,14 @@ bool FBBVisualRebuildTest::RunTest(const FString& Parameters)
         }
         const FVector Positions[]={
             {-4200,-2900,700},{-1900,-2300,1050},{850,-750,190},{-650,-1120,230},
-            {-110,-690,145},{210,15,155},{158,12,665},{130,12,1190},
-            {175,-95,1740},{155,-150,1940},{-2300,-1900,800},{-2300,-1900,800},
+            {-145,-730,150},{210,15,155},{158,12,665},{130,12,1190},
+            {380,-75,1780},{155,-150,1940},{-2300,-1900,800},{-2300,-1900,800},
             {-4200,-2900,700},{-3400,-650,240},{-2200,1000,1650}
         };
         const FVector Targets[]={
             {0,0,1550},{0,0,1170},{170,0,180},{0,-620,160},
-            {60,-560,140},{80,-130,250},{40,-125,720},{15,-125,1230},
-            {0,45,1960},{0,0,1960},{0,0,1530},{0,0,1530},
+            {30,-610,120},{80,-130,250},{40,-125,720},{15,-125,1230},
+            {0,0,1900},{0,0,1960},{0,0,1530},{0,0,1530},
             {-500,800,4600},{-3400,-1600,-100},State->Target
         };
         const TCHAR* Names[]={
@@ -113,7 +113,7 @@ bool FBBVisualRebuildTest::RunTest(const FString& Parameters)
         {
             State->Camera->SetActorLocation(Positions[State->Index]);
             State->Camera->SetActorRotation((Targets[State->Index]-Positions[State->Index]).Rotation());
-            State->Camera->GetCameraComponent()->SetFieldOfView(State->Index==9 ? 65 : 78);
+            State->Camera->GetCameraComponent()->SetFieldOfView(State->Index==8 ? 100 : (State->Index==9 ? 65 : 78));
             // Exercise the actual public state restore path; it controls lens, glow and beam together.
             if (State->Index==10 && State->Lighthouse->HasStartedBeam())
                 State->Lighthouse->RestoreBeamState(false,true,EBBBeamRotationMode::Off,State->Lighthouse->BeamComponent->GetCurrentYawDegrees(),State->Lighthouse->BeamComponent->GetCurrentPitchDegrees());
@@ -125,7 +125,7 @@ bool FBBVisualRebuildTest::RunTest(const FString& Parameters)
                 State->Lighthouse->BeamComponent->SetManualPitchDegrees(Aim.Pitch);
             }
             if (Now-State->Stage<3.5) return false;
-            FScreenshotRequest::RequestScreenshot(FString::Printf(TEXT("BlackBeacon_V04_%s.png"),Names[State->Index]),false,false);
+            FScreenshotRequest::RequestScreenshot(FString::Printf(TEXT("BlackBeacon_V05_%s.png"),Names[State->Index]),false,false);
             State->Requested=true;State->Stage=Now;return false;
         }
         if (Now-State->Stage<.4) return false;

@@ -9,6 +9,39 @@ intended context), `TESTED` (built + exercised with evidence), `PLACEHOLDER`
 (scaffolding to be replaced), `PLANNED` (paper only). Anything written-but-not-
 compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
+## 2026-09-25 — V0.5 hero environment visual pass
+
+- Authorized visual scope on `work/v05-hero-environment`, based on `cf3923a`.
+  Both V0.4 checkpoint tags and the gallery/hatch collision assets are preserved.
+  No experimental branch merges, new mechanics, plugins or dependencies.
+- **User-visible:** replaced lantern/rotor source with sixteen cast structural bays,
+  copper dome and internal ribs, real prism courses and a forward bull's-eye lens,
+  compact arc source, open roller bed, pedestal, drive gears and instrument console.
+  The carriage stays level while following the existing azimuth; gameplay aiming
+  remains unchanged. Removed obsolete luminous sphere/band/glazing presentation.
+- **User-visible:** generator now has a cast crankcase, three finned cylinders,
+  alternator, open spoked flywheel, pipework, switchboard instruments and a caged
+  service lamp. Unit visual scale prevents inherited collider scale distortion.
+  Its existing interaction collider and power-driven flywheel timer remain.
+- **User-visible:** world-mapped salt/runoff/oxidation, sheltered masonry courses,
+  cast enamel, aged brass/copper and tread texture replace the repetitive wall
+  ripples and uniform metal response. V0.4 source-only stair lamps were deliberately
+  adopted without changing tread dimensions; annex shell geometry was retained.
+- **User-visible beam tunables:** native volumetric scattering 4.0→0.35, source glow
+  90→65 lm and additive density 0.012→0.035 with a new extinction/soft-density shader.
+  Beam length/range, query angle, intensity and all reveal rules are unchanged.
+  Annex practical is 100 lm at its new modeled fixture location.
+- Explicit OBJ normals replace ignored smoothing-group directives. Opaque generator,
+  flywheel and stair meshes use Nanite; bulb/glass sections do not cast opaque shadows.
+- **TESTED:** final Vulkan suite 5/5, zero test warnings/errors, exit 0; editor
+  build and standalone 53 logic/five geometry checks pass. Fifteen gameplay
+  captures and a matching-camera comparison are available. The VSM warning
+  did not recur after the Nanite/shadow correction. See `V05_VALIDATION.md`.
+  The first run
+  caught obsolete assertions for eight old panes/40 bands; these now verify the
+  authored glazed housing and real power-driven arc in off/on/power-loss states.
+  No checks of movement, power, controls, climb or reveal were removed.
+
 ## 2026-09-25 — V0.4 resumed validation and upper stair clearance
 
 - Resumed the owner's manually reviewed `1c0cf71` checkpoint; preserved its tag.

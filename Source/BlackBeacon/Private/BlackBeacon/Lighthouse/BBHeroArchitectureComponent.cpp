@@ -25,10 +25,11 @@ void UBBHeroArchitectureComponent::Assemble()
 {
     ABBLighthouseController* Lighthouse = Cast<ABBLighthouseController>(GetOwner());
     if (!Lighthouse) return;
-    const auto AddMesh = [Lighthouse](const TCHAR* Name, const TCHAR* Asset, USceneComponent* Parent, FVector Offset)
+    const auto AddMesh = [](const TCHAR* Name, const TCHAR* Asset, USceneComponent* Parent, FVector Offset)
     {
-        UStaticMeshComponent* Mesh = NewObject<UStaticMeshComponent>(Lighthouse, Name);
-        Lighthouse->AddInstanceComponent(Mesh);
+        AActor* Owner = Parent->GetOwner();
+        UStaticMeshComponent* Mesh = NewObject<UStaticMeshComponent>(Owner, Name);
+        Owner->AddInstanceComponent(Mesh);
         Mesh->SetupAttachment(Parent);
         Mesh->SetStaticMesh(LoadObject<UStaticMesh>(nullptr, Asset));
         Mesh->SetRelativeLocation(Offset);
@@ -50,7 +51,15 @@ void UBBHeroArchitectureComponent::Assemble()
     {
         if (Part->GetName() == TEXT("BeamVisualPivot"))
         {
-            AddMesh(TEXT("HeroFresnelRotor"), TEXT("/Game/BlackBeacon/Art/Lighthouse/Meshes/SM_BB_LH_FresnelRotor.SM_BB_LH_FresnelRotor"), Part, FVector::ZeroVector);
+            UStaticMeshComponent* Rotor = AddMesh(TEXT("HeroFresnelRotor"), TEXT("/Game/BlackBeacon/Art/Lighthouse/Meshes/SM_BB_LH_FresnelRotor.SM_BB_LH_FresnelRotor"), Part, FVector::ZeroVector);
+            // The carriage turns on a level roller track. Optical elevation passes
+            // through its broad aperture without tipping the bearing off the pedestal.
+            Rotor->SetRelativeRotation(FRotator(-Lighthouse->BeamComponent->GetCurrentPitchDegrees(),0,0));
+            Lighthouse->BeamComponent->OnBeamQueryChanged.AddWeakLambda(Rotor,
+                [Rotor, Lighthouse](const BlackBeacon::Logics::FBBBeamQuery& Query)
+                {
+                    Rotor->SetRelativeRotation(FRotator(-Lighthouse->BeamComponent->GetCurrentPitchDegrees(),0,0));
+                });
             break;
         }
     }
@@ -60,29 +69,57 @@ void UBBHeroArchitectureComponent::Assemble()
     {
         if (Mesh->GetName().StartsWith(TEXT("LanternGlass_")))
         {
-            const int32 Index = FCString::Atoi(*Mesh->GetName().RightChop(13));
-            const float Angle = FMath::DegreesToRadians(Index * 45.0f + 22.5f);
-            Mesh->SetRelativeTransform(FTransform(FRotator(0,Index*45.0f+112.5f,0),
-                FVector(FMath::Cos(Angle)*243,FMath::Sin(Angle)*243,-64),FVector(1.98f,0.025f,3.60f)));
-        }
-        if (Mesh->GetName() == TEXT("BeamLensSupport") || Mesh->GetName() == TEXT("LanternFrame"))
+            // Glazing now belongs to the sixteen modeled structural bays.
             Mesh->SetVisibility(false);
+        }
+        if (Mesh->GetName() == TEXT("BeamLensSupport") || Mesh->GetName() == TEXT("LanternFrame")
+            || Mesh->GetName() == TEXT("ControlMesh"))
+            Mesh->SetVisibility(false);
+        if (Mesh->GetName() == TEXT("BeamLensMesh"))
+        {
+            Mesh->SetStaticMesh(LoadObject<UStaticMesh>(nullptr,
+                TEXT("/Game/BlackBeacon/Art/Lighthouse/Meshes/SM_BB_LH_ArcSource.SM_BB_LH_ArcSource")));
+            Mesh->SetRelativeScale3D(FVector::OneVector);
+        }
         if (Mesh->GetName() == TEXT("LanternFresnelBands"))
         {
             UInstancedStaticMeshComponent* Bands = Cast<UInstancedStaticMeshComponent>(Mesh);
             if (!Bands) continue;
             Bands->ClearInstances();
-            for (int32 I=0; I<8; ++I)
-            {
-                const float Angle = FMath::DegreesToRadians(I*45.0f+22.5f);
-                for (float Z : {-64.0f,-32.0f,0.0f,32.0f,64.0f})
-                    Bands->AddInstance(FTransform(FRotator(0,I*45.0f+112.5f,0),
-                        FVector(FMath::Cos(Angle)*70,FMath::Sin(Angle)*70,Z),FVector(.48f,.025f,.025f)));
-            }
         }
     }
     for (TActorIterator<AActor> It(GetWorld()); It; ++It)
     {
+        if (It->ActorHasTag(TEXT("BB_Generator")))
+        {
+            // Retain the interaction collider and the existing power-driven flywheel timer.
+            for (UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(*It))
+            {
+                if (Mesh->GetName().StartsWith(TEXT("Generator")))
+                {
+                    Mesh->SetVisibility(false);
+                    Mesh->SetCastShadow(false);
+                }
+            }
+            UStaticMeshComponent* Works = AddMesh(TEXT("HeroGeneratorWorks"),
+                TEXT("/Game/BlackBeacon/Art/Lighthouse/Meshes/SM_BB_GeneratorWorks.SM_BB_GeneratorWorks"),
+                It->GetRootComponent(), FVector::ZeroVector);
+            Works->SetAbsolute(false, false, true);
+            Works->SetWorldScale3D(FVector::OneVector);
+            for (USceneComponent* Part : TInlineComponentArray<USceneComponent*>(*It))
+            {
+                if (Part->GetName() == TEXT("GeneratorFlywheelPivot"))
+                {
+                    Part->SetAbsolute(false, false, true);
+                    Part->SetWorldScale3D(FVector::OneVector);
+                    Part->SetWorldLocation(It->GetActorLocation() + FVector(-92,0,-4));
+                    AddMesh(TEXT("HeroGeneratorFlywheel"),
+                        TEXT("/Game/BlackBeacon/Art/Lighthouse/Meshes/SM_BB_GeneratorFlywheel.SM_BB_GeneratorFlywheel"),
+                        Part, FVector::ZeroVector);
+                    break;
+                }
+            }
+        }
         const bool bHide = It->ActorHasTag(TEXT("BB_StairStep")) || It->ActorHasTag(TEXT("BB_StairGuard"))
             || It->ActorHasTag(TEXT("BB_StairCore")) || It->ActorHasTag(TEXT("BB_StairEntryLanding"))
             || It->ActorHasTag(TEXT("BB_LanternFloor"));
@@ -117,6 +154,12 @@ void UBBHeroArchitectureComponent::Assemble()
         }
         for (UPointLightComponent* Light : TInlineComponentArray<UPointLightComponent*>(*It))
         {
+            if (Light->GetName() == TEXT("GeneratorShedLight"))
+            {
+                Light->SetIntensity(AnnexPracticalLumens);
+                Light->SetAttenuationRadius(PracticalRadiusCm);
+                Light->AddWorldOffset(AnnexPracticalOffset);
+            }
             if (Light->GetName() == TEXT("StairFillLight"))
             {
                 Light->SetIntensity(PracticalLumens);

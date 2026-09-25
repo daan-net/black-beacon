@@ -1,0 +1,38 @@
+[
+  {
+    "name": "SM_BB_LH_LanternRoom",
+    "vertices": 50736,
+    "triangles": 27172,
+    "normals": 8624
+  },
+  {
+    "name": "SM_BB_LH_FresnelRotor",
+    "vertices": 53848,
+    "triangles": 27036,
+    "normals": 15450
+  },
+  {
+    "name": "SM_BB_LH_ArcSource",
+    "vertices": 960,
+    "triangles": 384,
+    "normals": 194
+  },
+  {
+    "name": "SM_BB_GeneratorWorks",
+    "vertices": 38596,
+    "triangles": 20004,
+    "normals": 1130
+  },
+  {
+    "name": "SM_BB_GeneratorFlywheel",
+    "vertices": 2576,
+    "triangles": 1340,
+    "normals": 250
+  },
+  {
+    "name": "SM_BB_LH_StairStructure",
+    "vertices": 39912,
+    "triangles": 21532,
+    "normals": 5032
+  }
+]

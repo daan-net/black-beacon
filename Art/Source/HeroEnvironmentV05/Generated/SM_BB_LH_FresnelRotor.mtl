@@ -1,0 +1,42 @@
+newmtl TowerPaint
+Kd 0.4 0.4 0.4
+Ks 0.1 0.1 0.1
+Ns 12
+newmtl DarkIron
+Kd 0.4 0.4 0.4
+Ks 0.1 0.1 0.1
+Ns 12
+newmtl WarmBrass
+Kd 0.4 0.4 0.4
+Ks 0.1 0.1 0.1
+Ns 12
+newmtl LanternGlass
+Kd 0.4 0.4 0.4
+Ks 0.1 0.1 0.1
+Ns 12
+newmtl AgedWood
+Kd 0.4 0.4 0.4
+Ks 0.1 0.1 0.1
+Ns 12
+newmtl WetRock
+Kd 0.4 0.4 0.4
+Ks 0.1 0.1 0.1
+Ns 12
+newmtl InteriorPlaster
+Kd 0.4 0.4 0.4
+Ks 0.1 0.1 0.1
+Ns 12
+newmtl CutStone
+Kd 0.4 0.4 0.4
+Ks 0.1 0.1 0.1
+Ns 12
+newmtl LensGlass
+Kd 0.4 0.4 0.4
+Ks 0.1 0.1 0.1
+Ns 12
+newmtl Lamp
+Kd 0.4 0.4 0.4
+Ks 0.1 0.1 0.1
+Ns 12
+newmtl DialFace
+Kd 0.25 0.25 0.25

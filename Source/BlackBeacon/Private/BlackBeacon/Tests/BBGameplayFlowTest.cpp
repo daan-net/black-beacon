@@ -97,7 +97,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
         TWeakObjectPtr<UBBGeneratorComponent> Generator;
         TWeakObjectPtr<USceneComponent> GeneratorFlywheelPivot;
         TWeakObjectPtr<ABBLighthouseController> Lighthouse;
-        TWeakObjectPtr<UInstancedStaticMeshComponent> LanternFresnelBands;
+        TWeakObjectPtr<UStaticMeshComponent> ArcSource;
         TArray<TWeakObjectPtr<UStaticMeshComponent>> LanternGlazingPanels;
         TWeakObjectPtr<AActor> Anomaly;
         TWeakObjectPtr<UBBBeamRevealComponent> AnomalyReveal;
@@ -452,9 +452,9 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                     bKeepsHiddenInteractionCollider = !Mesh->IsVisible()
                         && Mesh->GetCollisionEnabled() != ECollisionEnabled::NoCollision;
                 }
-                if (Mesh && Mesh->GetName().StartsWith(TEXT("Generator")))
+                if (Mesh && Mesh->GetName().StartsWith(TEXT("HeroGenerator")))
                 {
-                    bHasFlywheel |= Mesh->GetName() == TEXT("GeneratorFlywheel");
+                    bHasFlywheel |= Mesh->GetName() == TEXT("HeroGeneratorFlywheel");
                     NonBlockingGeneratorDetails += Mesh->GetCollisionEnabled() == ECollisionEnabled::NoCollision ? 1 : 0;
                 }
             }
@@ -469,7 +469,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             }
             TestNotNull(TEXT("Generator flywheel has a motorized pivot"), State->GeneratorFlywheelPivot.Get());
             TestTrue(TEXT("Generator retains its invisible interaction collider"), bKeepsHiddenInteractionCollider);
-            TestTrue(TEXT("Generator machinery details stay nonblocking"), NonBlockingGeneratorDetails >= 7);
+            TestTrue(TEXT("Generator machinery details stay nonblocking"), NonBlockingGeneratorDetails == 2);
             AActor* Shed = FindTaggedActor(World, TEXT("BB_GeneratorShed"));
             UStaticMeshComponent* ShedBlockout = Shed ? Shed->FindComponentByClass<UStaticMeshComponent>() : nullptr;
             TestNotNull(TEXT("Generator annex shell source"), ShedBlockout);
@@ -482,37 +482,30 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 ShedLight = EnvironmentIt->FindComponentByClass<UPointLightComponent>();
             }
             TestTrue(TEXT("Generator annex has a warm working light"), ShedLight && ShedLight->Intensity > 0.0f);
+            UStaticMeshComponent* Rotor = nullptr;
             for (UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(State->Lighthouse.Get()))
             {
-                if (Mesh && Mesh->GetName().StartsWith(TEXT("LanternGlass_")))
+                if (Mesh->GetName() == TEXT("HeroLanternRoom"))
                 {
                     State->LanternGlazingPanels.Add(Mesh);
+                    bool bHasTransparentGlazing = false;
+                    for (int32 Slot = 0; Slot < Mesh->GetNumMaterials(); ++Slot)
+                    {
+                        UMaterialInterface* Surface = Mesh->GetMaterial(Slot);
+                        bHasTransparentGlazing |= Surface && Surface->GetBlendMode() == BLEND_Translucent;
+                    }
+                    TestTrue(TEXT("Authored lantern bays retain transparent glazing"), bHasTransparentGlazing);
                 }
+                if (Mesh->GetName() == TEXT("HeroFresnelRotor")) Rotor = Mesh;
+                if (Mesh->GetName() == TEXT("BeamLensMesh")) State->ArcSource = Mesh;
             }
-            TestEqual(TEXT("Lantern housing has eight glazing panels"), State->LanternGlazingPanels.Num(), 8);
-            UInstancedStaticMeshComponent* FresnelBands = nullptr;
-            for (UInstancedStaticMeshComponent* Mesh : TInlineComponentArray<UInstancedStaticMeshComponent*>(State->Lighthouse.Get()))
-            {
-                if (Mesh && Mesh->GetName() == TEXT("LanternFresnelBands"))
-                {
-                    FresnelBands = Mesh;
-                    break;
-                }
-            }
-            TestNotNull(TEXT("Lantern has instanced Fresnel bands"), FresnelBands);
-            if (FresnelBands)
-            {
-                TestEqual(TEXT("Fresnel bands detail all eight glass faces"), FresnelBands->GetInstanceCount(), 40);
-                TestFalse(TEXT("Fresnel emission stays off before beam startup"), FresnelBands->IsVisible());
-                State->LanternFresnelBands = FresnelBands;
-            }
-            int32 VisibleGlazingPanels = 0;
-            for (const TWeakObjectPtr<UStaticMeshComponent>& Panel : State->LanternGlazingPanels)
-            {
-                VisibleGlazingPanels += Panel.IsValid() && Panel->IsVisible() ? 1 : 0;
-                TestNotNull(TEXT("Unpowered glazing has a material"), Panel.IsValid() ? Panel->GetMaterial(0) : nullptr);
-            }
-            TestEqual(TEXT("Unpowered lantern glazing remains visible"), VisibleGlazingPanels, 8);
+            TestTrue(TEXT("Authored Fresnel optics remain present without power"),
+                Rotor && Rotor->GetStaticMesh() && Rotor->IsVisible());
+            TestEqual(TEXT("Lantern has one integrated glazed housing"), State->LanternGlazingPanels.Num(), 1);
+            TestTrue(TEXT("Unpowered lantern housing remains visible"),
+                State->LanternGlazingPanels.Num() == 1 && State->LanternGlazingPanels[0]->IsVisible());
+            TestTrue(TEXT("Arc emission stays off before beam startup"),
+                State->ArcSource.IsValid() && !State->ArcSource->IsVisible());
             UBBSaveSubsystem* SaveSubsystem = GameInstance->GetSubsystem<UBBSaveSubsystem>();
             TestNotNull(TEXT("Save subsystem"), SaveSubsystem);
             if (!SaveSubsystem || !SaveSubsystem->SaveWorldData(
@@ -702,10 +695,7 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             {
                 VisibleGlazingPanels += Panel.IsValid() && Panel->IsVisible() ? 1 : 0;
             }
-            TestEqual(TEXT("Lantern glazing remains visible when lit"), VisibleGlazingPanels, 8);
-            UInstancedStaticMeshComponent* FresnelBands = State->LanternFresnelBands.Get();
-            TestNotNull(TEXT("Powered lighthouse Fresnel assembly"), FresnelBands);
-            TestTrue(TEXT("Fresnel bands illuminate with the beam"), FresnelBands && FresnelBands->IsVisible());
+            TestEqual(TEXT("Lantern glazing remains visible when lit"), VisibleGlazingPanels, 1);
             ABBlackBeaconPlayerController* PlayerController = Cast<ABBlackBeaconPlayerController>(World->GetFirstPlayerController());
             if (PlayerController && PlayerController->PromptWidget)
             {
@@ -772,6 +762,8 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("The revealed fragment has full visible weight"), State->AnomalyReveal->GetVisibilityAmount() >= 0.99f);
             USpotLightComponent* BeamLight = Lighthouse->FindComponentByClass<USpotLightComponent>();
             TestTrue(TEXT("Powered beam light is visible"), BeamLight && BeamLight->IsVisible());
+            TestTrue(TEXT("Arc source illuminates with the beam"),
+                State->ArcSource.IsValid() && State->ArcSource->IsVisible());
             if (BeamLight)
             {
                 TestTrue(TEXT("Powered beam has radiometric intensity"), BeamLight->Intensity > 1000.0f);
@@ -1108,7 +1100,9 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
                 VisibleGlazingPanels += Panel.IsValid() && Panel->IsVisible() ? 1 : 0;
                 TestNotNull(TEXT("Glazing retains a material after power loss"), Panel.IsValid() ? Panel->GetMaterial(0) : nullptr);
             }
-            TestEqual(TEXT("Lantern glazing remains visible after power loss"), VisibleGlazingPanels, 8);
+            TestEqual(TEXT("Lantern glazing remains visible after power loss"), VisibleGlazingPanels, 1);
+            TestTrue(TEXT("Arc source hides after power loss"),
+                State->ArcSource.IsValid() && !State->ArcSource->IsVisible());
             TestTrue(TEXT("Beam light hides after power loss"), BeamLight && !BeamLight->IsVisible());
             TestTrue(TEXT("Rain field stays fixed as the player traverses the map"),
                 State->Weather.IsValid()
