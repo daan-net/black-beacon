@@ -47,3 +47,6 @@ __pycache__/
 
 # Blender automatic backup
 *.blend1
+
+# Agent-only low-resolution references
+ART_REFERENCES/LIGHTHOUSE_HERO/AGENT_LOWRES/
