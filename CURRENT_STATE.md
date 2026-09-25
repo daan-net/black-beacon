@@ -1,12 +1,13 @@
 # BLACK BEACON — Current State
 
 
-## V0.5 — IMPLEMENTED Generator Annex & Machinery Asset Blockout
 
-- **IMPLEMENTED:** A new procedural python builder `Art/Source/GeneratorAnnex/build_annex.py` generated three modular OBJ assets:
-  - `SM_BB_GeneratorAnnex_Arch`: exterior shell, thick walls, rusted metal roof, gutters, vents, chimney, heavy industrial door, and weathered windows.
-  - `SM_BB_GeneratorAnnex_Machinery`: generator block, alternator, flywheel, support frame, exhaust manifold, fuel tank, and electrical/breaker panels.
-  - `SM_BB_GeneratorAnnex_Props`: workbench, crates, tools, and industrial practical lamps.
+## V0.5 — IMPLEMENTED Generator Annex & Machinery HERO PASS
+
+- **IMPLEMENTED:** A massive detail geometry pass via updated `build_annex.py`. The generator block now features explicit cylinders for an alternator, flywheel spokes, ribbed cooling fins, mounting frame/skid bolts, an overhead muffler and detailed fuel lines. The architecture features true repeating corrugated roofing, deeper windows with sills, gutters with brackets, and a heavy bolted door.
+- **IMPLEMENTED:** Added 10 high-quality PBR material families (e.g. `WetConcrete_Aged`, `Rust`, `ChippedPaint`, `OilyMetal`) providing localized weathering. Re-run via `apply_generator_material_correction.py`.
+- **IMPLEMENTED:** Reduced `GENERATOR_SHED_LIGHT_LUMENS` from 180 to 60 in `BBCoastalEnvironment.cpp` to prevent flat washout of these new materials, preserving readable practical lighting.
+
 - **IMPLEMENTED:** The assets are integrated into Unreal via `Art/Source/GeneratorAnnex/import_generator_annex.py`.
 - **Gameplay compatibility:** The original generator interaction position and the usable player space remains untouched and compatible. The new visual assets wrap the existing functional volumes.
 

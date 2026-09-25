@@ -27,7 +27,7 @@ namespace
 	constexpr const TCHAR* BASALT_MATERIAL = TEXT("/Game/BlackBeacon/Materials/M_WetBasaltRock.M_WetBasaltRock");
 	constexpr const TCHAR* WRECK_HULL_TEXTURE = TEXT("/Game/BlackBeacon/Textures/T_WreckHullAlbedo.T_WreckHullAlbedo");
 	constexpr const TCHAR* OCEAN_MATERIAL = TEXT("/Engine/EngineMaterials/WaterMaterial.DefaultWaterMaterial");
-	constexpr float GENERATOR_SHED_LIGHT_LUMENS = 180.0f;
+	constexpr float GENERATOR_SHED_LIGHT_LUMENS = 60.0f;
 	constexpr float ROCK_SAMPLE_SCALE = 0.4f;
 	const FVector GENERATOR_ANNEX_OLD_CENTER(1560.0f, 1120.0f, 0.0f);
 	const FVector GENERATOR_ANNEX_HERO_CENTER(0.0f, -620.0f, 0.0f);

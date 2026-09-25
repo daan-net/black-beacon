@@ -7,11 +7,13 @@ user-visible behaviour is called out as **user-visible**.
 Status vocabulary used here (same as AGENTS.md): `IMPLEMENTED` (built in the
 intended context), `TESTED` (built + exercised with evidence), `PLACEHOLDER`
 
-## 2026-09-25 — V0.5 — Generator Annex & Machinery Asset Blockout
 
-- **Visual Asset Production**: Added `Art/Source/GeneratorAnnex/build_annex.py` to procedurally generate a detailed production blockout of the Generator Annex and Machinery.
-- Generated `SM_BB_GeneratorAnnex_Arch`, `SM_BB_GeneratorAnnex_Machinery`, and `SM_BB_GeneratorAnnex_Props` as OBJ modules.
-- Added `Art/Source/GeneratorAnnex/import_generator_annex.py` for headless Unreal integration.
+## 2026-09-25 — V0.5 — Generator Annex & Machinery HERO PASS
+
+- **Visual Asset Production**: Re-engineered `build_annex.py` to produce hero-quality mechanical components (belts, cooling fins, conduits, gauges) and architectural detailing (corrugated roof, gutters, deep window frames).
+- **Materials**: Expanded from simple colors to 10 tuned PBR materials via `apply_generator_material_correction.py`, adding rust, chipped paint, damp concrete, and oil stains.
+- **Lighting**: Reduced `GENERATOR_SHED_LIGHT_LUMENS` to 60.0f to eliminate material wash-out.
+
 
 (scaffolding to be replaced), `PLANNED` (paper only). Anything written-but-not-
 compiled is marked **written, not built** and is *not* `IMPLEMENTED`.

@@ -22,12 +22,16 @@ for filename in sorted(os.listdir(ROOT)):
 
 unreal.EditorAssetLibrary.make_directory(MATERIAL_DESTINATION)
 for source_name, target_name in (
-        ("TowerPaint", "M_GA_TowerPaint"),
-        ("DarkIron", "M_GA_DarkIron"),
-        ("WarmBrass", "M_GA_WarmBrass"),
-        ("LanternGlass", "M_GA_LanternGlass"),
+        ("WetConcrete", "M_GA_WetConcrete"),
+        ("WetConcrete_Aged", "M_GA_WetConcrete_Aged"),
+        ("Rust", "M_GA_Rust"),
+        ("OxidizedIron", "M_GA_OxidizedIron"),
+        ("ChippedPaint", "M_GA_ChippedPaint"),
+        ("DirtyGlass", "M_GA_DirtyGlass"),
+        ("OilyMetal", "M_GA_OilyMetal"),
+        ("DampFloor", "M_GA_DampFloor"),
         ("AgedWood", "M_GA_AgedWood"),
-        ("WetRock", "M_GA_WetRock")):
+        ("WarmBrass", "M_GA_WarmBrass")):
     source = DESTINATION + "/" + source_name
     target = MATERIAL_DESTINATION + "/" + target_name
     if unreal.EditorAssetLibrary.does_asset_exist(source):
