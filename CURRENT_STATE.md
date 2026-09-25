@@ -1,17 +1,48 @@
 # BLACK BEACON — Current State
 
-**Last updated:** 2026-09-24 · **Milestone:** M0.2 open; scoped M1 first reveal in progress
+**Last updated:** 2026-09-25 · **Milestone:** V0.4 playable validation complete; art/performance gates remain open
 
-## Major visual rebuild V0.4 — PAUSED at owner's request
+## V0.4 — TESTED playable checkpoint; validation complete
 
-The user paused work to wait for the usage-limit reset. This branch is a saved
-work checkpoint, NOT an accepted playable milestone. C++ editor build succeeded;
-53 standalone logic checks and four geometry checks pass. The first null-RHI
-asset import succeeded. The subsequent Vulkan material compile was interrupted
-before completion; the integrated gameplay suite and A–O renders were NOT run.
+Resumed from the owner's manually reviewed `1c0cf71`, preserved at
+`checkpoint-v04-playable-20260925`. The old pause instructions were superseded by
+its successful recovery Vulkan asset build. No blanket regeneration or material
+rebuild was performed during validation.
 
-Resume instructions are in `V04_RESUME.md`. Return the active `main` worktree to
-the verified pre-V0.4 state before playing. Do not label V0.4 TESTED.
+The first rendered run found an actual upper-stair obstruction at step 74/84.
+Only the matching gallery visual and collision hatch were widened 112→200 degrees;
+original stairs, gameplay logic and all materials remain unchanged. Added a
+capsule-footprint regression and an in-engine probe at the recorded obstruction.
+
+- **TESTED:** final 1920×1080 Vulkan suite **5/5**, zero test warnings/errors,
+  exit 0: GameplayFlow, PlayerControls, StairTraversal, StormWorld.Identity,
+  ArchitectureReview. Entire 84-step climb reaches lantern height grounded.
+  Generator/power, interactions/objectives, beam start/aim/rotation, reveal/fade,
+  and save/load restoration pass. Exactly one directional light is asserted.
+- **TESTED:** `./Tools/validate.sh` passes the existing 53 logic checks and five
+  geometric regression checks. UE 5.8.2 BlackBeaconEditor build succeeded.
+- Read-only audit: all nine meshes load, material slots resolve, 1–7 sections
+  per mesh, correct gallery collision mode, all eight approved reference PNGs.
+  Hash comparison confirms only the two intended gallery OBJ/UE meshes changed.
+- Fifteen real A–O captures, contact sheet and same-camera before/after comparison:
+  `Saved/VisualRebuildV04/Validation/Screenshots.md`.
+- Final automation report: `Saved/Automation/VisualRebuildV04Clearance/index.json`;
+  logs/audits: `Saved/VisualRebuildV04/Validation/`. The first failed run is retained
+  separately as `Gameplay.log`; the passing run is `GameplayClearance.log`.
+- Short storm sample, 1417 frames: median **20.23 ms**, p95 **25.64 ms**,
+  aggregate **44.93 FPS** including screenshot stalls. This is not sustained
+  60 FPS or a long-duration stability certification. M0.2 performance gate stays open.
+
+No known blocker remains in the tested gameplay route. Visual weaknesses remain:
+beam still reads dense/uniform, close Fresnel is overbright, generator machinery
+is primitive, coastal rocks/foam lack convincing contact and scale, and some
+warm wall pools show repetitive surface detail. V0.4 is a validated playable
+checkpoint, not final production-art acceptance. No micro-polish or V0.5 work
+was started. See `V04_VALIDATION.md` for findings and the recommended next milestone.
+
+Source reproducibility caveat: committed OBJ/UE assets define this checkpoint;
+pre-pause generator-only variations remain unexported. `V04_RESUME.md` records
+them so a later full regeneration does not silently replace reviewed art.
 
 ## Storm World Identity V0.1 — TESTED checkpoint; USER VISUAL / AUDIO REVIEW
 

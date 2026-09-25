@@ -8,6 +8,8 @@ from pathlib import Path
 from mesh import Mesh,polar,add
 OUT=Path(__file__).resolve().parents[2]/'Lighthouse'/'SourceMeshes'
 T=math.tau
+# Includes the full player capsule above the final flight, before its centre enters the hatch.
+GALLERY_HATCH_END=math.radians(200)
 
 def radius(z): return 314-92*min(z,1560)/1560
 
@@ -67,8 +69,8 @@ def gallery():
     m.lathe([(1400,226),(1460,249),(1500,288),(1522,335),(1540,378)],'CutStone')
     m.ring(1545,394,277,30,'DarkIron')
     # Last flight rises through the positive-Y hatch onto the existing landing.
-    m.ring(1565,391,63,10,'DarkIron',112,math.radians(112),T)
-    m.ring(1565,391,210,10,'DarkIron',40,0,math.radians(112))
+    m.ring(1565,391,63,10,'DarkIron',112,GALLERY_HATCH_END,T)
+    m.ring(1565,391,210,10,'DarkIron',40,0,GALLERY_HATCH_END)
     m.box((120,-35,1565),(110,120,10),'DarkIron')
     for i in range(16):
         a=i*T/16
@@ -95,8 +97,8 @@ def gallery():
 
 def deck():
     m=Mesh('SM_BB_LH_GalleryDeck')
-    m.ring(1565,388,63,10,'DarkIron',112,math.radians(112),T)
-    m.ring(1565,388,210,10,'DarkIron',40,0,math.radians(112))
+    m.ring(1565,388,63,10,'DarkIron',112,GALLERY_HATCH_END,T)
+    m.ring(1565,388,210,10,'DarkIron',40,0,GALLERY_HATCH_END)
     return m
 
 def lantern():

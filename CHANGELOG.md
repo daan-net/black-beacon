@@ -9,6 +9,28 @@ intended context), `TESTED` (built + exercised with evidence), `PLACEHOLDER`
 (scaffolding to be replaced), `PLANNED` (paper only). Anything written-but-not-
 compiled is marked **written, not built** and is *not* `IMPLEMENTED`.
 
+## 2026-09-25 — V0.4 resumed validation and upper stair clearance
+
+- Resumed the owner's manually reviewed `1c0cf71` checkpoint; preserved its tag.
+  Confirmed the interrupted-run documentation was stale: the recovery Vulkan
+  asset build had already completed. No blanket asset/material rebuild.
+- Read-only audit loaded all nine generated meshes, checked all material slots,
+  1–7 draw sections per mesh, gallery collision mode, and eight reference PNGs.
+- First rendered suite exposed a real climb blocker at step 74/84: the new deck
+  underside met the player's head before the capsule reached the hatch.
+- **User-visible repair:** enlarged only the matching gallery visual/collision
+  hatch from 112 to 200 degrees; preserved all original stair collision. Added
+  tests for the recorded capsule footprint and head obstruction. Only these two
+  Unreal mesh assets changed; all other audited content/reference hashes match.
+- **Validation:** final rendered Vulkan suite 5/5, zero test warnings/errors,
+  exit 0; full 84-step climb and gallery probes pass. UE build and standalone
+  validation (53 logic + five geometry checks) pass. Captured all A–O frames.
+  Short sample median 20.23 ms / p95 25.64 ms; no sustained-60-FPS claim.
+  Evidence and remaining visual limits: CURRENT_STATE.md / V04_VALIDATION.md.
+- Corrected stale pause/resume notes. Source-only generator variations are
+  explicitly recorded rather than silently re-exporting manually reviewed art.
+- V0.5 remains a recommendation only; no visual micro-polish was performed.
+
 ## 2026-09-25 — Major visual rebuild V0.4 — paused work checkpoint
 
 - **Scope authorization:** milestone owner requested a structural visual rebuild

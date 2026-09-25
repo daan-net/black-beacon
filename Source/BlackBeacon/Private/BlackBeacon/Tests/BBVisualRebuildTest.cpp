@@ -76,11 +76,15 @@ bool FBBVisualRebuildTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("Gallery floor has supporting collision"),Deck && Deck->GetCollisionEnabled()==ECollisionEnabled::QueryAndPhysics);
             if (Deck)
             {
-                for (const FVector P:{FVector(-180,0,1570),FVector(310,0,1570),FVector(0,-300,1570)})
+                for (const FVector P:{FVector(-180,-100,1570),FVector(310,0,1570),FVector(0,-300,1570)})
                 {
                     FHitResult Hit;
                     TestTrue(TEXT("Gallery floor agrees with its visible surface"),Deck->LineTraceComponent(Hit,P+FVector(0,0,60),P-FVector(0,0,60),FCollisionQueryParams(NAME_None,true)));
                 }
+                FHitResult HeadHit;
+                TestFalse(TEXT("Gallery clears the recorded step-74 head obstruction"),
+                    Deck->LineTraceComponent(HeadHit,FVector(-113.251,38.242,1550),
+                        FVector(-113.251,38.242,1590),FCollisionQueryParams(NAME_None,true)));
                 FHitResult Hit;
                 TestFalse(TEXT("Last stair flight retains overhead hatch clearance"),Deck->LineTraceComponent(Hit,FVector(110,85,1590),FVector(110,85,1500),FCollisionQueryParams(NAME_None,true)));
             }

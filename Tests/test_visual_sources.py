@@ -18,11 +18,27 @@ class Architecture(unittest.TestCase):
 
     def test_gallery_hatch_and_walkway(self):
         m=deck()
-        # All floor vertices in the hatch's 0..112 degree sector stay outside r=210.
+        # All floor vertices in the hatch's 0..200 degree sector stay outside r=210.
         for p,uv in m.vertices:
-            a=math.degrees(math.atan2(p[1],p[0]))
-            if .01<a<111.99:self.assertGreaterEqual(math.hypot(p[0],p[1]),209.99)
+            a=math.degrees(math.atan2(p[1],p[0]))%360
+            if .01<a<199.99:self.assertGreaterEqual(math.hypot(p[0],p[1]),209.99)
         self.assertTrue(all(1559.99<=p[2]<=1570.01 for p,uv in m.vertices))
+
+    def test_gallery_clears_recorded_step_74_capsule(self):
+        m=deck()
+        # Actual failed climb: head touched Z=1560 at this XY position.
+        centre=(-113.251,38.242)
+        probes=[centre]+[(centre[0]+38*math.cos(i*math.tau/32),
+                          centre[1]+38*math.sin(i*math.tau/32)) for i in range(32)]
+        for mat,ids,smooth in m.faces:
+            ps=[m.vertices[i-1][0] for i in ids]
+            if any(abs(p[2]-1560)>1e-6 for p in ps):continue
+            a,b,c=ps
+            def orient(a,b,p):return (b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0])
+            for probe in probes:
+                signs=[orient(a,b,probe),orient(b,c,probe),orient(c,a,probe)]
+                inside=all(v>=-1e-6 for v in signs) or all(v<=1e-6 for v in signs)
+                self.assertFalse(inside,'Gallery overlaps the failed player capsule footprint')
 
     def test_tower_taper_clears_stair_outer_edges(self):
         for floor,outer in enumerate((255,210,175)):
