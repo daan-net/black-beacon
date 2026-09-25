@@ -233,7 +233,10 @@ def lantern_room():
         x, y = math.cos(a), math.sin(a)
         m.box((x * 150, y * 150, 0), (16, 16, 178), "DarkIron", math.degrees(a) + 90)
         # Layered Fresnel rings flank the real, powered beam lens at (0,0,0).
-        m.torus(-52 + i * 15, 59 + i * 1.4, 3.5, "WarmBrass", 48, 6)
+        for ring_idx in range(6):
+            m.torus(-52 + i * 15 + ring_idx * 5, 59 + i * 1.4 + ring_idx * 2, 3.5, "WarmBrass", 48, 6)
+        # Add vertical alignment struts connecting rings
+        m.box((x * 60, y * 60, 0), (4, 4, 120), "WarmBrass", math.degrees(a) + 90)
     # Radial optical cage and restrained dark glass panes.
     for i in range(8):
         a = math.tau * (i + 0.5) / 8
