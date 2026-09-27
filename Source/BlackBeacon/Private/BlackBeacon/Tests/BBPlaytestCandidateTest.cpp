@@ -108,6 +108,32 @@ bool FBBPlaytestCandidateTest::RunTest(const FString& Parameters)
                 const FVector D=FRotator(0,Angle,0).Vector();
                 TestFalse(*FString::Printf(TEXT("Actual doorway clear at %.0f degrees"),Angle),Blocked(D*425+FVector(0,0,150),D*280+FVector(0,0,150)));
             }
+            // Include stair guards and landings: perimeter-only probes missed the
+            // first guard's projecting corner even at the higher capsule position.
+            FCollisionQueryParams EntryParams;
+            EntryParams.AddIgnoredActor(State->Pawn);
+            for (float Height : {112.0f, 150.0f})
+            {
+                for (float Angle : {-3.0f, 0.0f, 3.0f})
+                {
+                    const FVector Direction = FRotator(0, Angle, 0).Vector();
+                    FHitResult Hit;
+                    const bool bBlocked = State->World->SweepSingleByChannel(Hit,
+                        Direction * 420 + FVector(0, 0, Height), Direction * 280 + FVector(0, 0, Height),
+                        FQuat::Identity, ECC_Pawn, FCollisionShape::MakeCapsule(38, 88), EntryParams);
+                    // A level sweep can hit a tread that CharacterMovement steps onto.
+                    // Do not exempt guards, walls, or risers above the actual step limit.
+                    const AActor* HitActor = Hit.GetActor();
+                    const UPrimitiveComponent* HitComponent = Hit.GetComponent();
+                    const bool bReachableTread = HitActor && HitComponent
+                        && HitActor->ActorHasTag(TEXT("BB_StairStep"))
+                        && State->Pawn->GetCharacterMovement()->CanStepUp(Hit)
+                        && HitComponent->Bounds.GetBox().Max.Z <= Height - 88.0f
+                            + State->Pawn->GetCharacterMovement()->MaxStepHeight;
+                    TestTrue(*FString::Printf(TEXT("Full-scene entry permits walking at %.0f degrees, Z=%.0f (hit %s/%s)"),
+                        Angle, Height, *GetNameSafe(HitActor), *GetNameSafe(HitComponent)), !bBlocked || bReachableTread);
+                }
+            }
             for(float Angle:{45.f,90.f,180.f,270.f})
             {
                 const FVector D=FRotator(0,Angle,0).Vector();
@@ -122,6 +148,8 @@ bool FBBPlaytestCandidateTest::RunTest(const FString& Parameters)
         if(State->Stage==1 && Now-State->At>.6)
         {
             Key(EKeys::W,IE_Released,0);
+            AddInfo(FString::Printf(TEXT("Doorway approach %d: location=%s velocity=%s"),
+                State->EntryPass, *Pawn->GetActorLocation().ToString(), *Pawn->GetVelocity().ToString()));
             TestTrue(*FString::Printf(TEXT("W enters the genuine doorway, approach %d"),State->EntryPass),Pawn->GetActorLocation().X<280);
             if(++State->EntryPass<3)
             {

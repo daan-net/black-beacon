@@ -1,11 +1,26 @@
-## V0.5.1 playtest stabilization — work in progress
-
-Baseline: `d1bbab5`, branch `work/v051-playtest-candidate`. V0.5 checkpoint preserved.
-IMPLEMENTED: collision proxies, stair assistance, two-axis optical controls and pitch synchronization compile in Unreal 5.8.2. Logic tests and the two-mesh access import pass. The in-engine playtest is running. Do not treat this working tree as a playable checkpoint until the V0.5.1 validation record is complete.
-
 # BLACK BEACON — Current State
 
-**Last updated:** 2026-09-25 · **Milestone:** V0.5 hero environment playable checkpoint validated
+**Last updated:** 2026-09-27 · **Milestone:** V0.5.1 technical playtest candidate
+
+## V0.5.1 — IMPLEMENTED / TESTED technical candidate
+
+On `work/v051-playtest-candidate`, preserving safety baseline `a036ba4` and V0.5
+checkpoint `d1bbab5`. The entrance obstruction was the first `BB_StairGuard`'s
+invisible projecting corner. Only its entrance-facing half was trimmed to end
+at the existing first post. Door geometry, tower shell, upper guards and
+traversal dimensions remain intact. No failed door-leaf experiment remains.
+
+Unreal 5.8.2 build and `Tools/validate.sh` pass. Final targeted
+`BlackBeacon.V051.PlaytestLoop` and `BlackBeacon.M01.GameplayFlow` both pass,
+exit 0. Entry at -3/0/+3 degrees passes the original 0.6-second deadline;
+full climb, balcony access, generator, yaw/pitch aiming, manual wreck discovery,
+release/reacquire, objectives and save/restore are exercised.
+
+[Root cause, validation evidence and controls](V051_VALIDATION.md).
+Owner manual UX acceptance remains pending. Existing V0.4/V0.5 hero assets and
+V0.5.1 access source/imports are intact; no partial art export was found during
+recovery. The reference package's V0.1 implementation record is historical and
+must not overwrite these later assets.
 
 ## V0.5 — TESTED hero environment playable checkpoint
 

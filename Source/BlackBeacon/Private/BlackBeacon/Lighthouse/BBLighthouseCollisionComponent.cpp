@@ -70,12 +70,29 @@ void UBBLighthouseCollisionComponent::Assemble()
         }
     }
     // Old blockout guards protruded into the capsule lane, especially on flight three.
+    AActor* EntryGuard = nullptr;
     for (TActorIterator<AActor> It(GetWorld()); It; ++It)
     {
         if (It->ActorHasTag(TEXT("BB_StairGuard")))
         {
             FVector Radial=It->GetActorLocation(); Radial.Z=0;
             It->AddActorWorldOffset(Radial.GetSafeNormal()*8.0f);
+            if (!EntryGuard || It->GetActorLocation().Z < EntryGuard->GetActorLocation().Z)
+            {
+                EntryGuard = *It;
+            }
         }
+    }
+    if (UStaticMeshComponent* GuardMesh = EntryGuard ? EntryGuard->FindComponentByClass<UStaticMeshComponent>() : nullptr)
+    {
+        // The rail begins at its first post. The blockout guard extended half a
+        // tread beyond that post and caught entering capsules on an invisible corner.
+        // Retain the trailing half toward the next post; preserve every upper guard.
+        FVector Scale = GuardMesh->GetComponentScale();
+        const FVector Offset = GuardMesh->GetRightVector()
+            * GuardMesh->GetStaticMesh()->GetBounds().BoxExtent.Y * Scale.Y * 0.5f;
+        Scale.Y *= 0.5f;
+        GuardMesh->SetWorldScale3D(Scale);
+        GuardMesh->AddWorldOffset(-Offset);
     }
 }

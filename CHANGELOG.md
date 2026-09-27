@@ -1,11 +1,13 @@
-## V0.5.1 — playtest stabilization (validation in progress)
+## V0.5.1 — TESTED technical playtest candidate (2026-09-27)
 
 - Restore solid tapered tower and lantern perimeter collision with clear entry and balcony doorways. Relocate the obstructing lantern console and increase service-door headroom; preserve the V0.5 appearance and gallery hatch/deck.
 - Add movement-based spiral stair steering and gentle lane correction, overridden by strafing or looking away. Limit stair walking to 180 cm/s; releasing movement stops traversal.
 - Add a blended exterior optical control view, mouse yaw/pitch (−20° to +8°), and E release independent of interaction focus. Restore normal camera and movement on release or power loss.
 - Synchronize pitch-only changes, spotlight, atmospheric beam and reveal query in the same frame.
 - Require manual aiming before discovery; illuminate a hull target long enough to reveal the whole wreck silhouette, acknowledge discovery, fade on release and resume fading in when reacquired.
-- Add engine-free regression checks and an in-engine playtest that uses actual W/E/mouse input for climbing and searching. Engine validation is pending; this is not yet a checkpoint.
+- Add engine-free regression checks and an in-engine playtest that uses actual W/E/mouse input for climbing and searching. The targeted V0.5.1 loop and M01 gameplay/power/save regression pass; owner manual UX acceptance remains pending.
+
+- Correct the entrance obstruction by trimming only the first stair guard's invisible projection to its starting post. Add full-scene capsule probes at walking and elevated heights; keep the three dynamic entry tests' 0.6-second deadline. Full collision diagnosis is recorded in `V051_VALIDATION.md`.
 
 # BLACK BEACON — Change Log
 
