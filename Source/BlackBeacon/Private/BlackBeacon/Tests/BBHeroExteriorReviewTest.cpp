@@ -63,7 +63,7 @@ bool FBBHeroExteriorReviewTest::RunTest(const FString& Parameters)
             TestEqual(TEXT("All three exterior modules assembled"), Modules, 3);
             const int32 Slot = Lighthouse->TowerExteriorSkin->GetMaterialIndex(TEXT("TowerPaint"));
             TestTrue(TEXT("Only exterior paint receives new finish"), Slot != INDEX_NONE && Lighthouse->TowerExteriorSkin->GetMaterial(Slot) &&
-                Lighthouse->TowerExteriorSkin->GetMaterial(Slot)->GetName() == TEXT("M_Hero_ExteriorFinish"));
+                Lighthouse->TowerExteriorSkin->GetMaterial(Slot)->GetName() == TEXT("MI_EK_ExteriorPlaster"));
             State->Controller = World->GetFirstPlayerController();
             State->PreviousView = State->Controller->GetViewTarget();
             State->Camera = World->SpawnActor<ACameraActor>();

@@ -1,4 +1,5 @@
 #include "BlackBeacon/Lighthouse/BBHeroArchitectureComponent.h"
+#include "BBEnvironmentKit.h"
 
 #include "BlackBeacon/Lighthouse/BBLighthouseController.h"
 #include "Components/InstancedStaticMeshComponent.h"
@@ -199,4 +200,5 @@ void UBBHeroArchitectureComponent::Assemble()
         Light->RegisterComponent();
         Light->SetWorldLocation(Positions[I]);
     }
+    BlackBeacon::EnvironmentKit::Assemble(*Lighthouse);
 }

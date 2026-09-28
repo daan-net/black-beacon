@@ -381,15 +381,20 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             TestNotNull(TEXT("Lighthouse weathered paint texture loads"), LighthousePaint);
             UStaticMeshComponent* const TowerSkin = State->Lighthouse->TowerExteriorSkin;
             UMaterialInterface* const ExteriorFinish = LoadObject<UMaterialInterface>(nullptr,
-                TEXT("/Game/BlackBeacon/Art/Lighthouse/Materials/M_Hero_ExteriorFinish.M_Hero_ExteriorFinish"));
+                TEXT("/Game/BlackBeacon/EnvironmentKitV1/Materials/MI_EK_ExteriorPlaster"));
             const int32 PaintSlot = TowerSkin->GetMaterialIndex(TEXT("TowerPaint"));
+            const int32 PlasterSlot = TowerSkin->GetMaterialIndex(TEXT("InteriorPlaster"));
+            UMaterialInterface* const InteriorFinish = LoadObject<UMaterialInterface>(nullptr,
+                TEXT("/Game/BlackBeacon/EnvironmentKitV1/Materials/MI_EK_InteriorPlaster"));
             TestTrue(TEXT("Tower exterior has its isolated hero finish"), ExteriorFinish && PaintSlot != INDEX_NONE
                 && TowerSkin->GetMaterial(PaintSlot) == ExteriorFinish);
+            TestTrue(TEXT("Tower interior has its sheltered scan finish"), InteriorFinish && PlasterSlot != INDEX_NONE
+                && TowerSkin->GetMaterial(PlasterSlot) == InteriorFinish);
             if (TowerSkin->GetStaticMesh())
             {
                 for (int32 Slot = 0; Slot < TowerSkin->GetNumMaterials(); ++Slot)
                 {
-                    if (Slot == PaintSlot) continue;
+                    if (Slot == PaintSlot || Slot == PlasterSlot) continue;
                     TestTrue(TEXT("Other tower slots retain their imported materials"),
                         TowerSkin->GetMaterial(Slot) == TowerSkin->GetStaticMesh()->GetMaterial(Slot));
                 }

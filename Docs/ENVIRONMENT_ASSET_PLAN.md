@@ -70,5 +70,6 @@ allows source redistribution; cooked-game permission alone is insufficient.
 Acquire four assets, create the reusable kit materials/meshes, override only visual
 wall slots, add noncolliding coastal skins and restrained fuel-storage props.
 No new map, generic scratch modeling, gameplay code, collision, sky or global
-renderer changes. One targeted editor build, one rendered review with eight views
-and targeted route/interaction checks; record limitations, commit and stop.
+renderer changes. Targeted editor build and a rendered review with eight views and essential
+route/interaction checks; correct concrete import/shader failures only, record
+limitations, commit and stop.
