@@ -19,6 +19,7 @@
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/SkyLightComponent.h"
 #include "Engine/Texture2D.h"
+#include "Engine/StaticMesh.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
 #include "BlackBeacon/Core/BBGameMode.h"
@@ -378,9 +379,21 @@ bool FBBGameplayFlowTest::RunTest(const FString& Parameters)
             UTexture2D* const LighthousePaint = LoadObject<UTexture2D>(nullptr,
                 TEXT("/Game/BlackBeacon/Textures/T_LighthousePaintAlbedo.T_LighthousePaintAlbedo"));
             TestNotNull(TEXT("Lighthouse weathered paint texture loads"), LighthousePaint);
-            UMaterialInterface* const TowerMaterial = State->Lighthouse->TowerExteriorSkin->GetMaterial(0);
-            TestTrue(TEXT("Tower uses imported architectural material slots"),
-                TowerMaterial && TowerMaterial->GetName().StartsWith(TEXT("M_LH_")));
+            UStaticMeshComponent* const TowerSkin = State->Lighthouse->TowerExteriorSkin;
+            UMaterialInterface* const ExteriorFinish = LoadObject<UMaterialInterface>(nullptr,
+                TEXT("/Game/BlackBeacon/Art/Lighthouse/Materials/M_Hero_ExteriorFinish.M_Hero_ExteriorFinish"));
+            const int32 PaintSlot = TowerSkin->GetMaterialIndex(TEXT("TowerPaint"));
+            TestTrue(TEXT("Tower exterior has its isolated hero finish"), ExteriorFinish && PaintSlot != INDEX_NONE
+                && TowerSkin->GetMaterial(PaintSlot) == ExteriorFinish);
+            if (TowerSkin->GetStaticMesh())
+            {
+                for (int32 Slot = 0; Slot < TowerSkin->GetNumMaterials(); ++Slot)
+                {
+                    if (Slot == PaintSlot) continue;
+                    TestTrue(TEXT("Other tower slots retain their imported materials"),
+                        TowerSkin->GetMaterial(Slot) == TowerSkin->GetStaticMesh()->GetMaterial(Slot));
+                }
+            }
             TestTrue(TEXT("Gameplay lighthouse tower shell uses the tapered hero mesh"),
                 State->Lighthouse->TowerExteriorSkin
                 && State->Lighthouse->TowerExteriorSkin->GetStaticMesh()

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "SM_BB_Hero_Foundation",
+    "vertices": 42032,
+    "triangles": 21016,
+    "normals": 10391
+  },
+  {
+    "name": "SM_BB_Hero_GalleryCorbels",
+    "vertices": 24544,
+    "triangles": 13376,
+    "normals": 2610
+  },
+  {
+    "name": "SM_BB_Hero_WindowDressings",
+    "vertices": 1152,
+    "triangles": 576,
+    "normals": 18
+  }
+]

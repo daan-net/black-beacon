@@ -1,3 +1,18 @@
+## 2026-09-28 — Hero Lighthouse Art V0.1 exterior continuation
+
+- Owner-authorized additive art pass over the validated V0.5.1 baseline. Preserve
+  `06a986f` at `checkpoint-v051-playtest-candidate-20260926`; no previous tags moved.
+- **User-visible / IMPLEMENTED:** modeled ashlar base and portal, curved cast gallery
+  corbels/riveted fascia, projecting window dressings and isolated exterior lime
+  paint weathering. Three new noncolliding mesh modules; no regenerated legacy assets.
+- Editable Python/OBJ/HLSL plus Blender 5.0.1 source; two new Unreal materials.
+  No new gameplay feature, dependency, plugin or coastline scope.
+- **TESTED:** editor build/import, standalone logic/seven geometry checks, native
+  1080p Vulkan art review, V0.5.1 loop and M01 regression pass (gameplay tests use
+  NullRHI). M01 material assertion now verifies the isolated exterior override
+  and every preserved imported slot. Five captures plus an interactive comparison
+  are saved locally; owner visual/UX acceptance remains pending. See `HERO_LIGHTHOUSE_ART_V01.md`.
+
 ## V0.5.1 — TESTED technical playtest candidate (2026-09-27)
 
 - Restore solid tapered tower and lantern perimeter collision with clear entry and balcony doorways. Relocate the obstructing lantern console and increase service-door headroom; preserve the V0.5 appearance and gallery hatch/deck.

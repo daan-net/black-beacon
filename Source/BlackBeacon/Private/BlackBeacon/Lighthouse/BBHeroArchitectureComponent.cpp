@@ -64,6 +64,21 @@ void UBBHeroArchitectureComponent::Assemble()
         }
     }
     Lighthouse->TowerExteriorSkin->EmptyOverrideMaterials();
+    // Additive exterior finish preserves the validated shell, doorway and access meshes.
+    const TCHAR* ExteriorModules[] = {TEXT("Foundation"), TEXT("GalleryCorbels"), TEXT("WindowDressings")};
+    for (const TCHAR* Module : ExteriorModules)
+    {
+        const FString Name = FString::Printf(TEXT("HeroExterior%s"), Module);
+        const FString Asset = FString::Printf(TEXT("/Game/BlackBeacon/Art/Lighthouse/Meshes/SM_BB_Hero_%s.SM_BB_Hero_%s"), Module, Module);
+        AddMesh(*Name, *Asset, Lighthouse->GetRootComponent(), FVector(0,0,-1980));
+    }
+    UMaterialInterface* ExteriorFinish = LoadObject<UMaterialInterface>(nullptr,
+        TEXT("/Game/BlackBeacon/Art/Lighthouse/Materials/M_Hero_ExteriorFinish.M_Hero_ExteriorFinish"));
+    const int32 PaintSlot = Lighthouse->TowerExteriorSkin->GetMaterialIndex(TEXT("TowerPaint"));
+    if (ExteriorFinish && PaintSlot != INDEX_NONE)
+    {
+        Lighthouse->TowerExteriorSkin->SetMaterial(PaintSlot, ExteriorFinish);
+    }
     // Saved component transforms can override constructor defaults during map load.
     for (UStaticMeshComponent* Mesh : TInlineComponentArray<UStaticMeshComponent*>(Lighthouse))
     {

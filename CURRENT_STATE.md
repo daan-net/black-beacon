@@ -1,6 +1,23 @@
 # BLACK BEACON — Current State
 
-**Last updated:** 2026-09-27 · **Milestone:** V0.5.1 technical playtest candidate
+**Last updated:** 2026-09-28 · **Milestone:** Hero lighthouse exterior continuation
+
+## Hero Lighthouse Art Pass V0.1 — IMPLEMENTED / TESTED technical art candidate
+
+Owner authorized continuation after recovery. V0.5.1 is preserved at `06a986f`,
+tag `checkpoint-v051-playtest-candidate-20260926`, with both final gameplay tests
+passing. The new pass adds separate exterior architectural modules and an isolated
+exterior finish; it does not regenerate historical V0.1/V0.4/V0.5/access assets.
+No new gameplay or coastline milestone is included. Three imported meshes add
+34,968 triangles of ashlar base/portal, curved cast gallery corbels and window
+dressings. An isolated material replaces only the exterior paint slot. Blender
+5.0.1 source is saved alongside Python/OBJ/HLSL. UE build/import succeeded;
+`Tools/validate.sh` passes with seven geometry checks. Final Vulkan review passes (five native 1080p captures); V0.5.1 PlaytestLoop
+and M01 GameplayFlow pass in NullRHI, all exit 0. M01 now checks the exact new
+exterior finish and preservation of every other imported slot rather than the
+obsolete `M_LH_` name prefix. The final surface-only correction was reviewed in
+Vulkan; no traversal/reveal implementation changed. Owner art/UX acceptance remains
+pending. See [art report and captures](HERO_LIGHTHOUSE_ART_V01.md).
 
 ## V0.5.1 — IMPLEMENTED / TESTED technical candidate
 
