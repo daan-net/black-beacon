@@ -65,7 +65,6 @@ ABBWeatherController::ABBWeatherController()
 	if (SkyCloudBase.Succeeded())
 	{
 		SkyCloudDome->SetMaterial(0, SkyCloudBase.Object);
-		SkyCloudMaterial = SkyCloudDome->CreateAndSetMaterialInstanceDynamic(0);
 	}
 
 	RainRoot = CreateDefaultSubobject<USceneComponent>(TEXT("RainRoot"));
@@ -97,6 +96,11 @@ MoonLight->bAtmosphereSunLight = true;
 void ABBWeatherController::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	if (SkyCloudDome && !SkyCloudMaterial)
+	{
+		SkyCloudMaterial = SkyCloudDome->CreateAndSetMaterialInstanceDynamic(0);
+	}
     LoadConfig();
 	MoonLight->SetIntensity(MoonlightLux);
 	SkyLight->SetIntensity(MoonSkyFillIntensity);
