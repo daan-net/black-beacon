@@ -617,3 +617,10 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
   with zero test warnings/errors; `./Tools/validate.sh` passed with 45/45 logic checks.
   M1 remains open because the surrounding environment and reveal audio are still
   placeholder/planned, and the five-second automation warm-up remains below 60 FPS.
+
+## 2026-09-28 — Linux Tester Package
+
+- Created standalone Linux x86_64 tester package (Development config) with a self-contained shell launcher.
+- Added local installer (Tools/install-test-build.sh) and uninstaller (Tools/uninstall-test-build.sh) to handle safe deployments and updates while preserving saved data.
+- Completed fully isolated clean user tests for deployment, checksum validation, and uninstallation.
+- Added TESTER_LINUX.md guide and LINUX_PACKAGE_VALIDATION.md report.

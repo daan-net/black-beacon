@@ -2,6 +2,10 @@
 
 **Last updated:** 2026-09-28 · **Milestone:** Hero lighthouse exterior continuation
 
+## Linux Tester Package - IMPLEMENTED / TESTED
+
+Created standalone Linux x86_64 build and installers (`Tools/install-test-build.sh`, `Tools/uninstall-test-build.sh`). Successfully validated deployment, updates, uninstallation, and checksum verification in an isolated mock environment. The packaged game starts cleanly without UE dependency, retaining save games on updates. Output artifacts placed in `dist/` (not committed). Added `TESTER_LINUX.md` and `LINUX_PACKAGE_VALIDATION.md`.
+
 ## Hero Lighthouse Art Pass V0.1 — IMPLEMENTED / TESTED technical art candidate
 
 Owner authorized continuation after recovery. V0.5.1 is preserved at `06a986f`,
