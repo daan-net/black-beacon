@@ -26,6 +26,12 @@ A Black Beacon entry is also added to the application menu. If your shell does
 not include `~/.local/bin` in PATH, run `~/.local/bin/black-beacon` or add
 `export PATH="$HOME/.local/bin:$PATH"` to your shell profile.
 
+On a slow or integrated GPU, start the installed game from a source checkout with
+`Tools/black-beacon-lowspec.sh` (`BB_PRESET=balanced`, `fast` or `original`).
+It renders for 1080p, upscales to the display and uses cheaper clouds, fog and
+shadows; on a 2-CU Radeon iGPU at 4K it raised test1-r2 from about 2 to 15-19 fps.
+It also applies the test1-r2 RADV crash fix and makes Escape quit.
+
 ## UPDATE
 
 Close the game and run the same install command again. It selects the newest
