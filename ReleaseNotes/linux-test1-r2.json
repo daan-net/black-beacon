@@ -1,0 +1,23 @@
+{
+  "status": "prepared-locally-not-published",
+  "proposed_repository": "daan-net/black-beacon",
+  "repository_confirmed": false,
+  "proposed_default_branch": "main",
+  "required_visibility_for_anonymous_install": "public",
+  "actual_visibility": null,
+  "tag": "linux-test1-r2",
+  "prerelease": true,
+  "proposed_installer_url": "https://raw.githubusercontent.com/daan-net/black-beacon/main/install.sh",
+  "packaging_commit": "a4b63a1",
+  "assets": [
+    {
+      "path": "dist/BlackBeacon-linux-x86_64-test1-r2.tar.zst",
+      "bytes": 856936099,
+      "sha256": "583419c562d3e07b7b2fdfd42fb136a885896020a4348649c91614f7e2dc7df4"
+    },
+    {
+      "path": "dist/BlackBeacon-linux-x86_64-test1-r2.tar.zst.sha256",
+      "bytes": 108
+    }
+  ]
+}

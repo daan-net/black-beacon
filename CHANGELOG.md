@@ -1,3 +1,19 @@
+## 2026-09-28 — GitHub Linux installation infrastructure
+
+- **IMPLEMENTED / TESTED locally:** standalone root installer/uninstaller, latest
+  published Linux tester-release selection, SHA-256 verification before extraction,
+  staged atomic updates/rollback, persistent saves/config, legacy migration,
+  argument-preserving launcher, desktop entry and active-game locking.
+- Repeated installs skip unchanged archives. Default uninstall retains managed
+  userdata; only explicit `--remove-saves` removes it. Native Unreal user data is
+  left untouched. Temporary downloads are cleaned on failures and interruption.
+- README install/run/update instructions and release notes/manifest prepared for
+  proposed `daan-net/black-beacon`, tag `linux-test1-r2`. Publication remains pending
+  repository/visibility confirmation. Existing validated archive/checksum unchanged.
+- 13 distribution integration tests, ShellCheck, desktop validation and repository
+  validation pass. No gameplay/art modifications, rebuild/repackaging or CI/Actions.
+  Add `/dist/` to Git ignores; binaries are release assets, not Git source files.
+
 ## 2026-09-28 — Hero Lighthouse Art V0.1 exterior continuation
 
 - Owner-authorized additive art pass over the validated V0.5.1 baseline. Preserve

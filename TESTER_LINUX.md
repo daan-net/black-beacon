@@ -1,5 +1,9 @@
 # Black Beacon Linux Tester Guide
 
+**Historical local-package workflow.** For the current GitHub installer/update
+workflow and save locations, use [README.md](README.md). The commands below
+remain for the older locally supplied test1 archive.
+
 Welcome to the Linux tester program for Black Beacon! This guide covers everything you need to know about installing, running, and managing your local playtest build.
 
 ## Minimum Practical Requirements

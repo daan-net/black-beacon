@@ -2,6 +2,22 @@
 
 **Last updated:** 2026-09-28 · **Milestone:** Hero lighthouse exterior continuation
 
+## GitHub installation infrastructure — IMPLEMENTED / TESTED locally
+
+Root `install.sh` and `uninstall-black-beacon.sh` support checksum-first staged
+Linux x86_64 installation, atomic application switching, save/config preservation,
+legacy migration and desktop/command launchers. All 13 distribution tests pass,
+including extraction of the unchanged real r2 archive. ShellCheck, desktop-entry
+validation and `Tools/validate.sh` pass. No game rebuild/repackaging or art/gameplay
+changes; no CI/Actions. Full report: [DISTRIBUTION.md](DISTRIBUTION.md).
+
+Release notes/manifest are prepared for proposed `daan-net/black-beacon`, `main`,
+tag `linux-test1-r2`. Destination and public visibility are NOT confirmed; no
+matching owned repository or local Git remote was found. GitHub CLI is not logged
+in. Nothing was published or tagged. README command is explicitly a non-live
+proposal pending owner confirmation. Existing untracked packaging scripts remain
+untouched; `dist/` is now ignored rather than risking binary commits.
+
 ## Linux Tester Package - IMPLEMENTED / TESTED
 
 Created standalone Linux x86_64 build and installers (`Tools/install-test-build.sh`, `Tools/uninstall-test-build.sh`). Successfully validated deployment, updates, uninstallation, and checksum verification in an isolated mock environment. The packaged game starts cleanly without UE dependency, retaining save games on updates. Output artifacts placed in `dist/` (not committed). Added `TESTER_LINUX.md` and `LINUX_PACKAGE_VALIDATION.md`.

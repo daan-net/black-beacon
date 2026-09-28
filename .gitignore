@@ -44,3 +44,6 @@ Tests/build/
 # Python source generators
 __pycache__/
 *.pyc
+
+# Distribution binaries are GitHub Release assets, never Git source files.
+/dist/
