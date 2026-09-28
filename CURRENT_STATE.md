@@ -2,6 +2,16 @@
 
 **Last updated:** 2026-09-28 · **Milestone:** Published Linux playtest distribution
 
+## Asset-first environment kit v1 — written, not built
+
+Owner authorized an asset-first cinematic environment pass on
+`work/asset-first-environment-pass`, preserving main and the released package.
+Audit, category acquisition plan and provenance are in `Docs/`. Four official
+Poly Haven CC0 assets acquired with verified checksums; new materials and visual
+integration are being built. No legacy assets, gameplay collision or global
+render settings are changed. Build/render validation is pending; no new Linux
+package or installer verification is part of this art pass.
+
 ## GitHub installation infrastructure — IMPLEMENTED / TESTED publicly
 
 Root `install.sh` and `uninstall-black-beacon.sh` support checksum-first staged

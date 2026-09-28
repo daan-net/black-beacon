@@ -1,0 +1,179 @@
+[
+  {
+    "id": "painted_plaster_wall",
+    "name": "Painted Plaster Wall",
+    "authors": {
+      "Amal Kumar": "All"
+    },
+    "source": "https://polyhaven.com/a/painted_plaster_wall",
+    "license": "CC0-1.0",
+    "license_url": "https://polyhaven.com/license",
+    "attribution_required": false,
+    "dimensions_mm": [
+      2000,
+      2000
+    ],
+    "files": {
+      "Diffuse": {
+        "size": 22706294,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/painted_plaster_wall/painted_plaster_wall_diff_2k.png",
+        "md5": "a59f31e4461b4e9385e88030e32280d9",
+        "sha256": "5d3e476d633d873f2f9f443936a7d3f6a5830b5486c9bd704cef7c1f89dbb3cc",
+        "local": "Saved/EnvironmentKitV1/Sources/painted_plaster_wall/painted_plaster_wall_diff_2k.png"
+      },
+      "nor_dx": {
+        "size": 22789119,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/painted_plaster_wall/painted_plaster_wall_nor_dx_2k.png",
+        "md5": "8d007431481ffbff0e0d86684eb66e11",
+        "sha256": "148d654923ae5a5c4f9c248fabc74e06898578e583b5671d6ffb4ee159b897fd",
+        "local": "Saved/EnvironmentKitV1/Sources/painted_plaster_wall/painted_plaster_wall_nor_dx_2k.png"
+      },
+      "arm": {
+        "size": 14790707,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/painted_plaster_wall/painted_plaster_wall_arm_2k.png",
+        "md5": "89a4d4c345073c326ed4a29168e5e3f3",
+        "sha256": "8fc9a730b7ea6698d4109924984326b2a0c37a77489e425213e8b24962fc9cce",
+        "local": "Saved/EnvironmentKitV1/Sources/painted_plaster_wall/painted_plaster_wall_arm_2k.png"
+      }
+    }
+  },
+  {
+    "id": "coast_rocks_05",
+    "name": "Coast Rocks 05",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "source": "https://polyhaven.com/a/coast_rocks_05",
+    "license": "CC0-1.0",
+    "license_url": "https://polyhaven.com/license",
+    "attribution_required": false,
+    "dimensions_mm": [
+      3036.3906621932983,
+      2817.328929901123,
+      1000.5000680685043
+    ],
+    "files": {
+      "Diffuse": {
+        "size": 20787048,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/coast_rocks_05/coast_rocks_05_diff_2k.png",
+        "md5": "0a68ef1efdd2d6126613b43590c13e07",
+        "sha256": "6742d38916a55806e542195173619ebdbb6f3c07c694b7ba0f9ea6285db8f69f",
+        "local": "Saved/EnvironmentKitV1/Sources/coast_rocks_05/coast_rocks_05_diff_2k.png"
+      },
+      "nor_dx": {
+        "size": 22209427,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/coast_rocks_05/coast_rocks_05_nor_dx_2k.png",
+        "md5": "7cd081195073223b3c38b5e6b244e8f8",
+        "sha256": "621348055fa7f37049c72f82d8879fd80447288e7821e989924d490365ed86c2",
+        "local": "Saved/EnvironmentKitV1/Sources/coast_rocks_05/coast_rocks_05_nor_dx_2k.png"
+      },
+      "arm": {
+        "size": 15014368,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/coast_rocks_05/coast_rocks_05_arm_2k.png",
+        "md5": "550b5aa429d3abe34f14408bc6b73f90",
+        "sha256": "0807780873b1b4ad62be3deb06f65e648d0e0b7172320b83888ea06379996a5e",
+        "local": "Saved/EnvironmentKitV1/Sources/coast_rocks_05/coast_rocks_05_arm_2k.png"
+      },
+      "mesh": {
+        "size": 63976556,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/coast_rocks_05/coast_rocks_05_2k.fbx",
+        "md5": "fac7aa805dc5bb018d2abf8853b9df01",
+        "sha256": "283ec63e79626e0fc624fb5df4f16aba17775affd36c768ed75f3f44855d6401",
+        "local": "Saved/EnvironmentKitV1/Sources/coast_rocks_05/coast_rocks_05_2k.fbx"
+      }
+    }
+  },
+  {
+    "id": "rock_face_02",
+    "name": "Rock Face 02",
+    "authors": {
+      "Dario Barresi": "All",
+      "Rico Cilliers": "processing"
+    },
+    "source": "https://polyhaven.com/a/rock_face_02",
+    "license": "CC0-1.0",
+    "license_url": "https://polyhaven.com/license",
+    "attribution_required": false,
+    "dimensions_mm": [
+      4870.411515235901,
+      3472.859501838684,
+      4734.235167503357
+    ],
+    "files": {
+      "Diffuse": {
+        "size": 19767863,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/rock_face_02/rock_face_02_diff_2k.png",
+        "md5": "5dba25e537473b8f27a34d714a000928",
+        "sha256": "fd1b30ecb2c1553837796684658813030cc9aecbbd5a26042ea58d05de6b55f8",
+        "local": "Saved/EnvironmentKitV1/Sources/rock_face_02/rock_face_02_diff_2k.png"
+      },
+      "nor_dx": {
+        "size": 20144936,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/rock_face_02/rock_face_02_nor_dx_2k.png",
+        "md5": "2967feab8a9f4c5f52e40de9b5311985",
+        "sha256": "3d6473c7667626265fcdfa29303d9ac59f1e1f24fb297cfbc367e86087cf5887",
+        "local": "Saved/EnvironmentKitV1/Sources/rock_face_02/rock_face_02_nor_dx_2k.png"
+      },
+      "arm": {
+        "size": 14624439,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/rock_face_02/rock_face_02_arm_2k.png",
+        "md5": "845d0bf304a1c1676a22676d684f4987",
+        "sha256": "e9178eeb9cd078403566df844754cfa2a1eab21dca5d41381792c787d469a5dd",
+        "local": "Saved/EnvironmentKitV1/Sources/rock_face_02/rock_face_02_arm_2k.png"
+      },
+      "mesh": {
+        "size": 1131996,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/rock_face_02/rock_face_02_2k.fbx",
+        "md5": "5bb2824c307e1f45a8e446351e8d7b6f",
+        "sha256": "f8bc96d906e4ebfe5f038da1cd2a492131e14dc35d73639ce8802078c11df580",
+        "local": "Saved/EnvironmentKitV1/Sources/rock_face_02/rock_face_02_2k.fbx"
+      }
+    }
+  },
+  {
+    "id": "barrel_03",
+    "name": "Barrel 03",
+    "authors": {
+      "Serhii Khromov": "All"
+    },
+    "source": "https://polyhaven.com/a/barrel_03",
+    "license": "CC0-1.0",
+    "license_url": "https://polyhaven.com/license",
+    "attribution_required": false,
+    "dimensions_mm": [
+      633.943498134613,
+      638.5995149612427,
+      930.4736243899824
+    ],
+    "files": {
+      "Diffuse": {
+        "size": 15514511,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/barrel_03/barrel_03_diff_2k.png",
+        "md5": "6265fba701aa6ef4caf4631466f94c88",
+        "sha256": "0157fc3fdf81540c2bd0c0b1de3a13a945ea6a8ea9b9e05a2f5290fce639072b",
+        "local": "Saved/EnvironmentKitV1/Sources/barrel_03/barrel_03_diff_2k.png"
+      },
+      "nor_dx": {
+        "size": 15081412,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/barrel_03/barrel_03_nor_dx_2k.png",
+        "md5": "b48b899fc722357b7d097b85df671cb9",
+        "sha256": "eacde7bf18c82b078a235f58768b1eee220c8c411de96151e1d4abc5c66f59fc",
+        "local": "Saved/EnvironmentKitV1/Sources/barrel_03/barrel_03_nor_dx_2k.png"
+      },
+      "arm": {
+        "size": 13260650,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/barrel_03/barrel_03_arm_2k.png",
+        "md5": "604633d13c346f94f3b0aa18a46fd462",
+        "sha256": "54fbfac05f6fc5adac20ce494a3a08074235c759660ef92bcac364549b239aea",
+        "local": "Saved/EnvironmentKitV1/Sources/barrel_03/barrel_03_arm_2k.png"
+      },
+      "mesh": {
+        "size": 63996,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/barrel_03/barrel_03_2k.fbx",
+        "md5": "ad45e79b49631f8911efbac9483e62c7",
+        "sha256": "7128ff67ee64d3f04393fd2663b07c6512c91135ceae602ab763bb0ff8b5bf5e",
+        "local": "Saved/EnvironmentKitV1/Sources/barrel_03/barrel_03_2k.fbx"
+      }
+    }
+  }
+]

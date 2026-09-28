@@ -660,3 +660,12 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
   sentinel and leaves one installed version. Evidence: `DISTRIBUTION.md`.
 - Explicitly disable repository Actions. No game rebuild/repackaging, gameplay/art
   changes, or history rewrite. Owner's untracked packaging scripts remain untouched.
+## 2026-09-28 — Asset-first cinematic environment kit v1 (in progress)
+
+- Owner-approved visual strategy: reuse functional architecture, acquire clearly
+  licensed generic assets, reserve custom modeling for Black Beacon identity.
+- Audit/provenance/acquisition plan in `Docs/`; four CC0 Poly Haven assets selected
+  for scanned plaster, coastal ledges/rock faces and annex fuel-storage dressing.
+- Isolated visual material overrides and noncolliding scan instances; no new
+  gameplay feature, dependency/plugin, global rendering change or package rebuild.
+- Integration written, not built; targeted build and rendered validation pending.
