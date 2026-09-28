@@ -1,6 +1,6 @@
 # Linux installation infrastructure — 2026-09-28
 
-**IMPLEMENTED / TESTED locally. Publication pending destination confirmation.**
+**IMPLEMENTED / TESTED locally. Public publication approved; upload/verification pending.**
 No game rebuild, recook, repackaging, gameplay/art edits or CI/Actions were performed.
 The existing validated `dist/BlackBeacon-linux-x86_64-test1-r2.tar.zst` and its
 existing checksum are the release inputs. SHA-256 verification succeeded:
@@ -80,15 +80,16 @@ failure/update tests still run. Evidence logs: `Saved/DistributionValidation/`
 
 [Release notes](ReleaseNotes/linux-test1-r2.md) and
 [machine-readable manifest](ReleaseNotes/linux-test1-r2.json) are prepared locally.
-Proposed public distribution repository: `daan-net/black-beacon`, default branch
-`main`, prerelease/tag `linux-test1-r2`. This is a proposal, not an existing verified
-destination. No tag/remote/repository/release has been created or published.
+Confirmed public repository: `daan-net/black-beacon`, default branch `main`,
+prerelease/tag `linux-test1-r2`. The owner authorized full history publication,
+existing branch/tag preservation and anonymous installation verification.
+The remote repository is initially empty and its public metadata was verified.
+Origin is configured to `https://github.com/daan-net/black-beacon.git`.
 
-The checkout has no Git remotes. The connected GitHub account is `daan-net`; no
-matching owned repository was found. `gh` is installed but unauthenticated.
-Confirm the destination and visibility before uploading. A private repository
-requires authenticated raw-file/release access, so the documented anonymous
-one-command flow requires a public distribution repository.
+CLI authentication was absent at the start of publication. The owner was asked
+to run `gh auth login`; no credentials were requested in chat. Release upload and
+public end-to-end verification remain pending until authenticated writes work.
+No Actions/workflows are added or enabled.
 
 GitHub API behavior: [official release API documentation](https://docs.github.com/en/rest/releases/releases).
 The installer does not use stable-only `/releases/latest`, because the proposed

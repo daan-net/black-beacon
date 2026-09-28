@@ -11,12 +11,13 @@ including extraction of the unchanged real r2 archive. ShellCheck, desktop-entry
 validation and `Tools/validate.sh` pass. No game rebuild/repackaging or art/gameplay
 changes; no CI/Actions. Full report: [DISTRIBUTION.md](DISTRIBUTION.md).
 
-Release notes/manifest are prepared for proposed `daan-net/black-beacon`, `main`,
-tag `linux-test1-r2`. Destination and public visibility are NOT confirmed; no
-matching owned repository or local Git remote was found. GitHub CLI is not logged
-in. Nothing was published or tagged. README command is explicitly a non-live
-proposal pending owner confirmation. Existing untracked packaging scripts remain
-untouched; `dist/` is now ignored rather than risking binary commits.
+Publication explicitly approved for public `daan-net/black-beacon`, default
+branch `main`, prerelease/tag `linux-test1-r2`, preserving the full Git history.
+The public repository exists and was verified empty; origin is configured.
+CLI authentication is currently missing; owner authentication requested.
+Uploading the two existing assets and anonymous installer verification are pending.
+No rebuild/repackaging, gameplay/art edits or Actions changes. Pre-existing
+untracked packaging scripts remain untouched.
 
 ## Linux Tester Package - IMPLEMENTED / TESTED
 

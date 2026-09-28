@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Standalone installer: safe to run through `curl -fsSL URL | bash`.
-# Proposed publication target; confirm repository/visibility before publishing.
+# Public distribution repository confirmed by the milestone owner.
 main() {
     set -euo pipefail
     local repository="${BLACK_BEACON_REPOSITORY:-daan-net/black-beacon}"

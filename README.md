@@ -2,10 +2,6 @@
 
 A storm-bound lighthouse exploration playtest for Linux x86_64.
 
-**Publication pending:** the URL below is the proposed destination, not a live
-installer yet. `daan-net/black-beacon`, its `main` branch and public visibility
-must be confirmed before publication. No release has been uploaded.
-
 ## INSTALL
 
 ```bash
@@ -53,7 +49,7 @@ From a source checkout:
 bash uninstall-black-beacon.sh
 ```
 
-Or, once published:
+Or directly from GitHub:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/daan-net/black-beacon/main/uninstall-black-beacon.sh | bash

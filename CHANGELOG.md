@@ -1,3 +1,12 @@
+## 2026-09-28 — Approved public Linux prerelease publication
+
+- Owner confirmed public `daan-net/black-beacon`, `main`, prerelease
+  `linux-test1-r2` and full history publication with branch/tag preservation.
+- Configure origin and finalize public installer/README metadata. The remote
+  repository is verified public and empty. No history rewrite or gameplay/art edit.
+- Release upload and public installation verification are in progress; the
+  existing r2 archive/checksum remain unchanged. No Actions or rebuild/repackaging.
+
 ## 2026-09-28 — GitHub Linux installation infrastructure
 
 - **IMPLEMENTED / TESTED locally:** standalone root installer/uninstaller, latest

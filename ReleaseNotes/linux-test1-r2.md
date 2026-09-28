@@ -1,20 +1,20 @@
 # Black Beacon — Linux playtest test1-r2
 
-Local release preparation only; **not uploaded or published**.
+Owner approved publication. Public repository verified; release upload/verification in progress.
 
-## Proposed publication
+## Confirmed publication target
 
-- Repository: `daan-net/black-beacon` — proposal, not yet confirmed/created.
-- Default branch: `main` — proposal, not verified for a destination repository.
+- Repository: `daan-net/black-beacon` — verified public repository.
+- Default branch: `main` — verified repository default branch.
 - Visibility: public is required for the documented anonymous installation.
-  No repository visibility has been changed; actual destination is unconfirmed.
+  Public visibility and full repository-history publication were explicitly approved.
 - Release/tag: `linux-test1-r2`.
 - Title: `Black Beacon Linux playtest test1-r2`.
 - Mark as **prerelease**. The installer deliberately includes published tester
   prereleases instead of using GitHub's stable-only `/releases/latest` endpoint.
 - Installer URL: `https://raw.githubusercontent.com/daan-net/black-beacon/main/install.sh`.
-- Publication should contain only approved distribution files if the source
-  repository is to remain private. This checkout has no Git remote configured.
+- Preserve and push existing repository branches/history and checkpoint tags;
+  fast-forward main to the validated distribution infrastructure. No force-push.
 
 ## Exact assets — upload existing files unchanged
 
@@ -54,20 +54,18 @@ The installer verifies SHA-256 before installation and preserves saves/config.
 This is a prerelease playtest build; physical-mouse UX and wider hardware
 compatibility still need tester feedback.
 
-## Publication gate
+## Publication authorization and verification
 
-Before any remote write, confirm owner/repository, default branch and public
-visibility, and show the final command/asset list to the owner as requested.
-The proposal above is not evidence that a public repository already exists.
-No tag was created or moved locally or remotely for this release.
+The owner confirmed `daan-net/black-beacon`, public visibility, default branch
+`main`, prerelease/tag `linux-test1-r2`, full history push and the two existing
+assets. No further publication approval is needed. Origin now uses the approved
+HTTPS URL. Preserve all existing branches and tags; never force-push.
 
-After confirmation, publish the installer/docs to the approved default branch,
-create the release initially as a draft prerelease, upload precisely the two
-assets above, verify their size/checksum and only then publish the draft.
-Use the prepared body via `gh --body-file` or equivalent structured API fields.
-No GitHub Actions, CI build, engine rebuild or automatic deployment is involved.
+Publish initially as a draft prerelease, attach the two unchanged files, verify
+sizes/checksum, then publish. Verify the anonymous public installer from an
+isolated temporary HOME, including real download, checksum, extraction, command
+launcher and repeat-install behavior. No Actions, CI, rebuild or repackaging.
 
-GitHub CLI is installed but currently unauthenticated. The connected GitHub app
-identifies `daan-net`; no Black Beacon repository was found among its accessible
-owned repositories. Release upload capability/authentication must be available
-before the existing 817 MiB archive can be uploaded.
+At preparation, the public repository was empty. CLI authentication was missing;
+the owner was asked to run `gh auth login` without sending tokens to chat.
+Final publication/verification evidence belongs in `DISTRIBUTION.md`.
