@@ -1,5 +1,11 @@
 {
-  "status": "publication-in-progress",
+  "status": "published-public-install-verified",
+  "release_url": "https://github.com/daan-net/black-beacon/releases/tag/linux-test1-r2",
+  "tag_commit": "121cd4c1a857f718e2a08414ae988a230e7ac46a",
+  "public_install_test": "PASS",
+  "packaged_headless_startup_exit": 0,
+  "repeat_install_preserves_saves": true,
+  "actions_enabled": false,
   "repository_confirmed": true,
   "required_visibility_for_anonymous_install": "public",
   "actual_visibility": "public",

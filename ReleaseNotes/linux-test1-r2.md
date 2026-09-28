@@ -1,6 +1,7 @@
 # Black Beacon — Linux playtest test1-r2
 
-Owner approved publication. Public repository verified; release upload/verification in progress.
+Published and publicly verified: [linux-test1-r2](https://github.com/daan-net/black-beacon/releases/tag/linux-test1-r2).
+Release tag commit: `121cd4c1a857f718e2a08414ae988a230e7ac46a`.
 
 ## Confirmed publication target
 
@@ -36,7 +37,7 @@ Archive provenance: gameplay/art checkpoint `b232ff1`, packaging fixes `a4b63a1`
 validation report at `cfb92f4`. This is the already validated Linux x86_64
 Development package, not a newly built game. See `LINUX_PACKAGE_VALIDATION.md`.
 
-## Release body ready for review
+## Release summary
 
 Black Beacon Linux x86_64 playtest, test1-r2. Includes the validated lighthouse,
 traversal, generator, beacon search and shipwreck reveal loop, with the r2
@@ -61,11 +62,11 @@ The owner confirmed `daan-net/black-beacon`, public visibility, default branch
 assets. No further publication approval is needed. Origin now uses the approved
 HTTPS URL. Preserve all existing branches and tags; never force-push.
 
-Publish initially as a draft prerelease, attach the two unchanged files, verify
-sizes/checksum, then publish. Verify the anonymous public installer from an
-isolated temporary HOME, including real download, checksum, extraction, command
-launcher and repeat-install behavior. No Actions, CI, rebuild or repackaging.
+The draft was published after both uploaded asset sizes and GitHub SHA-256
+digests matched the existing local inputs. All branches and previous tags were
+preserved. Repository Actions is disabled; no CI, rebuild or repackaging.
 
-At preparation, the public repository was empty. CLI authentication was missing;
-the owner was asked to run `gh auth login` without sending tokens to chat.
-Final publication/verification evidence belongs in `DISTRIBUTION.md`.
+The anonymous public installer passed from an isolated temporary HOME, including
+real download, checksum, extraction, desktop entry, actual packaged headless
+command startup (exit 0), and repeat installation with saved data retained and
+no duplicate payload. See [verification evidence](../DISTRIBUTION.md).

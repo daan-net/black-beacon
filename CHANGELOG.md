@@ -52,7 +52,7 @@
 # BLACK BEACON — Change Log
 
 Format: `date — milestone — summary`. Version reflects the vertical slice
-(`0.x`); no released build exists yet. A change that alters an existing
+(`0.x`); the Linux tester build is published as a prerelease. A change that alters an existing
 user-visible behaviour is called out as **user-visible**.
 
 Status vocabulary used here (same as AGENTS.md): `IMPLEMENTED` (built in the
@@ -649,3 +649,14 @@ Recorded in git as six initial commits, `bce6bc6` (docs base) → `1f2bcf5`
 - Added local installer (Tools/install-test-build.sh) and uninstaller (Tools/uninstall-test-build.sh) to handle safe deployments and updates while preserving saved data.
 - Completed fully isolated clean user tests for deployment, checksum validation, and uninstallation.
 - Added TESTER_LINUX.md guide and LINUX_PACKAGE_VALIDATION.md report.
+## 2026-09-28 — Linux prerelease published and public installer verified
+
+- **TESTED:** publish `linux-test1-r2` at `121cd4c` to public
+  `daan-net/black-beacon`, with the unchanged validated archive and checksum.
+  Preserve all nine branches and ten existing checkpoint/benchmark tags.
+- Anonymous installation from a clean temporary HOME passes download, SHA-256,
+  extraction, command/desktop installation, and actual packaged headless startup
+  (exit 0). Repeating the public command reuses the payload, preserves a save
+  sentinel and leaves one installed version. Evidence: `DISTRIBUTION.md`.
+- Explicitly disable repository Actions. No game rebuild/repackaging, gameplay/art
+  changes, or history rewrite. Owner's untracked packaging scripts remain untouched.

@@ -1,6 +1,6 @@
 # Linux installation infrastructure — 2026-09-28
 
-**IMPLEMENTED / TESTED locally. Public publication approved; upload/verification pending.**
+**IMPLEMENTED / TESTED locally and through the published anonymous GitHub installer.**
 No game rebuild, recook, repackaging, gameplay/art edits or CI/Actions were performed.
 The existing validated `dist/BlackBeacon-linux-x86_64-test1-r2.tar.zst` and its
 existing checksum are the release inputs. SHA-256 verification succeeded:
@@ -63,7 +63,8 @@ Unknown arguments, unrecognized installations and active game locks fail safely.
   verification/extraction/uninstall without rebuilding, repackaging or launching
   the game. Synthetic release responses replace only HTTP transport; production
   extraction, checksumming, shell entry point, filesystem switching and launchers
-  are exercised. Real GitHub download/publishing has not been tested yet.
+  are exercised. The separate public end-to-end check below exercises real GitHub
+  downloads and the unchanged packaged executable.
 
 Reproduce the full distribution tests:
 
@@ -78,19 +79,40 @@ failure/update tests still run. Evidence logs: `Saved/DistributionValidation/`
 
 ## Publication state
 
-[Release notes](ReleaseNotes/linux-test1-r2.md) and
-[machine-readable manifest](ReleaseNotes/linux-test1-r2.json) are prepared locally.
-Confirmed public repository: `daan-net/black-beacon`, default branch `main`,
-prerelease/tag `linux-test1-r2`. The owner authorized full history publication,
-existing branch/tag preservation and anonymous installation verification.
-The remote repository is initially empty and its public metadata was verified.
-Origin is configured to `https://github.com/daan-net/black-beacon.git`.
+[Public repository](https://github.com/daan-net/black-beacon), default branch
+`main`; [published prerelease](https://github.com/daan-net/black-beacon/releases/tag/linux-test1-r2).
+Tag `linux-test1-r2` points to `121cd4c1a857f718e2a08414ae988a230e7ac46a`.
+Both existing assets were uploaded unchanged; GitHub's asset sizes and SHA-256
+digests match the local inputs. The tag identifies distribution infrastructure;
+the packaged game's provenance remains `b232ff1` / `a4b63a1`, not a new build.
 
-CLI authentication was absent at the start of publication. The owner was asked
-to run `gh auth login`; no credentials were requested in chat. Release upload and
-public end-to-end verification remain pending until authenticated writes work.
-No Actions/workflows are added or enabled.
+All nine branches and ten pre-existing tags were pushed without rewriting history;
+their remote references matched the saved local reference snapshot. Experimental
+branches remain separate. GitHub Actions is explicitly disabled at repository
+level. No workflows were added. Two pre-existing untracked owner scripts,
+`Tools/cook_r2.sh` and `run_10m.sh`, were left untouched and unpublished.
+
+**TESTED — public end-to-end verification, 2026-09-28:**
+
+- Ran the exact README curl command from a clean temporary directory with an
+  isolated HOME, without GitHub authentication. Public release metadata confirms
+  `prerelease=true`, `draft=false`, and the two expected assets.
+- Downloaded the real release archive, verified SHA-256 before extraction, and
+  installed the packaged launcher/binary and a valid desktop entry.
+- Resolved `black-beacon` from the isolated `~/.local/bin` and ran
+  `black-beacon -nullrhi -unattended -nosplash -nosound -stdout -ExecCmds=Quit`:
+  game engine initialized and exited **0**. This is headless startup validation;
+  prior rendered Vulkan validation remains in `LINUX_PACKAGE_VALIDATION.md`.
+- Repeated the same public install command. It reported the version already
+  installed, reused the payload, preserved a save sentinel, retained exactly one
+  application version, and left no temporary download directory.
+- Removed only the isolated temporary test installation after completion.
+
+Local evidence (ignored): `Saved/DistributionValidation/Publication/` contains
+`PublicVerification.json`, `PublicInstall.log`, `PublicReinstall.log`,
+`PackagedCommand.log`, `DesktopValidation.log`, `PublicRelease.json`, and the
+local/remote reference snapshots. [Release manifest](ReleaseNotes/linux-test1-r2.json).
 
 GitHub API behavior: [official release API documentation](https://docs.github.com/en/rest/releases/releases).
-The installer does not use stable-only `/releases/latest`, because the proposed
+The installer does not use stable-only `/releases/latest`, because the
 first package is a tester prerelease.

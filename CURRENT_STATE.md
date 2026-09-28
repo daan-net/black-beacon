@@ -1,8 +1,8 @@
 # BLACK BEACON — Current State
 
-**Last updated:** 2026-09-28 · **Milestone:** Hero lighthouse exterior continuation
+**Last updated:** 2026-09-28 · **Milestone:** Published Linux playtest distribution
 
-## GitHub installation infrastructure — IMPLEMENTED / TESTED locally
+## GitHub installation infrastructure — IMPLEMENTED / TESTED publicly
 
 Root `install.sh` and `uninstall-black-beacon.sh` support checksum-first staged
 Linux x86_64 installation, atomic application switching, save/config preservation,
@@ -11,13 +11,16 @@ including extraction of the unchanged real r2 archive. ShellCheck, desktop-entry
 validation and `Tools/validate.sh` pass. No game rebuild/repackaging or art/gameplay
 changes; no CI/Actions. Full report: [DISTRIBUTION.md](DISTRIBUTION.md).
 
-Publication explicitly approved for public `daan-net/black-beacon`, default
-branch `main`, prerelease/tag `linux-test1-r2`, preserving the full Git history.
-The public repository exists and was verified empty; origin is configured.
-CLI authentication is currently missing; owner authentication requested.
-Uploading the two existing assets and anonymous installer verification are pending.
-No rebuild/repackaging, gameplay/art edits or Actions changes. Pre-existing
-untracked packaging scripts remain untouched.
+Published public `daan-net/black-beacon`, default branch `main`, prerelease/tag
+`linux-test1-r2` at `121cd4c1a857f718e2a08414ae988a230e7ac46a`. All nine branches
+and ten existing tags were pushed intact; no history was rewritten. Both existing
+release assets have matching GitHub/local sizes and SHA-256 digests.
+The exact public curl installer passed in an isolated temporary HOME: anonymous
+download, checksum before extraction, command/desktop launchers, actual packaged
+headless startup (exit 0), and repeat installation retaining save data and one
+application version. This did not repeat rendered gameplay validation.
+GitHub Actions is explicitly disabled. No rebuild/repackaging or gameplay/art edits.
+Pre-existing untracked `Tools/cook_r2.sh` and `run_10m.sh` remain untouched.
 
 ## Linux Tester Package - IMPLEMENTED / TESTED
 
